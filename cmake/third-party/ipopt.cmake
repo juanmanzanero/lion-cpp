@@ -1,0 +1,31 @@
+if (${BUILD_IPOPT})
+    include (ExternalProject)
+    ExternalProject_Add(mumps
+      GIT_REPOSITORY https://github.com/coin-or-tools/ThirdParty-Mumps.git
+      GIT_TAG stable/3.0
+      PREFIX "${THIRD_PARTY_DIR}/mumps"
+      SOURCE_DIR ${THIRD_PARTY_DIR}/mumps/source
+      BINARY_DIR ${THIRD_PARTY_DIR}/mumps/build 
+      INSTALL_DIR ${THIRD_PARTY_DIR}/lion/thirdparty
+      CONFIGURE_COMMAND cd ${THIRD_PARTY_DIR}/mumps/source && ./get.Mumps && ./configure --prefix=${THIRD_PARTY_DIR}/lion/thirdparty --enable-static=yes --enable-shared=no
+      BUILD_COMMAND cd ${THIRD_PARTY_DIR}/mumps/source && make && make install
+      INSTALL_COMMAND ""
+      UPDATE_COMMAND ""
+    )
+
+    ExternalProject_Add(ipopt
+      GIT_REPOSITORY https://github.com/coin-or/Ipopt.git
+      GIT_TAG releases/3.14.3 
+      PREFIX "${THIRD_PARTY_DIR}/ipopt"
+      SOURCE_DIR ${THIRD_PARTY_DIR}/ipopt/source
+      BINARY_DIR ${THIRD_PARTY_DIR}/ipopt/build 
+      INSTALL_DIR ${THIRD_PARTY_DIR}/lion/thirdparty
+      PATCH_COMMAND cd ${THIRD_PARTY_DIR}/ipopt/source && git apply ${PATCH_DIR}/ipopt.patch --reject 
+      CONFIGURE_COMMAND cd ${THIRD_PARTY_DIR}/ipopt/build &&
+    		../source/configure CXX=${CMAKE_CXX_COMPILER} CC=${CMAKE_C_COMPILER} F77=${CMAKE_FORTRAN_COMPILER}
+    				   --disable-java --with-mumps-cflags=-I${THIRD_PARTY_DIR}/lion/thirdparty/include/coin-or/mumps
+                                       --with-mumps-lflags="-L${THIRD_PARTY_DIR}/lion/thirdparty/lib -lcoinmumps" --prefix=${THIRD_PARTY_DIR}/lion/thirdparty
+      DEPENDS mumps
+    )
+endif()
+

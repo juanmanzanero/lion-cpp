@@ -1,0 +1,55 @@
+macro(new_test)
+    get_filename_component(binary_name ${CMAKE_CURRENT_LIST_DIR} NAME)
+    string(REPLACE " " "_" binary_name ${binary_name})
+    
+    set(BINARY ${binary_name}_test)
+    
+    file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false *.h *.cpp ../main.cpp)
+    
+    set(SOURCES ${TEST_SOURCES})
+    
+    add_executable(${BINARY} ${TEST_SOURCES})
+    
+    add_test(NAME ${BINARY} COMMAND ${BINARY})
+    
+    # Link libraries
+    target_link_libraries(${BINARY} LINK_PRIVATE GTest::gtest lion)
+    
+    # Copy required files
+    add_custom_target(${BINARY}_link_data ALL
+                      COMMAND ${CMAKE_COMMAND} -E create_symlink 
+                      ${CMAKE_CURRENT_SOURCE_DIR}/data 
+                      ${CMAKE_BINARY_DIR}/test/${binary_name}/data
+                     )
+endmacro()
+
+add_subdirectory(./foundation)
+add_subdirectory(./frame)
+add_subdirectory(./io)
+add_subdirectory(./math)
+add_subdirectory(./propagators)
+
+
+# Create a test if code coverage
+if (CODE_COVERAGE)
+	include(code-coverage)
+
+	add_code_coverage_all_targets(EXCLUDE test/* googletest-src/*)
+
+	set(BINARY coverage_test)
+
+	file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false **/*.cpp main.cpp)
+
+	set(SOURCES ${TEST_SOURCES})
+
+	add_executable(${BINARY} ${TEST_SOURCES})
+
+	target_link_libraries(${BINARY} PUBLIC gtest)
+
+	set_target_properties(${BINARY} PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
+
+	target_code_coverage(${BINARY} AUTO ALL EXCLUDE test/* build/googletest-src/*) 
+endif()
+
+
+
