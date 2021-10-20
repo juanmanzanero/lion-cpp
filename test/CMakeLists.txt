@@ -11,7 +11,10 @@ macro(new_test)
     add_executable(${BINARY} ${TEST_SOURCES})
     
     add_test(NAME ${BINARY} COMMAND ${BINARY})
-    
+
+    if ( NOT APPLE)
+        target_link_options(${BINARY} PUBLIC -Wl,--no-as-needed -ldl)
+    endif()
     # Link libraries
     target_link_libraries(${BINARY} LINK_PRIVATE GTest::gtest lion)
     

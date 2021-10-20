@@ -1,4 +1,4 @@
-name: Linux (latest)
+name: MacOS (latest)
 
 on: [push]
 
@@ -13,9 +13,12 @@ jobs:
     # well on Windows or Mac.  You can convert this to a matrix build if you need
     # cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
     - uses: actions/checkout@v2
+
+    - name: Install gfortran
+      run: brew reinstall gcc
 
     - name: Create Build Environment
       # Some projects don't allow in-source building, so create a separate build directory
@@ -30,7 +33,7 @@ jobs:
       # Note the current convention is to use the -S and -B options here to specify source 
       # and build directories, but this is only available with CMake 3.13 and higher.  
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_RELEASE
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_RELEASE -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
 
     - name: Build
       working-directory: ${{runner.workspace}}/build
@@ -62,9 +65,12 @@ jobs:
     # well on Windows or Mac.  You can convert this to a matrix build if you need
     # cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
     - uses: actions/checkout@v2
+
+    - name: Install gfortran
+      run: brew reinstall gcc
 
 
     - name: Create Build Environment
@@ -80,7 +86,7 @@ jobs:
       # Note the current convention is to use the -S and -B options here to specify source 
       # and build directories, but this is only available with CMake 3.13 and higher.  
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_DEBUG
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_DEBUG -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
 
     - name: Build
       working-directory: ${{runner.workspace}}/build
@@ -107,26 +113,13 @@ jobs:
         retention-days: 1 
 
 
-  valgrind:
-    runs-on: ubuntu-latest
-    
-    needs: [build_debug]
-    steps:
-    - uses: actions/checkout@v2
-
-    - uses: actions/upload-artifact@v2 
-      with:
-        name: valgrind_utils
-        path: ${{runner.workspace}}/lion-cpp/.github/workflows/valgrindtest.sh
-        retention-days: 1 
-
   frame_test_release:
   
     # The CMake configure and build commands are platform agnostic and should work equally
     # well on Windows or Mac.  You can convert this to a matrix build if you need
     # cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     
     needs: [build_release]
     
@@ -154,7 +147,7 @@ jobs:
     # well on Windows or Mac.  You can convert this to a matrix build if you need
     # cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     
     needs: [build_debug]
     
@@ -176,52 +169,13 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: cp ./frame/frame_test . && chmod +x ./frame_test && export LD_LIBRARY_PATH=${{runner.workspace}}:${LD_LIBRARY_PATH} && ./frame_test
 
-  frame_test_debug_valgrind:
-  
-    # The CMake configure and build commands are platform agnostic and should work equally
-    # well on Windows or Mac.  You can convert this to a matrix build if you need
-    # cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
-    
-    needs: [valgrind]
-    
-    steps:
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: valgrind_utils
-        path: ${{runner.workspace}}
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: tests_debug
-        path: ${{runner.workspace}}
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: libraries_debug
-        path: ${{runner.workspace}}
-      
-    - name: Get valgrind
-      working-directory: ${{runner.workspace}}
-      shell: bash
-      run: sudo apt install -y valgrind
-      
-    - name: Frame valgrind test
-      working-directory: ${{runner.workspace}}
-      shell: bash     
-      # Execute tests defined by the CMake configuration.  
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: cp ./frame/frame_test . && chmod +x ./frame_test && sh valgrindtest.sh frame
-
   math_test_release:
   
     # The CMake configure and build commands are platform agnostic and should work equally
     # well on Windows or Mac.  You can convert this to a matrix build if you need
     # cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     
     needs: [build_release]
     
@@ -249,7 +203,7 @@ jobs:
     # well on Windows or Mac.  You can convert this to a matrix build if you need
     # cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     
     needs: [build_debug]
     
@@ -271,51 +225,13 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: cp ./math/math_test . && chmod +x ./math_test && export LD_LIBRARY_PATH=${{runner.workspace}}:${LD_LIBRARY_PATH} && ./math_test
 
-  math_test_debug_valgrind:
-  
-    # The CMake configure and build commands are platform agnostic and should work equally
-    # well on Windows or Mac.  You can convert this to a matrix build if you need
-    # cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
-    
-    needs: [valgrind]
-    
-    steps:
-    - uses: actions/download-artifact@v2
-      with:
-        name: tests_debug
-        path: ${{runner.workspace}}
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: valgrind_utils
-        path: ${{runner.workspace}}
-        
-    - uses: actions/download-artifact@v2
-      with:
-        name: libraries_debug
-        path: ${{runner.workspace}}
-      
-    - name: Get valgrind
-      working-directory: ${{runner.workspace}}
-      shell: bash
-      run: sudo apt install -y valgrind
-      
-    - name: Math valgrind test
-      working-directory: ${{runner.workspace}}
-      shell: bash     
-      # Execute tests defined by the CMake configuration.  
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: cp ./math/math_test . && chmod +x ./math_test && sh valgrindtest.sh math
-
   propagators_test_release:
   
     # The CMake configure and build commands are platform agnostic and should work equally
     # well on Windows or Mac.  You can convert this to a matrix build if you need
     # cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     
     needs: [build_release]
     
@@ -343,7 +259,7 @@ jobs:
     # well on Windows or Mac.  You can convert this to a matrix build if you need
     # cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     
     needs: [build_debug]
     
@@ -365,51 +281,13 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: cp propagators/propagators_test . && chmod +x ./propagators_test && export LD_LIBRARY_PATH=${{runner.workspace}}:${LD_LIBRARY_PATH} && ./propagators_test
 
-  propagators_test_debug_valgrind:
-  
-    # The CMake configure and build commands are platform agnostic and should work equally
-    # well on Windows or Mac.  You can convert this to a matrix build if you need
-    # cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
-    
-    needs: [valgrind]
-    
-    steps:
-    - uses: actions/download-artifact@v2
-      with:
-        name: valgrind_utils
-        path: ${{runner.workspace}}
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: tests_debug
-        path: ${{runner.workspace}}
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: libraries_debug
-        path: ${{runner.workspace}}
-      
-    - name: Get valgrind
-      working-directory: ${{runner.workspace}}
-      shell: bash
-      run: sudo apt install -y valgrind
-      
-    - name: Propagators valgrind test
-      working-directory: ${{runner.workspace}}
-      shell: bash     
-      # Execute tests defined by the CMake configuration.  
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: cp propagators/propagators_test . && chmod +x ./propagators_test && sh valgrindtest.sh propagators
-
   io_test_release:
   
     # The CMake configure and build commands are platform agnostic and should work equally
     # well on Windows or Mac.  You can convert this to a matrix build if you need
     # cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     
     needs: [build_release]
     
@@ -442,7 +320,7 @@ jobs:
     # well on Windows or Mac.  You can convert this to a matrix build if you need
     # cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     
     needs: [build_debug]
     
@@ -469,56 +347,13 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: cp io/io_test . && chmod +x ./io_test && export LD_LIBRARY_PATH=${{runner.workspace}}:${LD_LIBRARY_PATH} && ./io_test
 
-  io_test_debug_valgrind:
-  
-    # The CMake configure and build commands are platform agnostic and should work equally
-    # well on Windows or Mac.  You can convert this to a matrix build if you need
-    # cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
-    
-    needs: [valgrind]
-    
-    steps:
-    - uses: actions/download-artifact@v2
-      with:
-        name: valgrind_utils
-        path: ${{runner.workspace}}
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: tests_debug
-        path: ${{runner.workspace}}
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: libraries_debug
-        path: ${{runner.workspace}}
-      
-    - uses: actions/download-artifact@v2
-      with:
-        name: io_test_debug_data
-        path: ${{runner.workspace}}/data
-
-    - name: Get valgrind
-      working-directory: ${{runner.workspace}}
-      shell: bash
-      run: sudo apt install -y valgrind
-      
-    - name: Io valgrind test
-      working-directory: ${{runner.workspace}}
-      shell: bash     
-      # Execute tests defined by the CMake configuration.  
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: cp io/io_test . && chmod +x ./io_test && sh valgrindtest.sh io
-
   foundation_test_release:
   
     # The CMake configure and build commands are platform agnostic and should work equally
     # well on Windows or Mac.  You can convert this to a matrix build if you need
     # cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     
     needs: [build_release]
     
@@ -546,7 +381,7 @@ jobs:
     # well on Windows or Mac.  You can convert this to a matrix build if you need
     # cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     
     needs: [build_debug]
     
@@ -568,47 +403,9 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: cp foundation/foundation_test . && chmod +x ./foundation_test && export LD_LIBRARY_PATH=${{runner.workspace}}:${LD_LIBRARY_PATH} && ./foundation_test
 
-  foundation_test_debug_valgrind:
-  
-    # The CMake configure and build commands are platform agnostic and should work equally
-    # well on Windows or Mac.  You can convert this to a matrix build if you need
-    # cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
-    
-    needs: [valgrind]
-    
-    steps:
-    - uses: actions/download-artifact@v2
-      with:
-        name: valgrind_utils
-        path: ${{runner.workspace}}
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: tests_debug
-        path: ${{runner.workspace}}
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: libraries_debug
-        path: ${{runner.workspace}}
-      
-    - name: Get valgrind
-      working-directory: ${{runner.workspace}}
-      shell: bash
-      run: sudo apt install -y valgrind
-      
-    - name: Foundation valgrind test
-      working-directory: ${{runner.workspace}}
-      shell: bash     
-      # Execute tests defined by the CMake configuration.  
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: cp foundation/foundation_test . && chmod +x ./foundation_test && sh valgrindtest.sh foundation
-
   remove_artifacts_release:
   
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     
     needs: [foundation_test_release, frame_test_release, io_test_release, math_test_release, propagators_test_release]
     if: always()
@@ -631,9 +428,9 @@ jobs:
 
   remove_artifacts_debug:
   
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     
-    needs: [foundation_test_debug, frame_test_debug, io_test_debug, math_test_debug, propagators_test_debug, foundation_test_debug_valgrind, frame_test_debug_valgrind, io_test_debug_valgrind, math_test_debug_valgrind, propagators_test_debug_valgrind]
+    needs: [foundation_test_debug, frame_test_debug, io_test_debug, math_test_debug, propagators_test_debug]
     if: always()
     
     steps:
@@ -651,8 +448,3 @@ jobs:
       continue-on-error: true
       with:
         name: io_test_debug_data
-
-    - uses: geekyeggo/delete-artifact@v1
-      continue-on-error: true
-      with:
-        name: valgrind_utils

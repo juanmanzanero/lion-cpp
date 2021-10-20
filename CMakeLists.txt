@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 # set the project name
-project(lioncpp VERSION 1.0)
+project(lioncpp VERSION 1.0 LANGUAGES C CXX Fortran)
 
 include(CMakeDependentOption)
 include(GNUInstallDirs)

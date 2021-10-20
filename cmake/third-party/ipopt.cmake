@@ -23,7 +23,7 @@ if (${BUILD_IPOPT})
       PATCH_COMMAND cd ${THIRD_PARTY_DIR}/ipopt/source && git apply ${PATCH_DIR}/ipopt.patch --reject 
       CONFIGURE_COMMAND cd ${THIRD_PARTY_DIR}/ipopt/build &&
     		../source/configure CXX=${CMAKE_CXX_COMPILER} CC=${CMAKE_C_COMPILER} F77=${CMAKE_FORTRAN_COMPILER}
-    				   --disable-java --with-mumps-cflags=-I${THIRD_PARTY_DIR}/lion/thirdparty/include/coin-or/mumps
+    				   --disable-java --with-mumps-cflags=-I${THIRD_PARTY_DIR}/lion/thirdparty/include/coin-or/mumps --enable-static=yes --enable-shared=no
                                        --with-mumps-lflags="-L${THIRD_PARTY_DIR}/lion/thirdparty/lib -lcoinmumps" --prefix=${THIRD_PARTY_DIR}/lion/thirdparty
       DEPENDS mumps
     )

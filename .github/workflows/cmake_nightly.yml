@@ -1,4 +1,4 @@
-name: Nightly Builder
+name: Linux (cron)
  
 on:
   schedule:
