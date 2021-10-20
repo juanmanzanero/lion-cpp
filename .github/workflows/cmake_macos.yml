@@ -1,6 +1,12 @@
-name: MacOS (latest)
+name: MacOS
 
-on: [push]
+on: 
+  push:
+
+  schedule:
+    - cron: 0 4 * * *
+
+
 
 env:
   BUILD_RELEASE: Release
