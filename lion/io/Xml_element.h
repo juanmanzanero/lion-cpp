@@ -65,7 +65,13 @@ class Xml_element
     Xml_element get_parent() const { return _e->Parent()->ToElement(); }
 
     //! Get attribute by name
+    //! @param[in] attribute: name of the attribute
     std::string get_attribute(const std::string& attribute) const { return _e->Attribute(attribute.c_str()); }
+
+    //! Get attribute as double
+    //! @param[in] attribute: name of the attribute
+    //! @param[in] simply pass double() to overload this version
+    double get_attribute(const std::string& attribute, double&&) const { return std::stod(_e->Attribute(attribute.c_str())); }
 
     //! Print
     void print(std::ostream& os) const;
