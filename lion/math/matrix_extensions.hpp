@@ -19,14 +19,15 @@ constexpr VEC1 operator+(const VEC1& lhs, const VEC2& rhs )
     return result;
 }
 
-
-template<class T, size_t N>
-constexpr std::array<T,N> operator-(const std::array<T,N>& lhs, const std::array<T,N>& rhs )
+template<typename VEC1, typename VEC2, typename is_vector<VEC1>::type*, typename is_vector<VEC2>::type*>
+constexpr VEC1 operator-(const VEC1& lhs, const VEC2& rhs )
 {
-    std::array<T,N> result = {{0.0}};
+    assert(lhs.size() == rhs.size());
 
-    for (size_t i = 0; i < N; ++i)
-        result[i] = lhs[i] - rhs[i];
+    VEC1 result = lhs;
+
+    for (size_t i = 0; i < lhs.size(); ++i)
+        result[i] -= rhs[i];
 
     return result;
 }

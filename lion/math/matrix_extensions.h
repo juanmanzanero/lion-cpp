@@ -15,8 +15,8 @@ constexpr VEC1 operator+(const VEC1& lhs, const VEC2& rhs );
 //! Subtract two vectors
 //! @param[in] lhs: left hand side vector
 //! @param[in] rhs: right hand side vector
-template<class T, size_t N>
-constexpr std::array<T,N> operator-(const std::array<T,N>& lhs, const std::array<T,N>& rhs );
+template<typename VEC1, typename VEC2, typename is_vector<VEC1>::type* = nullptr, typename is_vector<VEC2>::type* = nullptr>
+constexpr VEC1 operator-(const VEC1& lhs, const VEC2& rhs );
 
 //! Unitary minus operator for vector
 //! @param[in] rhs: original vector

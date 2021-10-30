@@ -42,6 +42,13 @@ if (NOT ${loggercpp_FOUND})
     set(BUILD_LOGGERCPP YES)
 endif()
 
+# Cpp Automatic Differentiation
+find_package(cppad)
+
+if (NOT ${cppad_FOUND})
+    set(BUILD_CPPAD YES)
+endif()
+
 
 #######################################################################
 
@@ -66,9 +73,10 @@ if ( ${ENABLE_TEST} )
 	find_package(GTest PATHS ${CMAKE_BINARY_DIR}/thirdparty REQUIRED)
 endif()
 
-find_package(tinyxml2)
-find_package(ipopt)
+find_package(tinyxml2 REQUIRED)
+find_package(ipopt REQUIRED)
 if ( ${Python3_FOUND} AND ${Python3_MATPLOTLIB} )
     find_package(matplotlibcpp)
 endif()
-find_package(loggercpp)
+find_package(loggercpp REQUIRED)
+find_package(cppad REQUIRED)

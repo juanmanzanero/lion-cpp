@@ -45,8 +45,11 @@ endif()
 add_library(lion INTERFACE)
 target_include_directories(lion SYSTEM INTERFACE
 	"$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>"
+	"$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/lion/thirdparty/include>"
 	"$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>"
-	"$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>")
+	"$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>"
+	"$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}/lion/thirdparty/include>"
+)
 
 target_link_libraries(lion INTERFACE ipopt tinyxml2)
 
