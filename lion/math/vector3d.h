@@ -137,6 +137,14 @@ std::istream& operator>>(std::istream &is, Vector3d<T> &v);
 using sVector3d = Vector3d<scalar>;
 using tVector3d = Vector3d<timeseries>;
 
+
+//! Add the capability to add tVector3d to sVector3d and get a tVector3d
+template<typename T = timeseries>
+typename std::enable_if<!std::is_same<T,scalar>::value,Vector3d<timeseries>>::type operator+(tVector3d lhs, const sVector3d& rhs);
+
+template<typename T = timeseries>
+typename std::enable_if<!std::is_same<T,scalar>::value,Vector3d<timeseries>>::type operator+(const sVector3d& lhs, const tVector3d& rhs) { return rhs+lhs; }
+
 #include "vector3d.hpp"
 
 constexpr sVector3d UX{1.0, 0.0, 0.0};
