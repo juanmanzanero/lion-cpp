@@ -307,7 +307,7 @@ constexpr Matrix3x3<T> inv(const Matrix3x3<T> &arg)
 {
     const auto d = arg.det();
 
-    if (std::abs(d) <= eps) {
+    if (fabs(d) <= eps) {
         std::cerr << "tr7::inv: warning, input Matrix3x3<T> is singular to working precision" << std::endl;
         return Matrix3x3<T>{ inf };
     }
@@ -346,9 +346,9 @@ constexpr T sumsqr(const Matrix3x3<T> &arg)
 template<typename T>
 constexpr T sumabs(const Matrix3x3<T> &arg)
 {
-    return std::abs(arg.xx()) + std::abs(arg.xy()) + std::abs(arg.xz()) +
-        std::abs(arg.yx()) + std::abs(arg.yy()) + std::abs(arg.yz()) +
-        std::abs(arg.zx()) + std::abs(arg.zy()) + std::abs(arg.zz());
+    return fabs(arg.xx()) + fabs(arg.xy()) + fabs(arg.xz()) +
+        fabs(arg.yx()) + fabs(arg.yy()) + fabs(arg.yz()) +
+        fabs(arg.zx()) + fabs(arg.zy()) + fabs(arg.zz());
 }
 
 template<typename T>
@@ -362,9 +362,9 @@ constexpr Matrix3x3<T> sqrt(const Matrix3x3<T> &arg)
 template<typename T>
 constexpr Matrix3x3<T> abs(const Matrix3x3<T> &arg)
 {
-    return Matrix3x3<T>{ std::abs(arg.xx()), std::abs(arg.xy()), std::abs(arg.xz()),
-        std::abs(arg.yx()), std::abs(arg.yy()), std::abs(arg.yz()),
-        std::abs(arg.zx()), std::abs(arg.zy()), std::abs(arg.zz()) };
+    return Matrix3x3<T>{ fabs(arg.xx()), fabs(arg.xy()), fabs(arg.xz()),
+        fabs(arg.yx()), fabs(arg.yy()), fabs(arg.yz()),
+        fabs(arg.zx()), fabs(arg.zy()), fabs(arg.zz()) };
 }
 
 template<typename T>
@@ -506,7 +506,7 @@ template<typename T>
 inline Vector3d<T> linsolve(const Matrix3x3<T> &m_lhs, const Vector3d<T> &v)
 {
     const auto d = m_lhs.det();
-    if (std::abs(d) <= eps) {
+    if (fabs(d) <= eps) {
         std::cerr << "tr7::linsolve:: warning, input Matrix3x3<T> may "
             "be singular or badly scaled" << std::endl;
         return Vector3d<T>{ inf, inf, inf };

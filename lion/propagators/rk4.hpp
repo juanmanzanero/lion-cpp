@@ -2,7 +2,7 @@
 #define __RK4_HPP__
 
 template<class F, class U, size_t N>
-inline void RK4<F,U,N>::take_step(F& f, U& u, std::array<timeseries,N>& q, timeseries t, scalar dt)
+inline void RK4<F,U,N>::take_step(F& f, U& u, std::array<timeseries,N>& q, scalar t, scalar dt)
 {
     // 1st stage
     const auto u_1 = u(t);

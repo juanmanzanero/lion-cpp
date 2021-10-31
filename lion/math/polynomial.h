@@ -80,11 +80,11 @@ class Polynomial
 
     //! Non-safe evaluation of the polynomial at x 
     //! @param[in] x: evaluation point 
-    T operator[](timeseries x) const;
+    T operator[](scalar x) const;
 
     //! Safe evaluation of the polynomial at x (exception if x is out of bounds)
     //! @param[in] x: evaluation point 
-    T operator()(timeseries x) const;
+    T operator()(scalar x) const;
 
     //! Computes the derivative of p
     Polynomial derivative() const;
@@ -156,7 +156,7 @@ class Polynomial_vector
 
     //! Return the evaluation of the polynomials at x as a vector
     //! @param[in] x: evaluation point
-    std::vector<T> operator()(timeseries x) const
+    std::vector<T> operator()(scalar x) const
     {
         std::vector<T> result(_p.size());
 
@@ -190,7 +190,7 @@ class Polynomial_array
 
     //! Return the evaluation of the polynomials at x as a vector
     //! @param[in] x: evaluation point
-    std::array<T,N> operator()(timeseries x) const
+    std::array<T,N> operator()(scalar x) const
     {
         std::array<T,N> result;
 

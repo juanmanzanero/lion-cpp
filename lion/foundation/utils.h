@@ -8,6 +8,9 @@
 
 #define PRINTVARIABLE(MSG,VAR) out(2) << "[" << #MSG << "] " << #VAR << ": " << VAR << std::endl
 
+constexpr double& Value(double& val) { return val; }
+constexpr const double& Value(const double& val) { return val; }
+
 template <typename T> 
 constexpr int sign(T val) 
 {
@@ -19,10 +22,10 @@ constexpr bool eq_fp(T x, T y, T tol = static_cast<T>(1.))
 {
     // Kopriva's AlmostEqual routine
     const T teps = tol * eps_T<T>;
-    const T diff = std::abs(x - y);
+    const T diff = fabs(x - y);
 
-    const T ax = std::abs(x);
-    const T ay = std::abs(y);
+    const T ax = fabs(x);
+    const T ay = fabs(y);
 
     if (ax <= teps || ay <= teps) {
         return diff <= static_cast<T>(2.) * teps;
@@ -50,8 +53,8 @@ constexpr T mod_mat(T x, T y)
                 ret = std::fmod(x, y);
                 bool rEQ0{ eq_fp(ret, static_cast<T>(0.)) }; 
                 if ((!rEQ0) && (y > std::floor(y))) {
-                    auto q{ std::abs(x / y) }; 
-                    rEQ0 = (std::abs(q - std::floor(q + static_cast<T>(0.5))) <= static_cast<T>(2.2204460492503131E-16) * q); // 2.220446049250313E-16 == eps, but we'll leave it like this since Matlab hardcodes it
+                    auto q{ fabs(x / y) }; 
+                    rEQ0 = (fabs(q - std::floor(q + static_cast<T>(0.5))) <= static_cast<T>(2.2204460492503131E-16) * q); // 2.220446049250313E-16 == eps, but we'll leave it like this since Matlab hardcodes it
                 }
 
                 if (rEQ0) {
@@ -121,7 +124,7 @@ inline std::vector<double> string_to_double_vector(std::string s)
 template<typename T = double>
 constexpr T smooth_pos(T a, T eps2)
 {
-    return 0.5*(a + std::sqrt(a*a + eps2));
+    return 0.5*(a + sqrt(a*a + eps2));
 }
 
 

@@ -9,6 +9,8 @@ using scalar = double;
 using timeseries = double;  // For future integration with autodiff?
 #endif 
 
-using size_t = std::size_t;
+using std::size_t;
+using std::max;
+using std::min;
 
 #endif

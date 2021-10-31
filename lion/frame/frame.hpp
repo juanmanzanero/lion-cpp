@@ -151,7 +151,7 @@ constexpr inline size_t Frame::generation() const
 }
 
 
-constexpr inline tVector3d Frame::get_absolute_position(const tVector3d& x) const
+inline tVector3d Frame::get_absolute_position(const tVector3d& x) const
 {
     if (is_inertial())
         return x;
@@ -160,7 +160,7 @@ constexpr inline tVector3d Frame::get_absolute_position(const tVector3d& x) cons
 }
 
 
-constexpr inline tVector3d Frame::get_absolute_velocity_in_body(const tVector3d& x, const tVector3d& dx) const
+inline tVector3d Frame::get_absolute_velocity_in_body(const tVector3d& x, const tVector3d& dx) const
 {
     if ( is_inertial() )
         return dx;
@@ -169,7 +169,7 @@ constexpr inline tVector3d Frame::get_absolute_velocity_in_body(const tVector3d&
 }
 
     
-constexpr inline tVector3d Frame::get_absolute_velocity_in_parent(const tVector3d& x, const tVector3d& dx) const
+inline tVector3d Frame::get_absolute_velocity_in_parent(const tVector3d& x, const tVector3d& dx) const
 {
     if ( is_inertial() )
         return dx;
@@ -178,7 +178,7 @@ constexpr inline tVector3d Frame::get_absolute_velocity_in_parent(const tVector3
 }
 
 
-constexpr inline tVector3d Frame::get_absolute_velocity_in_inertial(const tVector3d& x, const tVector3d& dx) const
+inline tVector3d Frame::get_absolute_velocity_in_inertial(const tVector3d& x, const tVector3d& dx) const
 {
     if ( is_inertial() )
         return tVector3d(dx);
@@ -278,7 +278,7 @@ inline std::pair<tVector3d,tVector3d> Frame::get_position_and_velocity_in_target
  }
 }
 
-constexpr inline tMatrix3x3 Frame::get_absolute_rotation_matrix() const
+inline tMatrix3x3 Frame::get_absolute_rotation_matrix() const
 {
     if ( is_inertial() ) 
         return tMatrix3x3::eye();
@@ -292,7 +292,7 @@ constexpr inline tMatrix3x3 Frame::get_absolute_rotation_matrix() const
 }
 
 
-constexpr inline tVector3d Frame::get_omega_absolute_in_body() const
+inline tVector3d Frame::get_omega_absolute_in_body() const
 {
     if ( is_inertial() )
         return tVector3d::zeros();
@@ -304,7 +304,7 @@ constexpr inline tVector3d Frame::get_omega_absolute_in_body() const
 }
 
 
-constexpr inline tVector3d Frame::get_omega_absolute_in_parent() const
+inline tVector3d Frame::get_omega_absolute_in_parent() const
 {
     if ( is_inertial() )
         return tVector3d::zeros();
@@ -548,7 +548,7 @@ inline tVector3d Frame::get_omega_in_target(const Frame& target) const
 }
 
 
-constexpr inline tVector3d Frame::get_omega_absolute_in_inertial() const
+inline tVector3d Frame::get_omega_absolute_in_inertial() const
 {
     if ( is_inertial() )
         return tVector3d::zeros();

@@ -74,7 +74,7 @@ class Frame
     //! Applies x = xO + Qpc*x' over all the chain of parent frames until the inertial frame
     //! is reached
     //! @param[in] x: the vector of this frame to be computed. Defaults to the origin (0,0,0)
-    constexpr tVector3d get_absolute_position(const tVector3d& x = tVector3d(0.0)) const;
+    tVector3d get_absolute_position(const tVector3d& x = tVector3d(0.0)) const;
 
     //!  Returns the absolute velocity of a point \p x with velocity \p dx of this frame
     //! AND projects it back to this frame
@@ -83,7 +83,7 @@ class Frame
     //! xBody = Q(Body|Inertial)xInertial
     //! @param[in] x: position of the point of this frame. Defaults to the origin (0,0,0)
     //! @param[in] dx: local velocity of the point of this frame. Defaults to fixed point (0,0,0)
-    constexpr tVector3d get_absolute_velocity_in_body(const tVector3d& x = tVector3d(0.0),
+    tVector3d get_absolute_velocity_in_body(const tVector3d& x = tVector3d(0.0),
                                                       const tVector3d& dx = tVector3d(0.0) 
                                                      ) const;
 
@@ -94,7 +94,7 @@ class Frame
     //! xParent = Q(Parent|Inertial)xInertial
     //! @param[in] x: position of the point of this frame. Defaults to the origin (0,0,0)
     //! @param[in] dx: local velocity of the point of this frame. Defaults to fixed point (0,0,0)
-    constexpr tVector3d get_absolute_velocity_in_parent(const tVector3d& x = tVector3d(0.0),
+    tVector3d get_absolute_velocity_in_parent(const tVector3d& x = tVector3d(0.0),
                                                         const tVector3d& dx = tVector3d(0.0)
                                                        ) const;
     
@@ -104,7 +104,7 @@ class Frame
     //! inertial frame is reached.
     //! @param[in] x: position of the point of this frame. Defaults to the origin (0,0,0)
     //! @param[in] dx: local velocity of the point of this frame. Defaults to fixed point (0,0,0)
-    constexpr tVector3d get_absolute_velocity_in_inertial(const tVector3d& x = tVector3d(0.0),
+    tVector3d get_absolute_velocity_in_inertial(const tVector3d& x = tVector3d(0.0),
                                                           const tVector3d& dx = tVector3d(0.0)
                                                          ) const;
 
@@ -163,19 +163,19 @@ class Frame
 
     //! Computes the rotation matrix from this frame to the inertial frame
     //! x|Inertial = Q(Inertial|Body)x|Body
-    constexpr tMatrix3x3 get_absolute_rotation_matrix() const;
+    tMatrix3x3 get_absolute_rotation_matrix() const;
 
     //! Computes the total (i.e. wrt the inertial frame) angular velocity of 
     //! the frame, written in this frame
-    constexpr tVector3d get_omega_absolute_in_body() const;
+    tVector3d get_omega_absolute_in_body() const;
 
     //! Computes the total (i.e. wrt the inertial frame) angular velocity
     //! of the frame, written in this frame's parent
-    constexpr tVector3d get_omega_absolute_in_parent() const;
+    tVector3d get_omega_absolute_in_parent() const;
 
     //! Computes the total (i.e. wrt the inertial frame) angular velocity
     //! of the frame, written in the inertial frame
-    constexpr tVector3d get_omega_absolute_in_inertial() const;
+    tVector3d get_omega_absolute_in_inertial() const;
 
     /** 
      *  This function takes two frames \p f1 and \p f2, and computes the generation

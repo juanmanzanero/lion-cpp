@@ -145,6 +145,11 @@ typename std::enable_if<!std::is_same<T,scalar>::value,Vector3d<timeseries>>::ty
 template<typename T = timeseries>
 typename std::enable_if<!std::is_same<T,scalar>::value,Vector3d<timeseries>>::type operator+(const sVector3d& lhs, const tVector3d& rhs) { return rhs+lhs; }
 
+template<typename T = timeseries>
+typename std::enable_if<!std::is_same<T,scalar>::value,Vector3d<timeseries>>::type operator/(const tVector3d& lhs, const scalar rhs) { return {lhs[0]/rhs, lhs[1]/rhs, lhs[2]/rhs}; }
+
+
+
 #include "vector3d.hpp"
 
 constexpr sVector3d UX{1.0, 0.0, 0.0};

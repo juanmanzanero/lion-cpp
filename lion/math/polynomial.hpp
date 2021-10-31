@@ -197,7 +197,7 @@ inline Polynomial<T>::Polynomial(const std::vector<Polynomial>& p)
 
 
 template<class T>
-inline T Polynomial<T>::operator[](timeseries x) const
+inline T Polynomial<T>::operator[](scalar x) const
 {
     if ( _n_blocks == 0 )
         return T(0.0);
@@ -207,9 +207,9 @@ inline T Polynomial<T>::operator[](timeseries x) const
     while(x > _bi[block])
         ++block;
 
-    timeseries xi = 2.0*(x-_ai[block])/(_bi[block]-_ai[block]) - 1.0;
+    scalar xi = 2.0*(x-_ai[block])/(_bi[block]-_ai[block]) - 1.0;
 
-    std::vector<timeseries> Lk = legendre_polynomials(_N[block],xi);
+    std::vector<scalar> Lk = legendre_polynomials(_N[block],xi);
 
     T result = T(0.0);
 
@@ -221,7 +221,7 @@ inline T Polynomial<T>::operator[](timeseries x) const
 
 
 template<class T>
-inline T Polynomial<T>::operator()(timeseries x) const
+inline T Polynomial<T>::operator()(scalar x) const
 {
     if ( _n_blocks == 0 )
         return T(0.0);
@@ -282,7 +282,7 @@ inline Polynomial<T> Polynomial<T>::integral() const
             coeffs[n][i] *= 0.5*(_bi[n]-_ai[n]);
 
         // Set the L0 coefficient to match left_value at p(-1)
-        std::vector<timeseries> Lk = legendre_polynomials(_N[n]+1,-1.0);
+        std::vector<scalar> Lk = legendre_polynomials(_N[n]+1,-1.0);
 
         T result = 0.0;
 
