@@ -194,7 +194,6 @@ template <typename T>
 constexpr Matrix3x3<T> crossmat(const Vector3d<T> &v);
 
 using sMatrix3x3 = Matrix3x3<scalar>;
-using tMatrix3x3 = Matrix3x3<timeseries>;
 
 // implementation header
 #include "matrix3x3.hpp"

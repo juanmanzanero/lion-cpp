@@ -1,7 +1,8 @@
 #include <tuple>
 
-inline Frame::Frame(const tVector3d& x, const tVector3d& dx, const std::vector<timeseries> angles, 
-                    const std::vector<timeseries> dangles, const std::vector<Axis> axis, const Frame& parent) 
+template<typename T>
+inline Frame<T>::Frame(const typename Frame<T>::tVector3d& x, const typename Frame<T>::tVector3d& dx, const std::vector<T> angles, 
+                    const std::vector<T> dangles, const std::vector<Axis> axis, const Frame<T>& parent) 
 : _parent(&parent),
   _x(x), 
   _dx(dx), 
@@ -43,7 +44,8 @@ inline Frame::Frame(const tVector3d& x, const tVector3d& dx, const std::vector<t
 }
 
 
-inline void Frame::update()
+template<typename T>
+inline void Frame<T>::update()
 {
     if ( is_inertial() )
         return;
@@ -120,7 +122,8 @@ inline void Frame::update()
 }
 
 
-inline const Frame& Frame::get_parent() const 
+template<typename T>
+inline const Frame<T>& Frame<T>::get_parent() const 
 {
  try
  { 
@@ -137,7 +140,8 @@ inline const Frame& Frame::get_parent() const
 }
 
 
-constexpr inline size_t Frame::generation() const
+template<typename T>
+constexpr inline size_t Frame<T>::generation() const
 {
     size_t gen = 0;
     const Frame* current = this;
@@ -151,7 +155,8 @@ constexpr inline size_t Frame::generation() const
 }
 
 
-inline tVector3d Frame::get_absolute_position(const tVector3d& x) const
+template<typename T>
+inline typename Frame<T>::tVector3d Frame<T>::get_absolute_position(const typename Frame<T>::tVector3d& x) const
 {
     if (is_inertial())
         return x;
@@ -160,7 +165,8 @@ inline tVector3d Frame::get_absolute_position(const tVector3d& x) const
 }
 
 
-inline tVector3d Frame::get_absolute_velocity_in_body(const tVector3d& x, const tVector3d& dx) const
+template<typename T>
+inline typename Frame<T>::tVector3d Frame<T>::get_absolute_velocity_in_body(const typename Frame<T>::tVector3d& x, const typename Frame<T>::tVector3d& dx) const
 {
     if ( is_inertial() )
         return dx;
@@ -169,7 +175,8 @@ inline tVector3d Frame::get_absolute_velocity_in_body(const tVector3d& x, const 
 }
 
     
-inline tVector3d Frame::get_absolute_velocity_in_parent(const tVector3d& x, const tVector3d& dx) const
+template<typename T>
+inline typename Frame<T>::tVector3d Frame<T>::get_absolute_velocity_in_parent(const typename Frame<T>::tVector3d& x, const typename Frame<T>::tVector3d& dx) const
 {
     if ( is_inertial() )
         return dx;
@@ -178,15 +185,17 @@ inline tVector3d Frame::get_absolute_velocity_in_parent(const tVector3d& x, cons
 }
 
 
-inline tVector3d Frame::get_absolute_velocity_in_inertial(const tVector3d& x, const tVector3d& dx) const
+template<typename T>
+inline typename Frame<T>::tVector3d Frame<T>::get_absolute_velocity_in_inertial(const typename Frame<T>::tVector3d& x, const typename Frame<T>::tVector3d& dx) const
 {
     if ( is_inertial() )
-        return tVector3d(dx);
+        return typename Frame<T>::tVector3d(dx);
 
     return get_parent_ptr()->get_absolute_velocity_in_inertial(_x + _Qpc*x, _dx + _Qpc*(dx+cross(_omega_pc_self,x)));
 }
  
-inline std::pair<tVector3d,tVector3d> Frame::get_position_and_velocity_in_target(const Frame& target, const tVector3d& x, const tVector3d& dx) const
+template<typename T>
+inline std::pair<typename Frame<T>::tVector3d,typename Frame<T>::tVector3d> Frame<T>::get_position_and_velocity_in_target(const Frame<T>& target, const typename Frame<T>::tVector3d& x, const typename Frame<T>::tVector3d& dx) const
 {
  try
  {
@@ -278,7 +287,8 @@ inline std::pair<tVector3d,tVector3d> Frame::get_position_and_velocity_in_target
  }
 }
 
-inline tMatrix3x3 Frame::get_absolute_rotation_matrix() const
+template<typename T>
+inline typename Frame<T>::tMatrix3x3 Frame<T>::get_absolute_rotation_matrix() const
 {
     if ( is_inertial() ) 
         return tMatrix3x3::eye();
@@ -292,7 +302,8 @@ inline tMatrix3x3 Frame::get_absolute_rotation_matrix() const
 }
 
 
-inline tVector3d Frame::get_omega_absolute_in_body() const
+template<typename T>
+inline typename Frame<T>::tVector3d Frame<T>::get_omega_absolute_in_body() const
 {
     if ( is_inertial() )
         return tVector3d::zeros();
@@ -304,7 +315,8 @@ inline tVector3d Frame::get_omega_absolute_in_body() const
 }
 
 
-inline tVector3d Frame::get_omega_absolute_in_parent() const
+template<typename T>
+inline typename Frame<T>::tVector3d Frame<T>::get_omega_absolute_in_parent() const
 {
     if ( is_inertial() )
         return tVector3d::zeros();
@@ -316,7 +328,8 @@ inline tVector3d Frame::get_omega_absolute_in_parent() const
 }
 
 
-inline tMatrix3x3 Frame::get_rotation_matrix(const Frame& target) const
+template<typename T>
+inline typename Frame<T>::tMatrix3x3 Frame<T>::get_rotation_matrix(const Frame<T>& target) const
 /*
 *       frame_i.get_rotation_matrix(frame_j) = Qji
 */
@@ -387,7 +400,8 @@ inline tMatrix3x3 Frame::get_rotation_matrix(const Frame& target) const
 }
 
 
-inline tVector3d Frame::get_omega_in_body(const Frame& target) const
+template<typename T>
+inline typename Frame<T>::tVector3d Frame<T>::get_omega_in_body(const Frame<T>& target) const
 {
  try
  {
@@ -461,7 +475,8 @@ inline tVector3d Frame::get_omega_in_body(const Frame& target) const
 }
 
 
-inline tVector3d Frame::get_omega_in_parent(const Frame& target) const
+template<typename T>
+inline typename Frame<T>::tVector3d Frame<T>::get_omega_in_parent(const Frame<T>& target) const
 {
  try
  {
@@ -474,7 +489,8 @@ inline tVector3d Frame::get_omega_in_parent(const Frame& target) const
 }
 
 
-inline tVector3d Frame::get_omega_in_target(const Frame& target) const
+template<typename T>
+inline typename Frame<T>::tVector3d Frame<T>::get_omega_in_target(const Frame<T>& target) const
 {
  try
  {
@@ -548,7 +564,8 @@ inline tVector3d Frame::get_omega_in_target(const Frame& target) const
 }
 
 
-inline tVector3d Frame::get_omega_absolute_in_inertial() const
+template<typename T>
+inline typename Frame<T>::tVector3d Frame<T>::get_omega_absolute_in_inertial() const
 {
     if ( is_inertial() )
         return tVector3d::zeros();
@@ -557,7 +574,8 @@ inline tVector3d Frame::get_omega_absolute_in_inertial() const
 }
 
 
-inline size_t Frame::get_crossing_generation(const Frame& f1, const Frame& f2)
+template<typename T>
+inline size_t Frame<T>::get_crossing_generation(const Frame<T>& f1, const Frame<T>& f2)
 {
  try
  {
@@ -595,7 +613,8 @@ inline size_t Frame::get_crossing_generation(const Frame& f1, const Frame& f2)
 }
 
 
-constexpr inline void Frame::set_origin(const tVector3d& x, const bool bUpdate) 
+template<typename T>
+constexpr inline void Frame<T>::set_origin(const typename Frame<T>::tVector3d& x, const bool bUpdate) 
 { 
     if (is_inertial())
         return;
@@ -610,7 +629,8 @@ constexpr inline void Frame::set_origin(const tVector3d& x, const bool bUpdate)
 } 
 
 
-constexpr inline void Frame::set_origin(const tVector3d& x, const tVector3d& dx, const bool bUpdate) 
+template<typename T>
+constexpr inline void Frame<T>::set_origin(const typename Frame<T>::tVector3d& x, const typename Frame<T>::tVector3d& dx, const bool bUpdate) 
 { 
     if (is_inertial())
         return;
@@ -626,7 +646,8 @@ constexpr inline void Frame::set_origin(const tVector3d& x, const tVector3d& dx,
 }  
 
 
-constexpr inline void Frame::set_velocity(const tVector3d& dx, const bool bUpdate)
+template<typename T>
+constexpr inline void Frame<T>::set_velocity(const typename Frame<T>::tVector3d& dx, const bool bUpdate)
 { 
     if (is_inertial())
         return;
@@ -641,7 +662,8 @@ constexpr inline void Frame::set_velocity(const tVector3d& dx, const bool bUpdat
 }
 
 
-inline void Frame::set_rotation_angle(const size_t which, const timeseries angle, const bool bUpdate) 
+template<typename T>
+inline void Frame<T>::set_rotation_angle(const size_t which, const T angle, const bool bUpdate) 
 { 
     _angles.at(which) = angle; 
     _updated = false; 
@@ -653,7 +675,8 @@ inline void Frame::set_rotation_angle(const size_t which, const timeseries angle
 } 
 
 
-inline void Frame::set_rotation_angle(const size_t which, const timeseries angle, const timeseries dangle, const bool bUpdate) 
+template<typename T>
+inline void Frame<T>::set_rotation_angle(const size_t which, const T angle, const T dangle, const bool bUpdate) 
 {
     _angles.at(which) = angle; 
     _dangles.at(which) = dangle; 
@@ -666,7 +689,8 @@ inline void Frame::set_rotation_angle(const size_t which, const timeseries angle
 } 
 
 
-inline void Frame::set_angular_speed(const size_t which, const timeseries dangle, const bool bUpdate) 
+template<typename T>
+inline void Frame<T>::set_angular_speed(const size_t which, const T dangle, const bool bUpdate) 
 {
     _dangles.at(which) = dangle; 
     _updated = false; 
@@ -678,7 +702,8 @@ inline void Frame::set_angular_speed(const size_t which, const timeseries dangle
 }  
 
 
-inline void Frame::add_rotation(const timeseries angle, const timeseries dangle, const Axis axis, const bool bUpdate) 
+template<typename T>
+inline void Frame<T>::add_rotation(const T angle, const T dangle, const Axis axis, const bool bUpdate) 
 { 
     if (is_inertial())
         return;

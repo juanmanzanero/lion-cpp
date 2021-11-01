@@ -39,7 +39,7 @@ const double& ODE45<F,U,N>::get(const std::string& name)
 
 
 template<typename F, typename U, size_t N>
-double ODE45<F,U,N>::initial_dt_estimation(F& f, U& u, const std::array<timeseries,N>& q0, scalar t_start, scalar t_end) 
+double ODE45<F,U,N>::initial_dt_estimation(F& f, U& u, const std::array<scalar,N>& q0, scalar t_start, scalar t_end) 
 {
     const double hmin = 16*std::abs(t_start)*eps;
     const double htspan = t_end - t_start;
@@ -55,7 +55,7 @@ double ODE45<F,U,N>::initial_dt_estimation(F& f, U& u, const std::array<timeseri
 
 
 template<typename F, typename U, size_t N>
-void ODE45<F,U,N>::take_step(F& f, U& u, std::array<timeseries,N>& q, timeseries& t, scalar& dt, 
+void ODE45<F,U,N>::take_step(F& f, U& u, std::array<scalar,N>& q, scalar& t, scalar& dt, 
                              const scalar t_end, bool& t_end_reached )
 {
     t_end_reached = false;
@@ -76,7 +76,7 @@ void ODE45<F,U,N>::take_step(F& f, U& u, std::array<timeseries,N>& q, timeseries
     bool nofailed = true;
     scalar tnew;
     typename std::remove_reference<decltype(q)>::type qnew;
-    timeseries err;
+    scalar err;
     while (true)
     {
         const auto   q1 = q;

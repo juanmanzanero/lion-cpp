@@ -11,7 +11,7 @@ class ODE45_test : public ::testing::Test
         ODE45<Armonic_oscillator,No_control,2>::set("relative error",1.0e-3); 
     }
 
-    const std::array<std::array<timeseries,2>,25> ref_solution = 
+    const std::array<std::array<scalar,2>,25> ref_solution = 
                     {{
                         {{  1.0000000000000000e+00,   0.0000000000000000e+00}},
                         {{  9.9999991923746101e-01,  -2.0095090911099770e-04}},
@@ -40,7 +40,7 @@ class ODE45_test : public ::testing::Test
                         {{  2.8366236686220403e-01,   4.7946147954704305e-01}}
                     }};
 
-    const std::array<timeseries,25> ref_t = {
+    const std::array<scalar,25> ref_t = {
                       0.0000000000000000e+00,
                       8.0380365808306554e-04,
                       4.8228219484983941e-03,
@@ -71,7 +71,7 @@ class ODE45_test : public ::testing::Test
     static constexpr double t0 = 0.0;
     static constexpr double tf = 10.0;
 
-    static inline std::array<timeseries,2> q = {1.0, 0.0};
+    static inline std::array<scalar,2> q = {1.0, 0.0};
     static inline double t = t0;
     static inline double dt;
     static inline bool t_end_reached = false;

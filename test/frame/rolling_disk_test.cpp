@@ -5,24 +5,24 @@
 #include <cmath>
 #include <tuple>
 
-void generic_inertial_frame_tests(Frame& inertial_frame);
+void generic_inertial_frame_tests(sFrame& inertial_frame);
 
 class Rolling_disk_test : public ::testing::TestWithParam<std::tuple<double,double>>
 {
  protected:
 
     const scalar R = 0.25;
-    const timeseries x0 = 3.43;
+    const scalar x0 = 3.43;
     const scalar omega = pi;
-    const timeseries theta = pi/6.0;
+    const scalar theta = pi/6.0;
     const scalar alpha = std::get<0>(GetParam());
     const scalar dalpha = std::get<1>(GetParam());
 
-    Frame inertial_frame = Frame();
-    Frame inclined_frame = Frame(tVector3d(0.0), tVector3d(0.0), {alpha}, {dalpha}, {Z}, inertial_frame);
-    Frame frame1 = Frame({x0,R,0.0}, {omega*R,0.0,0.0},{}, {}, {}, inclined_frame);
-    Frame frame2 = Frame(tVector3d(0.0),tVector3d(0.0),{theta},{-omega},{Z}, frame1);
-    Frame frame3 = Frame(tVector3d(0.0), tVector3d(0.0), {-theta}, {0.0}, {Z}, frame2);
+    sFrame inertial_frame = {};
+    sFrame inclined_frame = {sVector3d(0.0), sVector3d(0.0), {alpha}, {dalpha}, {Z}, inertial_frame};
+    sFrame frame1         = {{x0,R,0.0}, {omega*R,0.0,0.0},{}, {}, {}, inclined_frame};
+    sFrame frame2         = {sVector3d(0.0),sVector3d(0.0),{theta},{-omega},{Z}, frame1};
+    sFrame frame3         = {sVector3d(0.0), sVector3d(0.0), {-theta}, {0.0}, {Z}, frame2};
 };
 
 

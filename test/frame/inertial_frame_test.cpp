@@ -11,15 +11,15 @@ class Inertial_frame_test : public ::testing::Test
                   {} ;
 
 
-    Frame inertial_frame;
+    sFrame inertial_frame;
 };
 
 
-void generic_inertial_frame_tests(Frame& inertial_frame)
+void generic_inertial_frame_tests(sFrame& inertial_frame)
 {
     try
     { 
-        const Frame& parent(inertial_frame.get_parent());
+        const sFrame& parent(inertial_frame.get_parent());
         out(2) << &parent << std::endl;
         FAIL();
     } 

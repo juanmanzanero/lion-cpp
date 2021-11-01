@@ -2,19 +2,21 @@
 #include "lion/math/matrix_extensions.h"
 #include "gtest/gtest.h"
 
+using timeseries = CppAD::AD<double>;
+
 class FG_eval {
 public:
-    using ADvector = CppAD::vector<CppAD::AD<double>>;
+    using ADvector = CppAD::vector<timeseries>;
 
     void operator()(ADvector& fg, const ADvector& x)
     {   assert( fg.size() == 3 );
         assert( x.size()  == 4 );
 
         // Fortran style indexing
-        CppAD::AD<double> x1 = x[0];
-        CppAD::AD<double> x2 = x[1];
-        CppAD::AD<double> x3 = x[2];
-        CppAD::AD<double> x4 = x[3];
+        timeseries x1 = x[0];
+        timeseries x2 = x[1];
+        timeseries x3 = x[2];
+        timeseries x4 = x[3];
         // f(x)
         fg[0] = x1 * x4 * (x1 + x2 + x3) + x3;
         // g_1 (x)

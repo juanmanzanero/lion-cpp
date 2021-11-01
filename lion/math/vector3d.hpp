@@ -331,7 +331,7 @@ inline std::istream& operator>>(std::istream &is, Vector3d<T> &v)
 
 
 template<typename T>
-typename std::enable_if<!std::is_same<T,scalar>::value,Vector3d<timeseries>>::type operator+(tVector3d lhs, const sVector3d& rhs)
+typename std::enable_if<!std::is_same<T,scalar>::value,Vector3d<T>>::type operator+(Vector3d<T> lhs, const sVector3d& rhs)
 {
     lhs[0] += rhs[0];
     lhs[1] += rhs[1];

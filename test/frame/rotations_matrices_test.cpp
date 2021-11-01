@@ -6,20 +6,20 @@
 #include "lion/thirdparty/include/logger.hpp"
 
   
-void generic_inertial_frame_tests(Frame& inertial_frame);
+void generic_inertial_frame_tests(sFrame& inertial_frame);
 
 class Rotated_frames_test : public ::testing::Test
 {
  protected:
     Rotated_frames_test(): inertial_frame(),
-                           frame_rot_x(tVector3d(0.0), tVector3d(0.0),{theta_x},{w_x},{X},inertial_frame),
-                           frame_rot_y(tVector3d(0.0), tVector3d(0.0),{theta_y},{w_y},{Y},inertial_frame),
-                           frame_rot_z(tVector3d(0.0), tVector3d(0.0),{theta_z},{w_z},{Z},inertial_frame),
-                           frame_rot_xy(tVector3d(0.0), tVector3d(0.0),{theta_x,theta_y},{w_x,w_y},{X,Y},inertial_frame),
-                           frame_rot_yz(tVector3d(0.0), tVector3d(0.0),{theta_y,theta_z},{w_y,w_z},{Y,Z},inertial_frame),
-                           frame_rot_zx(tVector3d(0.0), tVector3d(0.0),{theta_z,theta_x},{w_z,w_x},{Z,X},inertial_frame),
-                           frame_rot_xyz(tVector3d(0.0), tVector3d(0.0),{theta_x,theta_y,theta_z},{w_x,w_y,w_z},{X,Y,Z},inertial_frame),
-                           euler_frame(tVector3d(0.0), tVector3d(0.0), {phi,theta,psi},{dphi,dtheta,dpsi},{Z,X,Z},inertial_frame)
+                           frame_rot_x(sVector3d(0.0), sVector3d(0.0),{theta_x},{w_x},{X},inertial_frame),
+                           frame_rot_y(sVector3d(0.0), sVector3d(0.0),{theta_y},{w_y},{Y},inertial_frame),
+                           frame_rot_z(sVector3d(0.0), sVector3d(0.0),{theta_z},{w_z},{Z},inertial_frame),
+                           frame_rot_xy(sVector3d(0.0), sVector3d(0.0),{theta_x,theta_y},{w_x,w_y},{X,Y},inertial_frame),
+                           frame_rot_yz(sVector3d(0.0), sVector3d(0.0),{theta_y,theta_z},{w_y,w_z},{Y,Z},inertial_frame),
+                           frame_rot_zx(sVector3d(0.0), sVector3d(0.0),{theta_z,theta_x},{w_z,w_x},{Z,X},inertial_frame),
+                           frame_rot_xyz(sVector3d(0.0), sVector3d(0.0),{theta_x,theta_y,theta_z},{w_x,w_y,w_z},{X,Y,Z},inertial_frame),
+                           euler_frame(sVector3d(0.0), sVector3d(0.0), {phi,theta,psi},{dphi,dtheta,dpsi},{Z,X,Z},inertial_frame)
                   {} ;
 
     // Data used
@@ -30,24 +30,24 @@ class Rotated_frames_test : public ::testing::Test
     const double w_y = -5.6;
     const double w_z = 0.12;
 
-    const timeseries phi = 10.0*DEG;
-    const timeseries theta = 50.0*DEG;
-    const timeseries psi = -300.0*DEG;
+    const scalar phi = 10.0*DEG;
+    const scalar theta = 50.0*DEG;
+    const scalar psi = -300.0*DEG;
 
-    const timeseries dphi = pi;
-    const timeseries dtheta = pi/3.0;
-    const timeseries dpsi = 2.0*pi;
+    const scalar dphi = pi;
+    const scalar dtheta = pi/3.0;
+    const scalar dpsi = 2.0*pi;
 
 
-    Frame inertial_frame;
-    const Frame frame_rot_x;
-    const Frame frame_rot_y;
-    const Frame frame_rot_z;
-    const Frame frame_rot_xy;
-    const Frame frame_rot_yz;
-    const Frame frame_rot_zx;
-    const Frame frame_rot_xyz;
-    const Frame euler_frame;
+    sFrame inertial_frame;
+    const sFrame frame_rot_x;
+    const sFrame frame_rot_y;
+    const sFrame frame_rot_z;
+    const sFrame frame_rot_xy;
+    const sFrame frame_rot_yz;
+    const sFrame frame_rot_zx;
+    const sFrame frame_rot_xyz;
+    const sFrame euler_frame;
 };
 
 class Rotation_wrt_target_test : public :: testing::Test
@@ -70,102 +70,102 @@ class Rotation_wrt_target_test : public :: testing::Test
 
 
     // Data used
-    const std::array<timeseries,9> theta = {1.0, -0.4, 2.0, 1.2, -0.333, 0.89, 0.5, -0.6667, 0.707};
-    const std::array<timeseries,9> dtheta = {0.1, -0.25, pi/12.0, -pi/12.0, pi, -pi/4.0, pi/8.0, -pi/8.0, 0.668};
+    const std::array<scalar,9> theta = {1.0, -0.4, 2.0, 1.2, -0.333, 0.89, 0.5, -0.6667, 0.707};
+    const std::array<scalar,9> dtheta = {0.1, -0.25, pi/12.0, -pi/12.0, pi, -pi/4.0, pi/8.0, -pi/8.0, 0.668};
     const std::array<Axis,9> axis = {X,Y,Z,Z,Y,X,X,Z,X};
 
-    const Frame frame1;
-    const Frame frame2 = Frame(tVector3d(0.0), tVector3d(0.0), {theta[0]}, {dtheta[0]}, {axis[0]}, frame1);
-    const Frame frame3 = Frame(tVector3d(0.0), tVector3d(0.0), {theta[1]}, {dtheta[1]}, {axis[1]}, frame2);
-    const Frame frame4 = Frame(tVector3d(0.0), tVector3d(0.0), {theta[2]}, {dtheta[2]}, {axis[2]}, frame2);
-    const Frame frame5 = Frame(tVector3d(0.0), tVector3d(0.0), {theta[3]}, {dtheta[3]}, {axis[3]}, frame3);
-    const Frame frame6 = Frame(tVector3d(0.0), tVector3d(0.0), {theta[4]}, {dtheta[4]}, {axis[4]}, frame4);
-    const Frame frame7 = Frame(tVector3d(0.0), tVector3d(0.0), {theta[5]}, {dtheta[5]}, {axis[5]}, frame5);
-    const Frame frame8 = Frame(tVector3d(0.0), tVector3d(0.0), {theta[6]}, {dtheta[6]}, {axis[6]}, frame5);
-    const Frame frame9 = Frame(tVector3d(0.0), tVector3d(0.0), {theta[7]}, {dtheta[7]}, {axis[7]}, frame6);
-    const Frame frame10 = Frame(tVector3d(0.0), tVector3d(0.0), {theta[8]}, {dtheta[8]}, {axis[8]}, frame6);
+    const sFrame frame1;
+    const sFrame frame2 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[0]}, {dtheta[0]}, {axis[0]}, frame1);
+    const sFrame frame3 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[1]}, {dtheta[1]}, {axis[1]}, frame2);
+    const sFrame frame4 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[2]}, {dtheta[2]}, {axis[2]}, frame2);
+    const sFrame frame5 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[3]}, {dtheta[3]}, {axis[3]}, frame3);
+    const sFrame frame6 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[4]}, {dtheta[4]}, {axis[4]}, frame4);
+    const sFrame frame7 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[5]}, {dtheta[5]}, {axis[5]}, frame5);
+    const sFrame frame8 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[6]}, {dtheta[6]}, {axis[6]}, frame5);
+    const sFrame frame9 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[7]}, {dtheta[7]}, {axis[7]}, frame6);
+    const sFrame frame10 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[8]}, {dtheta[8]}, {axis[8]}, frame6);
 
-    const Frame frame11;
+    const sFrame frame11;
 
     // Rotation matrices
-    const tMatrix3x3 Q12 = rotation_matrix_x(theta[0]);
-    const tMatrix3x3 Q23 = rotation_matrix_y(theta[1]);
-    const tMatrix3x3 Q35 = rotation_matrix_z(theta[3]);
-    const tMatrix3x3 Q57 = rotation_matrix_x(theta[5]);
-    const tMatrix3x3 Q58 = rotation_matrix_x(theta[6]);
-    const tMatrix3x3 Q24 = rotation_matrix_z(theta[2]);
-    const tMatrix3x3 Q46 = rotation_matrix_y(theta[4]);
-    const tMatrix3x3 Q69 = rotation_matrix_z(theta[7]);
-    const tMatrix3x3 Q610 = rotation_matrix_x(theta[8]);
+    const sMatrix3x3 Q12 = rotation_matrix_x(theta[0]);
+    const sMatrix3x3 Q23 = rotation_matrix_y(theta[1]);
+    const sMatrix3x3 Q35 = rotation_matrix_z(theta[3]);
+    const sMatrix3x3 Q57 = rotation_matrix_x(theta[5]);
+    const sMatrix3x3 Q58 = rotation_matrix_x(theta[6]);
+    const sMatrix3x3 Q24 = rotation_matrix_z(theta[2]);
+    const sMatrix3x3 Q46 = rotation_matrix_y(theta[4]);
+    const sMatrix3x3 Q69 = rotation_matrix_z(theta[7]);
+    const sMatrix3x3 Q610 = rotation_matrix_x(theta[8]);
 
     // Rotation matrices derivatives
-    const tMatrix3x3 dQ12 = dtheta[0] * drotation_matrix_x(theta[0]);
-    const tMatrix3x3 dQ23 = dtheta[1] * drotation_matrix_y(theta[1]);
-    const tMatrix3x3 dQ35 = dtheta[3] * drotation_matrix_z(theta[3]);
-    const tMatrix3x3 dQ57 = dtheta[5] * drotation_matrix_x(theta[5]);
-    const tMatrix3x3 dQ58 = dtheta[6] * drotation_matrix_x(theta[6]);
-    const tMatrix3x3 dQ24 = dtheta[2] * drotation_matrix_z(theta[2]);
-    const tMatrix3x3 dQ46 = dtheta[4] * drotation_matrix_y(theta[4]);
-    const tMatrix3x3 dQ69 = dtheta[7] * drotation_matrix_z(theta[7]);
-    const tMatrix3x3 dQ610 = dtheta[8] * drotation_matrix_x(theta[8]);
+    const sMatrix3x3 dQ12 = dtheta[0] * drotation_matrix_x(theta[0]);
+    const sMatrix3x3 dQ23 = dtheta[1] * drotation_matrix_y(theta[1]);
+    const sMatrix3x3 dQ35 = dtheta[3] * drotation_matrix_z(theta[3]);
+    const sMatrix3x3 dQ57 = dtheta[5] * drotation_matrix_x(theta[5]);
+    const sMatrix3x3 dQ58 = dtheta[6] * drotation_matrix_x(theta[6]);
+    const sMatrix3x3 dQ24 = dtheta[2] * drotation_matrix_z(theta[2]);
+    const sMatrix3x3 dQ46 = dtheta[4] * drotation_matrix_y(theta[4]);
+    const sMatrix3x3 dQ69 = dtheta[7] * drotation_matrix_z(theta[7]);
+    const sMatrix3x3 dQ610 = dtheta[8] * drotation_matrix_x(theta[8]);
 
     // Full path rotation matrices
-    const tMatrix3x3 Q47  = transpose(Q24)*Q23*Q35*Q57 ;
-    const tMatrix3x3 Q29  = Q24*Q46*Q69;
-    const tMatrix3x3 Q19  = Q12*Q29;
-    const tMatrix3x3 Q28  = Q23*Q35*Q58;
-    const tMatrix3x3 Q210 = Q24*Q46*Q610;
-    const tMatrix3x3 Q810 = transpose(Q28)*Q210;
-    const tMatrix3x3 Q78  = transpose(Q57)*Q58 ;
+    const sMatrix3x3 Q47  = transpose(Q24)*Q23*Q35*Q57 ;
+    const sMatrix3x3 Q29  = Q24*Q46*Q69;
+    const sMatrix3x3 Q19  = Q12*Q29;
+    const sMatrix3x3 Q28  = Q23*Q35*Q58;
+    const sMatrix3x3 Q210 = Q24*Q46*Q610;
+    const sMatrix3x3 Q810 = transpose(Q28)*Q210;
+    const sMatrix3x3 Q78  = transpose(Q57)*Q58 ;
 
     // Full path rotation matrices derivatives
-    const tMatrix3x3 dQ47 = transpose(dQ24)*Q23*Q35*Q57 + transpose(Q24)*(dQ23*Q35*Q57+Q23*dQ35*Q57+Q23*Q35*dQ57);
+    const sMatrix3x3 dQ47 = transpose(dQ24)*Q23*Q35*Q57 + transpose(Q24)*(dQ23*Q35*Q57+Q23*dQ35*Q57+Q23*Q35*dQ57);
 
-    const tMatrix3x3 dQ78 = transpose(dQ57)*Q58 + transpose(Q57)*dQ58;
+    const sMatrix3x3 dQ78 = transpose(dQ57)*Q58 + transpose(Q57)*dQ58;
 
-    const tMatrix3x3 dQ28 = dQ23*Q35*Q58 + Q23*dQ35*Q58 + Q23*Q35*dQ58;
-    const tMatrix3x3 dQ210 = dQ24*Q46*Q610 + Q24*dQ46*Q610 + Q24*Q46*dQ610;
-    const tMatrix3x3 dQ810 = transpose(dQ28)*Q210 + transpose(Q28)*dQ210;
+    const sMatrix3x3 dQ28 = dQ23*Q35*Q58 + Q23*dQ35*Q58 + Q23*Q35*dQ58;
+    const sMatrix3x3 dQ210 = dQ24*Q46*Q610 + Q24*dQ46*Q610 + Q24*Q46*dQ610;
+    const sMatrix3x3 dQ810 = transpose(dQ28)*Q210 + transpose(Q28)*dQ210;
 
-    const tMatrix3x3 dQ29 = dQ24*Q46*Q69 + Q24*dQ46*Q69 + Q24*Q46*dQ69;
+    const sMatrix3x3 dQ29 = dQ24*Q46*Q69 + Q24*dQ46*Q69 + Q24*Q46*dQ69;
 
-    const tMatrix3x3 dQ19 = dQ12*Q29 + Q12*dQ29;
+    const sMatrix3x3 dQ19 = dQ12*Q29 + Q12*dQ29;
 
     // Full path omega matrices
-    const tMatrix3x3 M_omega_47_7 = transpose(Q47)*dQ47;
-    const tMatrix3x3 M_omega_47_4 = dQ47*transpose(Q47);
+    const sMatrix3x3 M_omega_47_7 = transpose(Q47)*dQ47;
+    const sMatrix3x3 M_omega_47_4 = dQ47*transpose(Q47);
 
-    const tMatrix3x3 M_omega_78_8 = transpose(Q78)*dQ78;
-    const tMatrix3x3 M_omega_78_7 = dQ78*transpose(Q78);
+    const sMatrix3x3 M_omega_78_8 = transpose(Q78)*dQ78;
+    const sMatrix3x3 M_omega_78_7 = dQ78*transpose(Q78);
    
-    const tMatrix3x3 M_omega_810_10 = transpose(Q810)*dQ810;
-    const tMatrix3x3 M_omega_810_8  = dQ810*transpose(Q810);
+    const sMatrix3x3 M_omega_810_10 = transpose(Q810)*dQ810;
+    const sMatrix3x3 M_omega_810_8  = dQ810*transpose(Q810);
 
-    const tMatrix3x3 M_omega_29_9 = transpose(Q29)*dQ29;
-    const tMatrix3x3 M_omega_29_2 = dQ29*transpose(Q29);
+    const sMatrix3x3 M_omega_29_9 = transpose(Q29)*dQ29;
+    const sMatrix3x3 M_omega_29_2 = dQ29*transpose(Q29);
 
-    const tMatrix3x3 M_omega_19_9 = transpose(Q19)*dQ19;
-    const tMatrix3x3 M_omega_19_1 = dQ19*transpose(Q19);
+    const sMatrix3x3 M_omega_19_9 = transpose(Q19)*dQ19;
+    const sMatrix3x3 M_omega_19_1 = dQ19*transpose(Q19);
 
     // Full path omega vectors
-    const tVector3d omega_47_7 = omega_vector_from_matrix(M_omega_47_7);
-    const tVector3d omega_47_4 = omega_vector_from_matrix(M_omega_47_4);
+    const sVector3d omega_47_7 = omega_vector_from_matrix(M_omega_47_7);
+    const sVector3d omega_47_4 = omega_vector_from_matrix(M_omega_47_4);
 
-    const tVector3d omega_78_8 = omega_vector_from_matrix(M_omega_78_8);
-    const tVector3d omega_78_7 = omega_vector_from_matrix(M_omega_78_7);
+    const sVector3d omega_78_8 = omega_vector_from_matrix(M_omega_78_8);
+    const sVector3d omega_78_7 = omega_vector_from_matrix(M_omega_78_7);
 
-    const tVector3d omega_810_10 = omega_vector_from_matrix(M_omega_810_10);
-    const tVector3d omega_810_8  = omega_vector_from_matrix(M_omega_810_8);
+    const sVector3d omega_810_10 = omega_vector_from_matrix(M_omega_810_10);
+    const sVector3d omega_810_8  = omega_vector_from_matrix(M_omega_810_8);
 
-    const tVector3d omega_29_9 = omega_vector_from_matrix(M_omega_29_9);
-    const tVector3d omega_29_2  = omega_vector_from_matrix(M_omega_29_2);
+    const sVector3d omega_29_9 = omega_vector_from_matrix(M_omega_29_9);
+    const sVector3d omega_29_2  = omega_vector_from_matrix(M_omega_29_2);
 
-    const tVector3d omega_19_9 = omega_vector_from_matrix(M_omega_19_9);
-    const tVector3d omega_19_1  = omega_vector_from_matrix(M_omega_19_1);
+    const sVector3d omega_19_9 = omega_vector_from_matrix(M_omega_19_9);
+    const sVector3d omega_19_1  = omega_vector_from_matrix(M_omega_19_1);
 };
 
 
-inline tVector3d omega_euler(const double phi, const double theta, const double psi, 
+inline sVector3d omega_euler(const double phi, const double theta, const double psi, 
                                        const double dphi, const double dtheta, const double dpsi)
 /* https://mathworld.wolfram.com/EulerAngles.html
  * Purpose: to check that after three rotations (phi,theta,psi) around (Z,X,Z), the 
@@ -180,7 +180,7 @@ inline tVector3d omega_euler(const double phi, const double theta, const double 
              cos(theta)*dphi + dpsi                       };
 }
 
-inline tMatrix3x3 Qcp_euler(const double phi, const double theta, const double psi)
+inline sMatrix3x3 Qcp_euler(const double phi, const double theta, const double psi)
 {
     return { cos(psi)*cos(phi)-cos(theta)*sin(phi)*sin(psi),
              cos(psi)*sin(phi)+cos(theta)*cos(phi)*sin(psi),
@@ -194,13 +194,13 @@ inline tMatrix3x3 Qcp_euler(const double phi, const double theta, const double p
 }
 
 
-inline tMatrix3x3 Qpc_euler(const double phi, const double theta, const double psi)
+inline sMatrix3x3 Qpc_euler(const double phi, const double theta, const double psi)
 {
     return transpose(Qcp_euler(phi,theta,psi));
 }
 
 
-void test_frame_1_rotation(const Frame& frame, const Frame& parent, Axis axis, double theta, double w)
+void test_frame_1_rotation(const sFrame& frame, const sFrame& parent, Axis axis, double theta, double w)
 {
     EXPECT_EQ(&frame.get_parent(), &parent);
     EXPECT_EQ(frame.get_parent_ptr(), &parent);
@@ -227,33 +227,33 @@ void test_frame_1_rotation(const Frame& frame, const Frame& parent, Axis axis, d
     }
 
     // Qpc and Qcp must be inverse matrices
-    tMatrix3x3 QQinv = frame.get_rotation_matrix()*frame.get_back_rotation_matrix();
+    sMatrix3x3 QQinv = frame.get_rotation_matrix()*frame.get_back_rotation_matrix();
 
     for ( int i = 0; i < 3; ++i)
         for ( int j = 0; j < 3; ++j)
             EXPECT_DOUBLE_EQ(QQinv(i,j), (double)(i==j));
 
     // Check Qpc
-    tMatrix3x3 Qpc;
-    tMatrix3x3 dQpc;
+    sMatrix3x3 Qpc;
+    sMatrix3x3 dQpc;
     switch(axis)
     {
      case X:
-        Qpc = tMatrix3x3( 1.0, 0.0, 0.0,
+        Qpc = sMatrix3x3( 1.0, 0.0, 0.0,
                           0.0, std::cos(theta), -std::sin(theta),
                           0.0, std::sin(theta),  std::cos(theta));
         dQpc = w*drotation_matrix_x(theta);
         break;
 
      case Y:
-        Qpc = tMatrix3x3(  std::cos(theta), 0.0, std::sin(theta),
+        Qpc = sMatrix3x3(  std::cos(theta), 0.0, std::sin(theta),
                            0.0,             1.0, 0.0,
                           -std::sin(theta), 0.0, std::cos(theta));
         dQpc = w*drotation_matrix_y(theta);
         break;
 
      case Z:
-        Qpc = tMatrix3x3( std::cos(theta), -std::sin(theta), 0.0,
+        Qpc = sMatrix3x3( std::cos(theta), -std::sin(theta), 0.0,
                           std::sin(theta),  std::cos(theta), 0.0,
                           0.0,             0.0,              1.0 );
         dQpc = w*drotation_matrix_z(theta);
@@ -265,8 +265,8 @@ void test_frame_1_rotation(const Frame& frame, const Frame& parent, Axis axis, d
             EXPECT_DOUBLE_EQ(frame.get_rotation_matrix()(i,j), Qpc(i,j));
 
     // Check that omega is the result of a skew-symmetric tensor
-    tVector3d omega_c = omega_vector_from_matrix(transpose(Qpc)*dQpc);
-    tVector3d omega_p = omega_vector_from_matrix(dQpc*transpose(Qpc));
+    sVector3d omega_c = omega_vector_from_matrix(transpose(Qpc)*dQpc);
+    sVector3d omega_p = omega_vector_from_matrix(dQpc*transpose(Qpc));
     
     for ( int i = 0; i < 3; ++i)
     {
@@ -290,7 +290,7 @@ void test_frame_1_rotation(const Frame& frame, const Frame& parent, Axis axis, d
 }
 
 
-void test_frame_2_rotations(const Frame& frame, const Frame& parent, const std::array<Axis,2>& axis, 
+void test_frame_2_rotations(const sFrame& frame, const sFrame& parent, const std::array<Axis,2>& axis, 
                               const std::array<double,2>& theta, const std::array<double,2>& w)
 {
     EXPECT_EQ(&frame.get_parent(), &parent);
@@ -319,35 +319,35 @@ void test_frame_2_rotations(const Frame& frame, const Frame& parent, const std::
 
 
     // Qpc and Qcp must be inverse matrices
-    tMatrix3x3 QQinv = frame.get_rotation_matrix()*frame.get_back_rotation_matrix();
+    sMatrix3x3 QQinv = frame.get_rotation_matrix()*frame.get_back_rotation_matrix();
 
     for ( int i = 0; i < 3; ++i)
         for ( int j = 0; j < 3; ++j)
             EXPECT_DOUBLE_EQ(QQinv(i,j)+1.0, (double)(i==j)+1.0);
 
     // Check Qpc
-    std::array<tMatrix3x3,2> Qij;
-    std::array<tMatrix3x3,2> dQij;
+    std::array<sMatrix3x3,2> Qij;
+    std::array<sMatrix3x3,2> dQij;
     for ( int i = 0; i < 2; ++i) 
     {
         switch(axis[i])
         {
          case X:
-            Qij[i] = tMatrix3x3( 1.0, 0.0               , 0.0,
+            Qij[i] = sMatrix3x3( 1.0, 0.0               , 0.0,
                                 0.0, std::cos(theta[i]), -std::sin(theta[i]),
                                 0.0, std::sin(theta[i]),  std::cos(theta[i]));
             dQij[i] = w[i]*drotation_matrix_x(theta[i]);
             break;
 
          case Y:
-            Qij[i] = tMatrix3x3(  std::cos(theta[i]), 0.0, std::sin(theta[i]),
+            Qij[i] = sMatrix3x3(  std::cos(theta[i]), 0.0, std::sin(theta[i]),
                                   0.0,                1.0, 0.0,
                                  -std::sin(theta[i]), 0.0, std::cos(theta[i]));
             dQij[i] = w[i]*drotation_matrix_y(theta[i]);
             break;
 
          case Z:
-            Qij[i] = tMatrix3x3( std::cos(theta[i]), -std::sin(theta[i]), 0.0,
+            Qij[i] = sMatrix3x3( std::cos(theta[i]), -std::sin(theta[i]), 0.0,
                                  std::sin(theta[i]),  std::cos(theta[i]), 0.0,
                                  0.0,                 0.0,                1.0 );
             dQij[i] = w[i]*drotation_matrix_z(theta[i]);
@@ -355,7 +355,7 @@ void test_frame_2_rotations(const Frame& frame, const Frame& parent, const std::
         }
     }
 
-    const tMatrix3x3 Qpc = Qij[0]*Qij[1];
+    const sMatrix3x3 Qpc = Qij[0]*Qij[1];
 
     
     for ( int i = 0; i < 3; ++i)
@@ -365,8 +365,8 @@ void test_frame_2_rotations(const Frame& frame, const Frame& parent, const std::
     // Test omega: omega|parent = w0 e_axis0 + Q01 w1 e_axis1
     //             omega|child  = Qcp omega|parent
     constexpr std::array<sVector3d,3> unitary{UX,UY,UZ};
-    const tVector3d omega_p = w[0]*unitary[axis[0]] + Qij[0]*w[1]*unitary[axis[1]];
-    const tVector3d omega_c = frame.get_back_rotation_matrix()*omega_p;
+    const sVector3d omega_p = w[0]*unitary[axis[0]] + Qij[0]*w[1]*unitary[axis[1]];
+    const sVector3d omega_c = frame.get_back_rotation_matrix()*omega_p;
 
     for (int i = 0; i < 3; ++i)
     {
@@ -375,8 +375,8 @@ void test_frame_2_rotations(const Frame& frame, const Frame& parent, const std::
     }
 
     // Check that omega is the result of a skew-symmetric tensor: tr(Q).dQ / dQ.tr(Q)
-    tVector3d omega_c_from_tens = omega_vector_from_matrix(transpose(Qij[0]*Qij[1])*(dQij[0]*Qij[1]+Qij[0]*dQij[1]));
-    tVector3d omega_p_from_tens = omega_vector_from_matrix((dQij[0]*Qij[1]+Qij[0]*dQij[1])*transpose(Qij[0]*Qij[1]));
+    sVector3d omega_c_from_tens = omega_vector_from_matrix(transpose(Qij[0]*Qij[1])*(dQij[0]*Qij[1]+Qij[0]*dQij[1]));
+    sVector3d omega_p_from_tens = omega_vector_from_matrix((dQij[0]*Qij[1]+Qij[0]*dQij[1])*transpose(Qij[0]*Qij[1]));
 
     for ( int i = 0; i < 3; ++i)
     {
@@ -398,7 +398,7 @@ void test_frame_2_rotations(const Frame& frame, const Frame& parent, const std::
 }
 
 
-void test_frame_3_rotations(const Frame& frame, const Frame& parent, const std::array<Axis,3>& axis, 
+void test_frame_3_rotations(const sFrame& frame, const sFrame& parent, const std::array<Axis,3>& axis, 
                               const std::array<double,3>& theta, const std::array<double,3>& w)
 {
     EXPECT_EQ(&frame.get_parent(), &parent);
@@ -427,35 +427,35 @@ void test_frame_3_rotations(const Frame& frame, const Frame& parent, const std::
 
 
     // Qpc and Qcp must be inverse matrices
-    tMatrix3x3 QQinv = frame.get_rotation_matrix()*frame.get_back_rotation_matrix();
+    sMatrix3x3 QQinv = frame.get_rotation_matrix()*frame.get_back_rotation_matrix();
 
     for ( int i = 0; i < 3; ++i)
         for ( int j = 0; j < 3; ++j)
             EXPECT_DOUBLE_EQ(QQinv(i,j)+1.0, (double)(i==j)+1.0);
 
     // Check Qpc
-    std::array<tMatrix3x3,3> Qij;
-    std::array<tMatrix3x3,3> dQij;
+    std::array<sMatrix3x3,3> Qij;
+    std::array<sMatrix3x3,3> dQij;
     for ( int i = 0; i < 3; ++i) 
     {
         switch(axis[i])
         {
          case X:
-            Qij[i] = tMatrix3x3( 1.0, 0.0               , 0.0,
+            Qij[i] = sMatrix3x3( 1.0, 0.0               , 0.0,
                                 0.0, std::cos(theta[i]), -std::sin(theta[i]),
                                 0.0, std::sin(theta[i]),  std::cos(theta[i]));
             dQij[i] = w[i]*drotation_matrix_x(theta[i]);
             break;
 
          case Y:
-            Qij[i] = tMatrix3x3(  std::cos(theta[i]), 0.0, std::sin(theta[i]),
+            Qij[i] = sMatrix3x3(  std::cos(theta[i]), 0.0, std::sin(theta[i]),
                                   0.0,                1.0, 0.0,
                                  -std::sin(theta[i]), 0.0, std::cos(theta[i]));
             dQij[i] = w[i]*drotation_matrix_y(theta[i]);
             break;
 
          case Z:
-            Qij[i] = tMatrix3x3( std::cos(theta[i]), -std::sin(theta[i]), 0.0,
+            Qij[i] = sMatrix3x3( std::cos(theta[i]), -std::sin(theta[i]), 0.0,
                                  std::sin(theta[i]),  std::cos(theta[i]), 0.0,
                                  0.0,                 0.0,                1.0 );
             dQij[i] = w[i]*drotation_matrix_z(theta[i]);
@@ -471,8 +471,8 @@ void test_frame_3_rotations(const Frame& frame, const Frame& parent, const std::
     // Test omega: omega|parent = w0 e_axis0 + Q01 w1 e_axis1 + Q02 w2 e_axis2
     //             omega|child  = Qcp omega|parent
     constexpr std::array<sVector3d,3> unitary{UX,UY,UZ};
-    const tVector3d omega_p = w[0]*unitary[axis[0]] + Qij[0]*(w[1]*unitary[axis[1]]+Qij[1]*w[2]*unitary[axis[2]]);
-    const tVector3d omega_c = frame.get_back_rotation_matrix()*omega_p;
+    const sVector3d omega_p = w[0]*unitary[axis[0]] + Qij[0]*(w[1]*unitary[axis[1]]+Qij[1]*w[2]*unitary[axis[2]]);
+    const sVector3d omega_c = frame.get_back_rotation_matrix()*omega_p;
 
     for (int i = 0; i < 3; ++i)
     {
@@ -481,8 +481,8 @@ void test_frame_3_rotations(const Frame& frame, const Frame& parent, const std::
     }
 
     // Check that omega is the result of a skew-symmetric tensor: tr(Q).dQ / dQ.tr(Q)
-    tVector3d omega_c_from_tens = omega_vector_from_matrix(transpose(Qij[0]*Qij[1]*Qij[2])*(dQij[0]*Qij[1]*Qij[2]+Qij[0]*dQij[1]*Qij[2]+Qij[0]*Qij[1]*dQij[2]));
-    tVector3d omega_p_from_tens = omega_vector_from_matrix((dQij[0]*Qij[1]*Qij[2]+Qij[0]*dQij[1]*Qij[2]+Qij[0]*Qij[1]*dQij[2])*transpose(Qij[0]*Qij[1]*Qij[2]));
+    sVector3d omega_c_from_tens = omega_vector_from_matrix(transpose(Qij[0]*Qij[1]*Qij[2])*(dQij[0]*Qij[1]*Qij[2]+Qij[0]*dQij[1]*Qij[2]+Qij[0]*Qij[1]*dQij[2]));
+    sVector3d omega_p_from_tens = omega_vector_from_matrix((dQij[0]*Qij[1]*Qij[2]+Qij[0]*dQij[1]*Qij[2]+Qij[0]*Qij[1]*dQij[2])*transpose(Qij[0]*Qij[1]*Qij[2]));
 
     for ( int i = 0; i < 3; ++i)
     {
@@ -491,7 +491,7 @@ void test_frame_3_rotations(const Frame& frame, const Frame& parent, const std::
     }
 
     // Check that absolute rotations are the same than relative rotations (i.e. parent is inertial)
-    tMatrix3x3 Qpc = Qij[0]*Qij[1]*Qij[2];
+    sMatrix3x3 Qpc = Qij[0]*Qij[1]*Qij[2];
     for (int i = 0; i < 3; ++i)
     {
         EXPECT_NEAR(frame.get_omega_absolute_in_body().at(i),omega_c[i], omega_p.norm()*3.0e-16);
@@ -510,7 +510,7 @@ TEST_F(Rotated_frames_test, Bad_construction_test)
 {
     try
     {
-        Frame error_frame(tVector3d(0.0), tVector3d(0.0), {0.0,1.0}, {0.0}, {X}, inertial_frame );
+        sFrame error_frame(sVector3d(0.0), sVector3d(0.0), {0.0,1.0}, {0.0}, {X}, inertial_frame );
         FAIL();
     }
     catch(const std::runtime_error& error)
@@ -520,7 +520,7 @@ TEST_F(Rotated_frames_test, Bad_construction_test)
 
     try
     { 
-        Frame error_frame(tVector3d(0.0), tVector3d(0.0), {0.0,1.0}, {0.0,1.0}, {X}, inertial_frame );
+        sFrame error_frame(sVector3d(0.0), sVector3d(0.0), {0.0,1.0}, {0.0,1.0}, {X}, inertial_frame );
         FAIL();
     }
     catch(const std::runtime_error& error)
@@ -530,7 +530,7 @@ TEST_F(Rotated_frames_test, Bad_construction_test)
 
     try
     {
-        Frame error_frame(tVector3d(0.0), tVector3d(0.0), {0.0,1.0}, {0.0,1.0}, {X,static_cast<Axis>(5)}, inertial_frame);
+        sFrame error_frame(sVector3d(0.0), sVector3d(0.0), {0.0,1.0}, {0.0,1.0}, {X,static_cast<Axis>(5)}, inertial_frame);
         FAIL();
     }
     catch(const std::runtime_error& error)
@@ -540,11 +540,11 @@ TEST_F(Rotated_frames_test, Bad_construction_test)
 }
 
 
-TEST_F(Rotated_frames_test, Frame_rotation_wrt_x) 
+TEST_F(Rotated_frames_test, sFrame_rotation_wrt_x) 
 { 
     test_frame_1_rotation(frame_rot_x, inertial_frame, X, theta_x, w_x); 
 
-    Frame local_frame(frame_rot_x);
+    sFrame local_frame(frame_rot_x);
 
     local_frame.set_rotation_angle(0, 60.0*DEG);
     test_frame_1_rotation(local_frame, inertial_frame, X, 60.0*DEG, w_x); 
@@ -560,11 +560,11 @@ TEST_F(Rotated_frames_test, Frame_rotation_wrt_x)
 }
 
 
-TEST_F(Rotated_frames_test, Frame_rotation_wrt_y) 
+TEST_F(Rotated_frames_test, sFrame_rotation_wrt_y) 
 { 
     test_frame_1_rotation(frame_rot_y, inertial_frame, Y, theta_y, w_y); 
 
-    Frame local_frame(frame_rot_y);
+    sFrame local_frame(frame_rot_y);
 
     local_frame.set_rotation_angle(0, 40.0*DEG);
     test_frame_1_rotation(local_frame, inertial_frame, Y, 40.0*DEG, w_y); 
@@ -577,11 +577,11 @@ TEST_F(Rotated_frames_test, Frame_rotation_wrt_y)
 }
 
 
-TEST_F(Rotated_frames_test, Frame_rotation_wrt_z) 
+TEST_F(Rotated_frames_test, sFrame_rotation_wrt_z) 
 { 
     test_frame_1_rotation(frame_rot_z, inertial_frame, Z, theta_z, w_z); 
 
-    Frame local_frame(frame_rot_z);
+    sFrame local_frame(frame_rot_z);
 
     local_frame.set_rotation_angle(0, 150.0*DEG);
     test_frame_1_rotation(local_frame, inertial_frame, Z, 150.0*DEG, w_z); 
@@ -594,11 +594,11 @@ TEST_F(Rotated_frames_test, Frame_rotation_wrt_z)
 }
 
 
-TEST_F(Rotated_frames_test, Frame_rotation_wrt_xy) 
+TEST_F(Rotated_frames_test, sFrame_rotation_wrt_xy) 
 { 
     test_frame_2_rotations(frame_rot_xy, inertial_frame, {X,Y}, {theta_x,theta_y}, {w_x,w_y} ); 
 
-    Frame local_frame(frame_rot_xy);
+    sFrame local_frame(frame_rot_xy);
 
     local_frame.set_rotation_angle(1, 36.0*DEG, 40.0, false);
     EXPECT_EQ(local_frame.is_updated(), false);
@@ -618,7 +618,7 @@ TEST_F(Rotated_frames_test, Frame_rotation_wrt_xy)
         SUCCEED();
     }
 
-    Frame local_frame2(frame_rot_x);
+    sFrame local_frame2(frame_rot_x);
     local_frame2.add_rotation(-62.0*DEG, 2.15,Z);
 
     test_frame_2_rotations(local_frame2, inertial_frame, {X,Z},{theta_x,-62.0*DEG}, {w_x,2.15} ); 
@@ -628,7 +628,7 @@ TEST_F(Rotated_frames_test, Frame_rotation_wrt_xy)
 }
 
 
-TEST_F(Rotated_frames_test, Frame_rotation_wrt_yz) 
+TEST_F(Rotated_frames_test, sFrame_rotation_wrt_yz) 
 { 
     test_frame_2_rotations(frame_rot_yz, inertial_frame, {Y,Z}, {theta_y,theta_z}, {w_y,w_z} ); 
 
@@ -637,7 +637,7 @@ TEST_F(Rotated_frames_test, Frame_rotation_wrt_yz)
 }
 
 
-TEST_F(Rotated_frames_test, Frame_rotation_wrt_zx) 
+TEST_F(Rotated_frames_test, sFrame_rotation_wrt_zx) 
 { 
     test_frame_2_rotations(frame_rot_zx, inertial_frame, {Z,X}, {theta_z,theta_x}, {w_z,w_x} ); 
 
@@ -646,7 +646,7 @@ TEST_F(Rotated_frames_test, Frame_rotation_wrt_zx)
 }
 
 
-TEST_F(Rotated_frames_test, Frame_rotation_wrt_xyz) 
+TEST_F(Rotated_frames_test, sFrame_rotation_wrt_xyz) 
 { 
     test_frame_3_rotations(frame_rot_xyz, inertial_frame, {X,Y,Z}, {theta_x,theta_y,theta_z}, {w_x,w_y,w_z} ); 
 
@@ -678,11 +678,11 @@ TEST_F(Rotated_frames_test, Nested_rotation_frames)
 {
     using namespace std;
 
-    const Frame euler_1st_rot(tVector3d(0.0), tVector3d(0.0), {phi}, {dphi}, {Z}, inertial_frame);
+    const sFrame euler_1st_rot(sVector3d(0.0), sVector3d(0.0), {phi}, {dphi}, {Z}, inertial_frame);
 
-    const Frame euler_2nd_rot(tVector3d(0.0), tVector3d(0.0), {theta}, {dtheta}, {X}, euler_1st_rot);
+    const sFrame euler_2nd_rot(sVector3d(0.0), sVector3d(0.0), {theta}, {dtheta}, {X}, euler_1st_rot);
 
-    const Frame euler_3rd_rot(tVector3d(0.0), tVector3d(0.0), {psi}, {dpsi}, {Z}, euler_2nd_rot);
+    const sFrame euler_3rd_rot(sVector3d(0.0), sVector3d(0.0), {psi}, {dpsi}, {Z}, euler_2nd_rot);
 
     // Check the three rotations
     for ( size_t i = 0; i < 3; ++i)
@@ -736,11 +736,11 @@ TEST_F(Rotation_wrt_target_test, rotation_matrix_wrt_target)
         {
             EXPECT_DOUBLE_EQ(frame7.get_rotation_matrix(frame4)(i,j), Q47(i,j));
             EXPECT_DOUBLE_EQ(frame4.get_rotation_matrix(frame7)(i,j), Q47(j,i));
-            EXPECT_EQ(Frame::get_crossing_generation(frame7,frame4),1);
+            EXPECT_EQ(sFrame::get_crossing_generation(frame7,frame4),1);
 
             // Test the self rotation
             EXPECT_DOUBLE_EQ(frame4.get_rotation_matrix(frame4)(i,j), (double)(i==j));
-            EXPECT_EQ(Frame::get_crossing_generation(frame4,frame4),2);
+            EXPECT_EQ(sFrame::get_crossing_generation(frame4,frame4),2);
         }
 
 
@@ -749,7 +749,7 @@ TEST_F(Rotation_wrt_target_test, rotation_matrix_wrt_target)
         {
             EXPECT_DOUBLE_EQ(frame8.get_rotation_matrix(frame7)(i,j)+1.0, Q78(i,j)+1.0);
             EXPECT_DOUBLE_EQ(frame7.get_rotation_matrix(frame8)(i,j)+1.0, Q78(j,i)+1.0);
-            EXPECT_EQ(Frame::get_crossing_generation(frame7,frame8),3);
+            EXPECT_EQ(sFrame::get_crossing_generation(frame7,frame8),3);
         }
 
 
@@ -758,7 +758,7 @@ TEST_F(Rotation_wrt_target_test, rotation_matrix_wrt_target)
         {
             EXPECT_DOUBLE_EQ(frame10.get_rotation_matrix(frame8)(i,j)+1.0, Q810(i,j)+1.0);
             EXPECT_DOUBLE_EQ(frame8.get_rotation_matrix(frame10)(i,j)+1.0, Q810(j,i)+1.0);
-            EXPECT_EQ(Frame::get_crossing_generation(frame8,frame10),1);
+            EXPECT_EQ(sFrame::get_crossing_generation(frame8,frame10),1);
         }
 
 
@@ -767,11 +767,11 @@ TEST_F(Rotation_wrt_target_test, rotation_matrix_wrt_target)
         {
             EXPECT_DOUBLE_EQ(frame9.get_rotation_matrix(frame2)(i,j)+1.0, Q29(i,j)+1.0);
             EXPECT_DOUBLE_EQ(frame2.get_rotation_matrix(frame9)(i,j)+1.0, Q29(j,i)+1.0);
-            EXPECT_EQ(Frame::get_crossing_generation(frame2,frame9),1);
+            EXPECT_EQ(sFrame::get_crossing_generation(frame2,frame9),1);
 
             EXPECT_DOUBLE_EQ(frame9.get_rotation_matrix(frame1)(i,j)+1.0, Q19(i,j)+1.0);
             EXPECT_DOUBLE_EQ(frame1.get_rotation_matrix(frame9)(i,j)+1.0, Q19(j,i)+1.0);
-            EXPECT_EQ(Frame::get_crossing_generation(frame1,frame9),0);
+            EXPECT_EQ(sFrame::get_crossing_generation(frame1,frame9),0);
 
         }
 
@@ -787,7 +787,7 @@ TEST_F(Rotation_wrt_target_test, rotation_matrix_wrt_target)
 
     try
     {
-        const size_t dummy(Frame::get_crossing_generation(frame4, frame11));
+        const size_t dummy(sFrame::get_crossing_generation(frame4, frame11));
         out(2) << dummy << std::endl;
         FAIL();
     }

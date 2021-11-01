@@ -2,7 +2,7 @@
 #define __EXPLICIT_EULER_HPP__
 
 template<class F, class U, size_t N>
-inline void Explicit_euler<F,U,N>::take_step(F& f, U& u, std::array<timeseries,N>& q, timeseries t, scalar dt)
+inline void Explicit_euler<F,U,N>::take_step(F& f, U& u, std::array<scalar,N>& q, scalar t, scalar dt)
 {
     const auto u_t = u(t);
 

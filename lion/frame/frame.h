@@ -6,9 +6,13 @@
 #include "rotations.h"
 
 //!  Class defining moving frames
+template<typename T>
 class Frame
 {
  public:
+    using tVector3d = Vector3d<T>;
+    using tMatrix3x3 = Matrix3x3<T>;
+
     //!  Default constructor. Returns an inertial frame
     Frame() = default;
 
@@ -22,8 +26,8 @@ class Frame
     //! @param[in] parent: Frame for which all the quantities above are referred to
     Frame(const tVector3d& x, 
           const tVector3d& dx, 
-          const std::vector<timeseries> angles, 
-          const std::vector<timeseries> dangles,
+          const std::vector<T> angles, 
+          const std::vector<T> dangles,
           const std::vector<Axis> axis, 
           const Frame& parent
          );
@@ -53,10 +57,10 @@ class Frame
     constexpr const tVector3d& get_relative_velocity() const { return _dx; } 
 
     //!  Returns a const reference to the rotation angles vector
-    constexpr const std::vector<timeseries>& get_rotation_angles() const { return _angles; } 
+    constexpr const std::vector<T>& get_rotation_angles() const { return _angles; } 
 
     //!  Returns a const reference to the rotation angles derivatives
-    constexpr const std::vector<timeseries>& get_rotation_angles_derivative() const { return _dangles; } 
+    constexpr const std::vector<T>& get_rotation_angles_derivative() const { return _dangles; } 
 
     //!  Returns a const reference to the rotation axis  
     constexpr const std::vector<Axis>& get_rotation_axis() const { return _axis; } 
@@ -219,27 +223,27 @@ class Frame
     //! @param[in] which: index of the angle
     //! @param[in] angle: new angle [rad]
     //! @param[in] bUpdate: if true, will call update()
-    void set_rotation_angle(const size_t which, const timeseries angle, const bool bUpdate = true);
+    void set_rotation_angle(const size_t which, const T angle, const bool bUpdate = true);
 
     //! Set a rotation angle and speed
     //! @param[in] which: index of the angle
     //! @param[in] angle: new angle [rad]
     //! @param[in] dangle: new angular velocity [rad/s]
     //! @param[in] bUpdate: if true, will call update()
-    void set_rotation_angle(const size_t which, const timeseries angle, const timeseries dangle, const bool bUpdate = true);
+    void set_rotation_angle(const size_t which, const T angle, const T dangle, const bool bUpdate = true);
 
     //! Set a rotation angular speed
     //! @param[in] which: index of the angle
     //! @param[in] dangle: new angular velocity [rad/s]
     //! @param[in] bUpdate: if true, will call update()
-    void set_angular_speed(const size_t which, const timeseries dangle, const bool bUpdate = true);
+    void set_angular_speed(const size_t which, const T dangle, const bool bUpdate = true);
 
     //! Append a new rotation angular
     //! @param[in] angle: new angle [rad]
     //! @param[in] dangle: new angular velocity [rad/s]
     //! @param[in] axis: which axis (X/Y/Z)
     //! @param[in] bUpdate: if true, will call update()
-    void add_rotation(const timeseries angle, const timeseries dangle, const Axis axis, const bool bUpdate = true);
+    void add_rotation(const T angle, const T dangle, const Axis axis, const bool bUpdate = true);
 
  private:
     
@@ -248,8 +252,8 @@ class Frame
     tVector3d _x;                   //! Origin coordinates in parent frame
     tVector3d _dx;                  //! Origin velocity in parent frame
 
-    std::vector<timeseries> _angles;  //! Rotation angles
-    std::vector<timeseries> _dangles; //! Rotation angles derivatives
+    std::vector<T>    _angles;  //! Rotation angles
+    std::vector<T>    _dangles; //! Rotation angles derivatives
     std::vector<Axis> _axis;    //! Rotation axes
 
     //! Updated parameters
@@ -259,6 +263,8 @@ class Frame
     tVector3d  _omega_pc_self = tVector3d::zeros();    //! Omega from parent (in this frame)
     tVector3d  _omega_pc_parent = tVector3d::zeros();  //! Omega from parent (in parent)
 };
+
+using sFrame = Frame<scalar>;
 
 
 #include "frame.hpp"

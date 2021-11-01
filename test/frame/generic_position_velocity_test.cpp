@@ -4,7 +4,7 @@
 
 using Matrix4x4 = std::array<std::array<double,4>,4>;
 
-constexpr Matrix4x4 total_transformation_matrix(const tMatrix3x3& Q, const tVector3d& x)
+constexpr Matrix4x4 total_transformation_matrix(const sMatrix3x3& Q, const sVector3d& x)
 {
     return {{{ Q(0,0), Q(0,1), Q(0,2), x[0] },
              { Q(1,0), Q(1,1), Q(1,2), x[1] },
@@ -13,7 +13,7 @@ constexpr Matrix4x4 total_transformation_matrix(const tMatrix3x3& Q, const tVect
 
 }
 
-constexpr Matrix4x4 dtotal_transformation_matrix(const tMatrix3x3& Q, const tVector3d& x)
+constexpr Matrix4x4 dtotal_transformation_matrix(const sMatrix3x3& Q, const sVector3d& x)
 {
     return {{{ Q(0,0), Q(0,1), Q(0,2), x[0] },
              { Q(1,0), Q(1,1), Q(1,2), x[1] },
@@ -40,7 +40,7 @@ class Generic_position_velocity_test : public ::testing::Test
  protected:
     Generic_position_velocity_test() {};
 
-    const std::array<tVector3d,10> positions = {{{ 0.8147,0.1576,0.6557},
+    const std::array<sVector3d,10> positions = {{{ 0.8147,0.1576,0.6557},
                                                  { 0.9058,0.9706,0.0357},
                                                  { 0.1270,0.9572,0.8491},
                                                  { 0.9134,0.4854,0.9340},
@@ -52,7 +52,7 @@ class Generic_position_velocity_test : public ::testing::Test
                                                  { 0.9649,0.9595,0.1712}}};
 
 
-    const std::array<tVector3d,10> velocities = {{{ 0.7060,0.4387,0.2760},
+    const std::array<sVector3d,10> velocities = {{{ 0.7060,0.4387,0.2760},
                                                   { 0.0318,0.3816,0.6797},
                                                   { 0.2769,0.7655,0.6551},
                                                   { 0.0462,0.7952,0.1626},
@@ -88,39 +88,39 @@ class Generic_position_velocity_test : public ::testing::Test
     const std::array<Axis,10> axis = {{ Y,Z,X,X,Y,Z,Y,Y,Z,X }};
    
     // Frames to be tested    
-    const Frame frame0; // Inertial frame
-    const Frame frame1 = Frame(positions[1],velocities[1], {angles[1]}, {dangles[1]}, {axis[1]}, frame0);
-    const Frame frame2 = Frame(positions[2],velocities[2], {angles[2]}, {dangles[2]}, {axis[2]}, frame1);
-    const Frame frame3 = Frame(positions[3],velocities[3], {angles[3]}, {dangles[3]}, {axis[3]}, frame1);
-    const Frame frame4 = Frame(positions[4],velocities[4], {angles[4]}, {dangles[4]}, {axis[4]}, frame2);
-    const Frame frame5 = Frame(positions[5],velocities[5], {angles[5]}, {dangles[5]}, {axis[5]}, frame3);
-    const Frame frame6 = Frame(positions[6],velocities[6], {angles[6]}, {dangles[6]}, {axis[6]}, frame4);
-    const Frame frame7 = Frame(positions[7],velocities[7], {angles[7]}, {dangles[7]}, {axis[7]}, frame4);
-    const Frame frame8 = Frame(positions[8],velocities[8], {angles[8]}, {dangles[8]}, {axis[8]}, frame5);
-    const Frame frame9 = Frame(positions[9],velocities[9], {angles[9]}, {dangles[9]}, {axis[9]}, frame5);
-    const Frame frame10; // Different inertial frame
+    const sFrame frame0; // Inertial frame
+    const sFrame frame1 = sFrame(positions[1],velocities[1], {angles[1]}, {dangles[1]}, {axis[1]}, frame0);
+    const sFrame frame2 = sFrame(positions[2],velocities[2], {angles[2]}, {dangles[2]}, {axis[2]}, frame1);
+    const sFrame frame3 = sFrame(positions[3],velocities[3], {angles[3]}, {dangles[3]}, {axis[3]}, frame1);
+    const sFrame frame4 = sFrame(positions[4],velocities[4], {angles[4]}, {dangles[4]}, {axis[4]}, frame2);
+    const sFrame frame5 = sFrame(positions[5],velocities[5], {angles[5]}, {dangles[5]}, {axis[5]}, frame3);
+    const sFrame frame6 = sFrame(positions[6],velocities[6], {angles[6]}, {dangles[6]}, {axis[6]}, frame4);
+    const sFrame frame7 = sFrame(positions[7],velocities[7], {angles[7]}, {dangles[7]}, {axis[7]}, frame4);
+    const sFrame frame8 = sFrame(positions[8],velocities[8], {angles[8]}, {dangles[8]}, {axis[8]}, frame5);
+    const sFrame frame9 = sFrame(positions[9],velocities[9], {angles[9]}, {dangles[9]}, {axis[9]}, frame5);
+    const sFrame frame10; // Different inertial frame
 
     // Rotation matrices
-    const tMatrix3x3 Q01 = rotation_matrix_z(angles[1]);
-    const tMatrix3x3 Q12 = rotation_matrix_x(angles[2]);
-    const tMatrix3x3 Q13 = rotation_matrix_x(angles[3]);
-    const tMatrix3x3 Q24 = rotation_matrix_y(angles[4]);
-    const tMatrix3x3 Q35 = rotation_matrix_z(angles[5]);
-    const tMatrix3x3 Q46 = rotation_matrix_y(angles[6]);
-    const tMatrix3x3 Q47 = rotation_matrix_y(angles[7]);
-    const tMatrix3x3 Q58 = rotation_matrix_z(angles[8]);
-    const tMatrix3x3 Q59 = rotation_matrix_x(angles[9]);
+    const sMatrix3x3 Q01 = rotation_matrix_z(angles[1]);
+    const sMatrix3x3 Q12 = rotation_matrix_x(angles[2]);
+    const sMatrix3x3 Q13 = rotation_matrix_x(angles[3]);
+    const sMatrix3x3 Q24 = rotation_matrix_y(angles[4]);
+    const sMatrix3x3 Q35 = rotation_matrix_z(angles[5]);
+    const sMatrix3x3 Q46 = rotation_matrix_y(angles[6]);
+    const sMatrix3x3 Q47 = rotation_matrix_y(angles[7]);
+    const sMatrix3x3 Q58 = rotation_matrix_z(angles[8]);
+    const sMatrix3x3 Q59 = rotation_matrix_x(angles[9]);
 
     // Rotation matrices derivatives
-    const tMatrix3x3 dQ01 = dangles[1] * drotation_matrix_z(angles[1]);
-    const tMatrix3x3 dQ12 = dangles[2] * drotation_matrix_x(angles[2]);
-    const tMatrix3x3 dQ13 = dangles[3] * drotation_matrix_x(angles[3]);
-    const tMatrix3x3 dQ24 = dangles[4] * drotation_matrix_y(angles[4]);
-    const tMatrix3x3 dQ35 = dangles[5] * drotation_matrix_z(angles[5]);
-    const tMatrix3x3 dQ46 = dangles[6] * drotation_matrix_y(angles[6]);
-    const tMatrix3x3 dQ47 = dangles[7] * drotation_matrix_y(angles[7]);
-    const tMatrix3x3 dQ58 = dangles[8] * drotation_matrix_z(angles[8]);
-    const tMatrix3x3 dQ59 = dangles[9] * drotation_matrix_x(angles[9]);
+    const sMatrix3x3 dQ01 = dangles[1] * drotation_matrix_z(angles[1]);
+    const sMatrix3x3 dQ12 = dangles[2] * drotation_matrix_x(angles[2]);
+    const sMatrix3x3 dQ13 = dangles[3] * drotation_matrix_x(angles[3]);
+    const sMatrix3x3 dQ24 = dangles[4] * drotation_matrix_y(angles[4]);
+    const sMatrix3x3 dQ35 = dangles[5] * drotation_matrix_z(angles[5]);
+    const sMatrix3x3 dQ46 = dangles[6] * drotation_matrix_y(angles[6]);
+    const sMatrix3x3 dQ47 = dangles[7] * drotation_matrix_y(angles[7]);
+    const sMatrix3x3 dQ58 = dangles[8] * drotation_matrix_z(angles[8]);
+    const sMatrix3x3 dQ59 = dangles[9] * drotation_matrix_x(angles[9]);
 
     // Total transformation matrices
     const Matrix4x4 T01 = total_transformation_matrix(Q01, positions[1]);
@@ -170,13 +170,13 @@ class Generic_position_velocity_test : public ::testing::Test
 
 TEST_F(Generic_position_velocity_test, frames_1_0)
 {
-    constexpr const tVector3d x(0.3517, 0.8308, 0.5853);
-    constexpr const tVector3d dx(0.5497, 0.9172, 0.2858);
+    constexpr const sVector3d x(0.3517, 0.8308, 0.5853);
+    constexpr const sVector3d dx(0.5497, 0.9172, 0.2858);
 
     constexpr const std::array<double,4> xT{x[0],x[1],x[2],1.0};
     constexpr const std::array<double,4> vT{dx[0],dx[1],dx[2],0.0};
 
-    tVector3d position, velocity;
+    sVector3d position, velocity;
 
     // Frame 1 wrt frame 0
     std::tie(position,velocity) = frame1.get_position_and_velocity_in_target(frame0, x, dx);
@@ -201,14 +201,14 @@ TEST_F(Generic_position_velocity_test, frames_1_0)
 
 TEST_F(Generic_position_velocity_test, frames_6_1)
 {
-    constexpr const tVector3d x(0.3517, 0.8308, 0.5853);
-    constexpr const tVector3d dx(0.5497, 0.9172, 0.2858);
+    constexpr const sVector3d x(0.3517, 0.8308, 0.5853);
+    constexpr const sVector3d dx(0.5497, 0.9172, 0.2858);
 
     std::array<double,4> xT{x[0],x[1],x[2],1.0};
     std::array<double,4> vT{dx[0],dx[1],dx[2],0.0};
 
-    tVector3d position, velocity;
-    tVector3d position2, velocity2;
+    sVector3d position, velocity;
+    sVector3d position2, velocity2;
 
 
     // Frame 6 wrt frame 1
@@ -246,14 +246,14 @@ TEST_F(Generic_position_velocity_test, frames_6_1)
 
 TEST_F(Generic_position_velocity_test, frames_7_8)
 {
-    constexpr const tVector3d x(0.3517, 0.8308, 0.5853);
-    constexpr const tVector3d dx(0.5497, 0.9172, 0.2858);
+    constexpr const sVector3d x(0.3517, 0.8308, 0.5853);
+    constexpr const sVector3d dx(0.5497, 0.9172, 0.2858);
 
     std::array<double,4> xT{x[0],x[1],x[2],1.0};
     std::array<double,4> vT{dx[0],dx[1],dx[2],0.0};
 
-    tVector3d position, velocity;
-    tVector3d position2, velocity2;
+    sVector3d position, velocity;
+    sVector3d position2, velocity2;
 
 
     // Frame 7 wrt frame 8
@@ -292,14 +292,14 @@ TEST_F(Generic_position_velocity_test, frames_7_8)
 
 TEST_F(Generic_position_velocity_test, frames_9_0)
 {
-    constexpr const tVector3d x(0.3517, 0.8308, 0.5853);
-    constexpr const tVector3d dx(0.5497, 0.9172, 0.2858);
+    constexpr const sVector3d x(0.3517, 0.8308, 0.5853);
+    constexpr const sVector3d dx(0.5497, 0.9172, 0.2858);
 
     std::array<double,4> xT{x[0],x[1],x[2],1.0};
     std::array<double,4> vT{dx[0],dx[1],dx[2],0.0};
 
-    tVector3d position, velocity;
-    tVector3d position2, velocity2;
+    sVector3d position, velocity;
+    sVector3d position2, velocity2;
 
 
     // Frame 9 wrt frame 0

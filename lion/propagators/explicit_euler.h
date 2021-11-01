@@ -17,7 +17,7 @@ class Explicit_euler
     //! @param[inout] u: control variables functor u = u(q,t)
     //! @param[inout] t: time
     //! @param[inout] dt: time step
-    static void take_step(F& f, U& u, std::array<timeseries,N>& q, timeseries t, scalar dt);
+    static void take_step(F& f, U& u, std::array<scalar,N>& q, scalar t, scalar dt);
 };
 
 #include "explicit_euler.hpp"

@@ -32,8 +32,8 @@ const inline std::vector<scalar> engine_data = { 1.0000e+4, 1.4251e+1,
 
 TEST(Polynomial_test, empty_polynomial)
 {
-    std::vector<timeseries> L;
-    std::vector<std::vector<timeseries>> y0;
+    std::vector<scalar> L;
+    std::vector<std::vector<scalar>> y0;
     sPolynomial p(0.0,L,y0);
 
     EXPECT_DOUBLE_EQ(p(3.14), 0.0);

@@ -6,7 +6,7 @@
 
 TEST(Explicit_euler_test, Armonic_oscillator)
 {
-    std::array<timeseries,2> q = {1.0, 0.0};
+    std::array<scalar,2> q = {1.0, 0.0};
     const scalar dt = 1.0e-3;
     const size_t n_timesteps = 50000;
     const scalar tf = dt*n_timesteps;

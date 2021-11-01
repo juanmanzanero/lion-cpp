@@ -32,7 +32,7 @@ class ODE45
     //! @param[in] q0: state vector values
     //! @param[in] t_start: simulation initial time
     //! @param[in] t_end: simulation final end
-    static double initial_dt_estimation(F& f, U& u, const std::array<timeseries,N>& q0, scalar t_start, scalar t_end);
+    static double initial_dt_estimation(F& f, U& u, const std::array<scalar,N>& q0, scalar t_start, scalar t_end);
 
     //! Perform a Runge-Kutta step
     //! @param[inout] f: ODE functor, dqdt = f(q,u,t)
@@ -44,8 +44,8 @@ class ODE45
     //! @param[in] t_end_reached: whether the simulation is done or not
     static void take_step(F& f, 
                           U& u, 
-                          std::array<timeseries,N>& q, 
-                          timeseries& t, 
+                          std::array<scalar,N>& q, 
+                          scalar& t, 
                           scalar& dt, 
                           const scalar t_end, 
                           bool& t_end_reached );

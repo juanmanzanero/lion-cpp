@@ -135,18 +135,17 @@ template<typename T>
 std::istream& operator>>(std::istream &is, Vector3d<T> &v);
 
 using sVector3d = Vector3d<scalar>;
-using tVector3d = Vector3d<timeseries>;
 
 
-//! Add the capability to add tVector3d to sVector3d and get a tVector3d
-template<typename T = timeseries>
-typename std::enable_if<!std::is_same<T,scalar>::value,Vector3d<timeseries>>::type operator+(tVector3d lhs, const sVector3d& rhs);
+//! Add the capability to add vectors of different type to scalar vectors
+template<typename T>
+typename std::enable_if<!std::is_same<T,scalar>::value,Vector3d<T>>::type operator+(Vector3d<T> lhs, const sVector3d& rhs);
 
-template<typename T = timeseries>
-typename std::enable_if<!std::is_same<T,scalar>::value,Vector3d<timeseries>>::type operator+(const sVector3d& lhs, const tVector3d& rhs) { return rhs+lhs; }
+template<typename T>
+typename std::enable_if<!std::is_same<T,scalar>::value,Vector3d<T>>::type operator+(const sVector3d& lhs, const Vector3d<T>& rhs) { return rhs+lhs; }
 
-template<typename T = timeseries>
-typename std::enable_if<!std::is_same<T,scalar>::value,Vector3d<timeseries>>::type operator/(const tVector3d& lhs, const scalar rhs) { return {lhs[0]/rhs, lhs[1]/rhs, lhs[2]/rhs}; }
+template<typename T>
+typename std::enable_if<!std::is_same<T,scalar>::value,Vector3d<T>>::type operator/(const Vector3d<T>& lhs, const scalar rhs) { return {lhs[0]/rhs, lhs[1]/rhs, lhs[2]/rhs}; }
 
 
 
