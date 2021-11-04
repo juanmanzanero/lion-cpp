@@ -1,5 +1,12 @@
 include(python)
 
+# Find lapack
+find_package(LAPACK) 
+
+if (NOT ${LAPACK_FOUND})
+    set(BUILD_LAPACK YES)
+endif()
+
 if ( ${ENABLE_TEST} )
     # Google tests 
     find_package(GTest PATHS ${CMAKE_BINARY_DIR})
@@ -73,6 +80,12 @@ if ( ${ENABLE_TEST} )
 	find_package(GTest PATHS ${CMAKE_BINARY_DIR}/thirdparty REQUIRED)
 endif()
 
+if ( ${BUILD_LAPACK} )
+	find_package(LAPACK REQUIRED PATHS ${CMAKE_BINARY_DIR}/lion/thirdparty HINTS ${CMAKE_BINARY_DIR}/lion/thirdparty)
+else()
+	find_package(LAPACK REQUIRED)
+endif()
+
 find_package(tinyxml2 REQUIRED)
 find_package(ipopt REQUIRED)
 if ( ${Python3_FOUND} AND ${Python3_MATPLOTLIB} )
@@ -80,3 +93,9 @@ if ( ${Python3_FOUND} AND ${Python3_MATPLOTLIB} )
 endif()
 find_package(loggercpp REQUIRED)
 find_package(cppad REQUIRED)
+
+if (MSYS)
+	file(COPY ${CMAKE_BINARY_DIR}/lion/thirdparty/bin/msys-blas-3.dll DESTINATION ${CMAKE_BINARY_DIR}/lion/thirdparty/lib)
+	file(COPY ${CMAKE_BINARY_DIR}/lion/thirdparty/bin/msys-lapack-3.dll DESTINATION ${CMAKE_BINARY_DIR}/lion/thirdparty/lib)
+	file(COPY ${CMAKE_BINARY_DIR}/lion/thirdparty/bin/msys-tinyxml2-9.dll DESTINATION ${CMAKE_BINARY_DIR}/lion/thirdparty/lib)
+endif()

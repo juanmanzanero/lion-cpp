@@ -6,7 +6,7 @@
 template<class T>
 inline Polynomial<T>::Polynomial()
 : _n_blocks(0),
-  _N(0),
+  _n(0),
   _a(0.0),
   _b(0.0),
   _ai(),
@@ -18,7 +18,7 @@ inline Polynomial<T>::Polynomial()
 template<class T>
 inline Polynomial<T>::Polynomial(const std::vector<scalar>& x0, const std::vector<T>& y0, const size_t N, bool smooth)
 : _n_blocks(smooth ? 1 : (x0.size()-1)/(N) + ( ((x0.size()-1 % (N))!=0) ? 1.0 : 0.0 )),
-  _N(_n_blocks,N),
+  _n(_n_blocks,N),
   _a(x0.front()),
   _b(x0.back()),
   _ai(_n_blocks),
@@ -80,7 +80,7 @@ template<class T>
 inline Polynomial<T>::Polynomial(const std::vector<size_t>& N, const std::vector<scalar>& ai, const std::vector<scalar>& bi, 
     const std::vector<std::vector<T>>& coeffs)
 : _n_blocks(coeffs.size()),
-  _N(N),
+  _n(N),
   _a(ai.front()),
   _b(bi.back()),
   _ai(ai),
@@ -98,7 +98,7 @@ inline Polynomial<T>::Polynomial(const std::vector<size_t>& N, const std::vector
 template<class T>
 inline Polynomial<T>::Polynomial(const double x0, const std::vector<scalar>& L, const std::vector<std::vector<T>>& y0)
 : _n_blocks(L.size()),
-  _N(_n_blocks),
+  _n(_n_blocks),
   _a(x0),
   _b(std::accumulate(L.begin(), L.end(), x0)),
   _ai(_n_blocks),
@@ -127,8 +127,8 @@ inline Polynomial<T>::Polynomial(const double x0, const std::vector<scalar>& L, 
     // Set blocks order and compute coefficients
     for (size_t i = 0; i < _n_blocks; ++i)
     {
-        _N[i] = y0[i].size()-1;
-        _coeffs[i] = compute_coefficients(y0[i],_N[i]);
+        _n[i] = y0[i].size()-1;
+        _coeffs[i] = compute_coefficients(y0[i],_n[i]);
     }
 }
 
@@ -137,7 +137,7 @@ template<class T>
 inline Polynomial<T>::Polynomial(const std::vector<std::vector<scalar>>& x0, const std::vector<std::vector<T>>& y0, 
         bool continuous, bool smooth)
 : _n_blocks(x0.size()),
-  _N(_n_blocks),
+  _n(_n_blocks),
   _a(x0.front().front()),
   _b(x0.back().back()),
   _ai(_n_blocks),
@@ -185,7 +185,7 @@ inline Polynomial<T>::Polynomial(const std::vector<Polynomial>& p)
 
         for (size_t i = 0; i < pol._n_blocks; ++i)
         {
-            _N.push_back(pol._N[i]);
+            _n.push_back(pol._n[i]);
             _ai.push_back(pol._ai[i]);
             _bi.push_back(pol._bi[i]);
             _coeffs.push_back(pol._coeffs[i]);
@@ -209,11 +209,11 @@ inline T Polynomial<T>::operator[](scalar x) const
 
     scalar xi = 2.0*(x-_ai[block])/(_bi[block]-_ai[block]) - 1.0;
 
-    std::vector<scalar> Lk = legendre_polynomials(_N[block],xi);
+    std::vector<scalar> Lk = legendre_polynomials(_n[block],xi);
 
     T result = T(0.0);
 
-    for (size_t i = 0; i <= _N[block]; ++i)
+    for (size_t i = 0; i <= _n[block]; ++i)
         result += _coeffs[block][i]*Lk[i];
 
     return result;
@@ -242,16 +242,16 @@ inline Polynomial<T> Polynomial<T>::derivative() const
 
     for (size_t n = 0; n < _n_blocks; ++n)
     {
-        coeffs[n] = std::vector<T>(_N[n],T(0.0));
-        for (size_t i = 0; i <= _N[n]; ++i)
+        coeffs[n] = std::vector<T>(_n[n],T(0.0));
+        for (size_t i = 0; i <= _n[n]; ++i)
             for (int j = i-1 ; j >= 0; j -= 2)
                 coeffs[n][j] += _coeffs[n][i]*(2.0*(j+1.0)-1.0);
     
-        for (size_t i = 0; i < _N[n]; ++i)
+        for (size_t i = 0; i < _n[n]; ++i)
             coeffs[n][i] *= 2.0/(_bi[n]-_ai[n]);
     }
 
-    std::vector<size_t> N_minus_one = _N;
+    std::vector<size_t> N_minus_one = _n;
 
     for (auto it = N_minus_one.begin(); it != N_minus_one.end(); ++it)
         --(*it);
@@ -269,38 +269,38 @@ inline Polynomial<T> Polynomial<T>::integral() const
 
     for (size_t n = 0; n < _n_blocks; ++n)
     {
-        coeffs[n] = std::vector<T>(_N[n]+2,0.0);
+        coeffs[n] = std::vector<T>(_n[n]+2,0.0);
         // integral of L0 = L1
         coeffs[n][1] = _coeffs[n][0];
-        for (size_t i = 1; i <= _N[n]; ++i)
+        for (size_t i = 1; i <= _n[n]; ++i)
         {
             coeffs[n][i+1] += _coeffs[n][i]/(2.0*i+1.0);
             coeffs[n][i-1] -= _coeffs[n][i]/(2.0*i+1.0);
         }
 
-        for (size_t i = 0; i < _N[n]+2; ++i)
+        for (size_t i = 0; i < _n[n]+2; ++i)
             coeffs[n][i] *= 0.5*(_bi[n]-_ai[n]);
 
         // Set the L0 coefficient to match left_value at p(-1)
-        std::vector<scalar> Lk = legendre_polynomials(_N[n]+1,-1.0);
+        std::vector<scalar> Lk = legendre_polynomials(_n[n]+1,-1.0);
 
         T result = 0.0;
 
-        for (size_t i = 1; i <= _N[n]+1; ++i)
+        for (size_t i = 1; i <= _n[n]+1; ++i)
             result += coeffs[n][i]*Lk[i];
 
         coeffs[n][0] = -result;
 
         // Update left_value to p(1.0) for the next block
-        Lk = legendre_polynomials(_N[n]+1,1.0);
+        Lk = legendre_polynomials(_n[n]+1,1.0);
 
         left_value = 0.0;
 
-        for (size_t i = 0; i <= _N[n]+1; ++i)
+        for (size_t i = 0; i <= _n[n]+1; ++i)
             left_value += coeffs[n][i]*Lk[i];
     }
 
-    std::vector<size_t> N_plus_one = _N;
+    std::vector<size_t> N_plus_one = _n;
 
     for (auto it = N_plus_one.begin(); it != N_plus_one.end(); ++it)
         ++(*it);

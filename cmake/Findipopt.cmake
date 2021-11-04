@@ -1,5 +1,4 @@
 if (NOT ipopt_FOUND)
-    find_package(LAPACK)
     find_path(IPOPT_INCLUDE_DIR IpIpoptApplication.hpp PATHS ${CMAKE_BINARY_DIR}/lion/thirdparty/include/coin-or NO_DEFAULT_PATH)
     find_library(IPOPT_LIBRARY NAMES ipopt PATHS ${CMAKE_BINARY_DIR}/lion/thirdparty/lib HINTS ${CMAKE_BINARY_DIR}/lion/thirdparty/lib NO_DEFAULT_PATH)
     find_library(MUMPS_LIBRARY NAMES coinmumps PATHS ${CMAKE_BINARY_DIR}/lion/thirdparty/lib HINTS ${CMAKE_BINARY_DIR}/lion/thirdparty/lib NO_DEFAULT_PATH) 

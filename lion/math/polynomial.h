@@ -130,7 +130,7 @@ class Polynomial
                                         //! piecewise polynomial in the smooth polynomial version
 
     size_t _n_blocks;       //! The number of blocks
-    std::vector<size_t> _N; //! The polynomial order of each block
+    std::vector<size_t> _n; //! The polynomial order of each block
     scalar _a;              //! The left bound
     scalar _b;              //! The right bound
     
