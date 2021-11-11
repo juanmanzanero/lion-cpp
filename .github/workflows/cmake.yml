@@ -4,7 +4,7 @@ on:
   push:
 
   schedule:
-    - cron: 0 4 * * *
+    - cron: 0 4 * * MON
 
 env:
   BUILD_RELEASE: Release
