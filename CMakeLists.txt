@@ -60,8 +60,10 @@ install(DIRECTORY "${CMAKE_SOURCE_DIR}/lion" TYPE INCLUDE)
 install(DIRECTORY "${CMAKE_BINARY_DIR}/lion/thirdparty/include/"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/lion/thirdparty/include/")
 
-install(DIRECTORY "${CMAKE_BINARY_DIR}/lion/thirdparty/bin/"
-	DESTINATION "${CMAKE_INSTALL_BINDIR}")
+if (EXISTS ${CMAKE_BINARY_DIR}/lion/thirdparty/bin/)
+    install(DIRECTORY "${CMAKE_BINARY_DIR}/lion/thirdparty/bin/"
+	    DESTINATION "${CMAKE_INSTALL_BINDIR}")
+endif()
 
 include(CMakePackageConfigHelpers)
 
