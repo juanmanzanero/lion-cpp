@@ -23,6 +23,8 @@ if (NOT ipopt_FOUND)
 
 	file(GLOB IPOPT_LIB_ALL_FILES "${CMAKE_BINARY_DIR}/lion/thirdparty/lib/libipopt*")
 	file(GLOB MUMPS_LIB_ALL_FILES "${CMAKE_BINARY_DIR}/lion/thirdparty/lib/libcoinmumps*")
+	file(GLOB BLAS_LIB_ALL_FILES "${CMAKE_BINARY_DIR}/lion/thirdparty/lib/libblas*")
+	file(GLOB LAPACK_LIB_ALL_FILES "${CMAKE_BINARY_DIR}/lion/thirdparty/lib/liblapack*")
 	
 	set(IPOPT_LIBRARY_INSTALL ${CMAKE_INSTALL_FULL_LIBDIR}/${IPOPT_LIB_NAME})
 
@@ -46,6 +48,14 @@ if (NOT ipopt_FOUND)
         endforeach()
 
         foreach(t ${MUMPS_LIB_ALL_FILES})
+    	    install(FILES "${t}" TYPE LIB) 
+        endforeach()
+
+	foreach(t ${BLAS_LIB_ALL_FILES})
+    	    install(FILES "${t}" TYPE LIB) 
+        endforeach()
+
+	foreach(t ${LAPACK_LIB_ALL_FILES})
     	    install(FILES "${t}" TYPE LIB) 
         endforeach()
 
