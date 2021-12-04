@@ -8,7 +8,7 @@ if (NOT blaslapack_FOUND)
         set(blaslapack_FOUND YES)
 
         add_library(blaslapack INTERFACE)
-	target_link_libraries(blaslapack INTERFACE LAPACK_LIBRARIES)
+	target_link_libraries(blaslapack INTERFACE ${LAPACK_LIBRARIES})
 
     else()
 
