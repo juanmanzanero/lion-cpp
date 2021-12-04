@@ -36,9 +36,15 @@ if (NOT ipopt_FOUND)
                "$<BUILD_INTERFACE:${MUMPS_LIBRARY}>"
                "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_LIBDIR}/${MUMPS_LIB_NAME}>")
 
-        target_link_libraries(ipopt INTERFACE 
-               "$<BUILD_INTERFACE:${LAPACK_LIBRARIES}>"
-               "$<INSTALL_INTERFACE:${LAPACK_LIBRARIES}>")
+       	if (BUILD_LAPACK)
+            target_link_libraries(ipopt INTERFACE 
+                   "$<BUILD_INTERFACE:${LAPACK_LIBRARIES}>"
+		   "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_LIBDIR}/${LAPACK_LIBRARIES}>")
+	else()
+            target_link_libraries(ipopt INTERFACE 
+                   "$<BUILD_INTERFACE:${LAPACK_LIBRARIES}>"
+                   "$<INSTALL_INTERFACE:${LAPACK_LIBRARIES}>")
+	endif()
 
         target_link_directories(ipopt INTERFACE ${CMAKE_Fortran_IMPLICIT_LINK_DIRECTORIES})
         target_link_libraries(ipopt INTERFACE ${CMAKE_Fortran_IMPLICIT_LINK_LIBRARIES})
