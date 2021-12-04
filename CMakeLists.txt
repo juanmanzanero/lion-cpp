@@ -13,6 +13,7 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/thirdparty)
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/thirdparty/include)
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/lion/thirdparty)
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/lion/thirdparty/include)
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/lion/thirdparty/bin)
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 # Download third party libraries
@@ -51,7 +52,7 @@ target_include_directories(lion SYSTEM INTERFACE
 	"$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}/lion/thirdparty/include>"
 )
 
-target_link_libraries(lion INTERFACE ipopt tinyxml2)
+target_link_libraries(lion INTERFACE ipopt blaslapack tinyxml2)
 
 # Install lion
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/lion" TYPE INCLUDE)
@@ -60,10 +61,8 @@ install(DIRECTORY "${CMAKE_SOURCE_DIR}/lion" TYPE INCLUDE)
 install(DIRECTORY "${CMAKE_BINARY_DIR}/lion/thirdparty/include/"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/lion/thirdparty/include/")
 
-if (EXISTS ${CMAKE_BINARY_DIR}/lion/thirdparty/bin/)
-    install(DIRECTORY "${CMAKE_BINARY_DIR}/lion/thirdparty/bin/"
-	    DESTINATION "${CMAKE_INSTALL_BINDIR}")
-endif()
+install(DIRECTORY "${CMAKE_BINARY_DIR}/lion/thirdparty/bin/"
+        DESTINATION "${CMAKE_INSTALL_BINDIR}")
 
 include(CMakePackageConfigHelpers)
 
@@ -88,7 +87,7 @@ install(FILES ${version_file} ${config_file}
   DESTINATION ${cmake_files_install_dir})
 
 # Export the targets
-install(TARGETS lion ipopt tinyxml2
+install(TARGETS lion ipopt blaslapack tinyxml2
   EXPORT ${targets_export_name}
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
   ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"

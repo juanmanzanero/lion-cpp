@@ -1,9 +1,10 @@
 include(python)
 
 # Find lapack
-find_package(LAPACK) 
+set(BUILD_LAPACK NO)
+find_package(blaslapack) 
 
-if (NOT ${LAPACK_FOUND})
+if (NOT ${blaslapack_FOUND})
     set(BUILD_LAPACK YES)
 endif()
 
@@ -80,12 +81,7 @@ if ( ${ENABLE_TEST} )
 	find_package(GTest PATHS ${CMAKE_BINARY_DIR}/thirdparty REQUIRED)
 endif()
 
-if ( ${BUILD_LAPACK} )
-	find_package(LAPACK REQUIRED PATHS ${CMAKE_BINARY_DIR}/lion/thirdparty HINTS ${CMAKE_BINARY_DIR}/lion/thirdparty)
-else()
-	find_package(LAPACK REQUIRED)
-endif()
-
+find_package(blaslapack REQUIRED)
 find_package(tinyxml2 REQUIRED)
 find_package(ipopt REQUIRED)
 if ( ${Python3_FOUND} AND ${Python3_MATPLOTLIB} )
