@@ -200,7 +200,7 @@ template<class T>
 inline T Polynomial<T>::operator[](scalar x) const
 {
     if ( _n_blocks == 0 )
-        return T(0.0);
+        return T();
 
     size_t block = 0;
 
@@ -211,7 +211,7 @@ inline T Polynomial<T>::operator[](scalar x) const
 
     std::vector<scalar> Lk = legendre_polynomials(_n[block],xi);
 
-    T result = T(0.0);
+    T result = T();
 
     for (size_t i = 0; i <= _n[block]; ++i)
         result += _coeffs[block][i]*Lk[i];
@@ -224,11 +224,18 @@ template<class T>
 inline T Polynomial<T>::operator()(scalar x) const
 {
     if ( _n_blocks == 0 )
-        return T(0.0);
+        return T();
 
     // Check bounds
     if ( (x < _a) || (x > _b) )
-        throw std::runtime_error("x is out of bounds");
+    {
+        std::ostringstream s_out;
+        s_out << "x is out of bounds" << std::endl;
+        s_out << "  a: " << _a << std::endl;
+        s_out << "  x: " <<  x << std::endl;
+        s_out << "  b: " << _b ;
+        throw std::runtime_error(s_out.str());
+    }
 
     // Call operator[]
     return operator[](x);
@@ -242,7 +249,7 @@ inline Polynomial<T> Polynomial<T>::derivative() const
 
     for (size_t n = 0; n < _n_blocks; ++n)
     {
-        coeffs[n] = std::vector<T>(_n[n],T(0.0));
+        coeffs[n] = std::vector<T>(_n[n],T());
         for (size_t i = 0; i <= _n[n]; ++i)
             for (int j = i-1 ; j >= 0; j -= 2)
                 coeffs[n][j] += _coeffs[n][i]*(2.0*(j+1.0)-1.0);
@@ -313,7 +320,7 @@ template<class T>
 inline std::vector<T> Polynomial<T>::compute_coefficients(const typename std::vector<scalar>::const_iterator& ix0, 
         const typename std::vector<T>::const_iterator& iy0, const size_t N)
 {
-    std::vector<T> coeffs(N+1,0.0);
+    std::vector<T> coeffs(N+1,T());
 
     // Get quadrature nodes and weights
     auto [xj, wj] = gauss_legendre_lobatto_nodes_and_weights(N);
@@ -325,7 +332,7 @@ inline std::vector<T> Polynomial<T>::compute_coefficients(const typename std::ve
         xi[i] = 2.0*(*(ix0+i)-(*ix0))/(*(ix0+N)-(*ix0)) - 1.0;
 
     // Get y evaluated at the interpolation points
-    std::vector<T> yj(N+1,0.0);
+    std::vector<T> yj(N+1,T());
 
     for (size_t i = 0; i <= N; ++i)
         for (size_t j = 0; j <= N; ++j)
@@ -359,7 +366,7 @@ inline std::vector<T> Polynomial<T>::compute_coefficients(const typename std::ve
 template<class T>
 inline std::vector<T> Polynomial<T>::compute_coefficients(const std::vector<T>& y0, const size_t N)
 {
-    std::vector<T> coeffs(N+1,T(0.0));
+    std::vector<T> coeffs(N+1,T());
 
     // Get quadrature nodes and weights
     auto [xj, wj] = gauss_legendre_lobatto_nodes_and_weights(N);
@@ -398,7 +405,7 @@ inline std::vector<T> Polynomial<T>::compute_coefficients(const Polynomial& p, c
     const scalar& a = p.get_left_bound();
     const scalar& b = p.get_right_bound();
 
-    std::vector<T> y0(N+1,0.0);
+    std::vector<T> y0(N+1,T());
 
     for (size_t i = 0; i <= N; ++i)
         y0[i] = p(a + 0.5*(b-a)*(xj[i]+1.0));

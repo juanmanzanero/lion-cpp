@@ -5,6 +5,7 @@
 #include <regex>
 #include<iostream>
 #include "lion/thirdparty/include/logger.hpp"
+#include "types.h"
 
 #define PRINTVARIABLE(MSG,VAR) out(2) << "[" << #MSG << "] " << #VAR << ": " << VAR << std::endl
 
@@ -121,10 +122,16 @@ inline std::vector<double> string_to_double_vector(std::string s)
     return result;
 }
 
-template<typename T = double>
-constexpr T smooth_pos(T a, T eps2)
+template<typename T = scalar>
+constexpr T smooth_pos(T a, scalar eps2)
 {
     return 0.5*(a + sqrt(a*a + eps2));
+}
+
+template<typename T = scalar>
+constexpr T smooth_sign(T a, scalar eps2)
+{
+    return tanh(eps2*a);
 }
 
 

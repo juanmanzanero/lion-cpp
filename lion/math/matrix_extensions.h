@@ -12,6 +12,12 @@
 template<typename VEC1, typename VEC2, typename is_vector<VEC1>::type* = nullptr, typename is_vector<VEC2>::type* = nullptr>
 constexpr VEC1 operator+(const VEC1& lhs, const VEC2& rhs );
 
+//! Increment vector by vector
+//! @param[in] lhs: left hand side vector
+//! @param[in] rhs: right hand side vector
+template<typename VEC1, typename VEC2, typename is_vector<VEC1>::type* = nullptr, typename is_vector<VEC2>::type* = nullptr>
+constexpr VEC1& operator+=(VEC1& lhs, const VEC2& rhs );
+
 //! Subtract two vectors
 //! @param[in] lhs: left hand side vector
 //! @param[in] rhs: right hand side vector
@@ -96,6 +102,12 @@ constexpr std::array<T,M> operator*(const std::array<T,N>& lhs, const std::array
 //! @param[in] rhs: the constant
 template<typename VEC, typename is_vector<VEC>::type* = nullptr>
 constexpr VEC operator*(const VEC& lhs, const double rhs);
+
+//! Multiply a vector by a constant
+//! @param[in] lhs: the vector
+//! @param[in] rhs: the constant
+template<typename VEC, typename is_vector<VEC>::type* = nullptr>
+constexpr VEC& operator*=(VEC& lhs, const double rhs);
 
 //! Multiply a constant by a vector
 //! @param[in] lhs: the constant

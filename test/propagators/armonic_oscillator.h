@@ -15,7 +15,7 @@ inline Armonic_oscillator armonic_oscillator;
 class No_control
 {
  public:
-    std::array<scalar,2> operator() (const scalar t) const { return {}; }
+    std::array<scalar,2> operator() (const std::array<scalar,2>& q, const scalar t) const { return {}; }
 };
 
 inline No_control no_control;

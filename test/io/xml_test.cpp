@@ -192,7 +192,7 @@ TEST_F(Xml_test, create_child)
 {
     Xml_document doc_out("dummy.xml");
     doc_out.create_root_element("root");
-    Xml_element child = doc_out.get_root_element().add_children("child");
+    Xml_element child = doc_out.get_root_element().add_child("child");
     child.set_value("value for child");
     
     std::ostringstream sOut;

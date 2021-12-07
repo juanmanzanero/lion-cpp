@@ -53,7 +53,7 @@ class Xml_element
     std::vector<Xml_element> get_children() const;
 
     //! Add children
-    Xml_element add_children(const std::string& name) { return _e->InsertNewChildElement(name.c_str()); }
+    Xml_element add_child(const std::string& name) { return _e->InsertNewChildElement(name.c_str()); }
 
     //! Get child by name
     Xml_element get_child(const std::string& name) const;
@@ -72,6 +72,12 @@ class Xml_element
     //! @param[in] attribute: name of the attribute
     //! @param[in] simply pass double() to overload this version
     double get_attribute(const std::string& attribute, double&&) const { return std::stod(_e->Attribute(attribute.c_str())); }
+
+    //! Set attribute
+    void add_attribute(const std::string& attrib_name, const std::string& attrib_value) { _e->SetAttribute(attrib_name.c_str(), attrib_value.c_str()); }
+
+    template<typename T>
+    void add_attribute(const std::string& attrib_name, const T& attrib_value) { _e->SetAttribute(attrib_name.c_str(), attrib_value); }
 
     //! Print
     void print(std::ostream& os) const;

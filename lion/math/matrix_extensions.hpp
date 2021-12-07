@@ -20,6 +20,19 @@ constexpr VEC1 operator+(const VEC1& lhs, const VEC2& rhs )
 }
 
 template<typename VEC1, typename VEC2, typename is_vector<VEC1>::type*, typename is_vector<VEC2>::type*>
+constexpr VEC1& operator+=(VEC1& lhs, const VEC2& rhs )
+{
+    assert(lhs.size() == rhs.size());
+
+    for (size_t i = 0; i < lhs.size(); ++i)
+        lhs[i] += rhs[i];
+
+    return lhs;
+}
+
+
+
+template<typename VEC1, typename VEC2, typename is_vector<VEC1>::type*, typename is_vector<VEC2>::type*>
 constexpr VEC1 operator-(const VEC1& lhs, const VEC2& rhs )
 {
     assert(lhs.size() == rhs.size());
@@ -180,6 +193,17 @@ constexpr VEC operator*(const VEC& lhs, const double rhs)
 
     return result;
 }
+
+template<typename VEC, typename is_vector<VEC>::type*>
+constexpr VEC& operator*=(VEC& lhs, const double rhs)
+{
+    for (auto it = lhs.begin(); it != lhs.end(); ++it)
+        *it *= rhs;
+
+    return lhs;
+}
+
+
 
 template<typename VEC1, typename VEC2, typename is_vector<VEC1>::type*, typename is_vector<VEC2>::type*>
 constexpr VEC1 operator/(const VEC1& lhs, const VEC2& rhs)

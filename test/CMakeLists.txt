@@ -15,6 +15,7 @@ macro(new_test)
     if ( NOT APPLE)
         target_link_options(${BINARY} PUBLIC -Wl,--no-as-needed -ldl)
     endif()
+
     # Link libraries
     target_link_libraries(${BINARY} LINK_PRIVATE GTest::gtest lion)
     

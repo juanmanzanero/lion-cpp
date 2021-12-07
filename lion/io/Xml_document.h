@@ -24,6 +24,11 @@ class Xml_document
     //! @return true if OK, false if NOT OK
     bool save() { return _doc.SaveFile(_name.c_str()) == tinyxml2::XML_SUCCESS; }
 
+    //! Save an XML document to file, name given as input
+    //! @param[in] name: name of the file;
+    //! @return true if OK, false if NOT OK
+    bool save(const std::string& name) { _name = name; return save(); }
+
     //! Parse an XML document from a string
     void parse(const std::string& contents) { _doc.Parse(contents.c_str()); }
 
