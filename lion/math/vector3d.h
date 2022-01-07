@@ -10,6 +10,7 @@
 #include "lion/foundation/utils.h"
 #include "lion/foundation/constants.h"
 #include "lion/foundation/types.h"
+#include "lion/foundation/type_traits.h"
 
 //
 // Defines the typical 3 x 1 array of Ts.
@@ -74,8 +75,8 @@ constexpr T angle(const Vector3d<T> &lhs, const Vector3d<T> &rhs);
 template<typename T>
 constexpr T dot(const Vector3d<T> &lhs, const Vector3d<T> &rhs);
 
-template<typename T>
-constexpr Vector3d<T> cross(const Vector3d<T> &lhs, const Vector3d<T> &rhs);
+template<typename U, typename V, typename W = typename combine_types<U,V>::type>
+constexpr Vector3d<W> cross(const Vector3d<U> &lhs, const Vector3d<V> &rhs);
 
 template<typename T>
 constexpr T distance(const Vector3d<T> &lhs, const Vector3d<T> &rhs);

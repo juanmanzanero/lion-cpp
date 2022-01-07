@@ -174,10 +174,10 @@ constexpr T dot(const Vector3d<T> &lhs, const Vector3d<T> &rhs)
     return lhs.x() * rhs.x() + lhs.y() * rhs.y() + lhs.z() * rhs.z();
 }
 
-template<typename T>
-constexpr Vector3d<T> cross(const Vector3d<T> &lhs, const Vector3d<T> &rhs)
+template<typename U, typename V, typename W>
+constexpr Vector3d<W> cross(const Vector3d<U> &lhs, const Vector3d<V> &rhs)
 {
-    return Vector3d<T>{ lhs.y() * rhs.z() - lhs.z() * rhs.y(),
+    return Vector3d<W>{ lhs.y() * rhs.z() - lhs.z() * rhs.y(),
         lhs.z() * rhs.x() - lhs.x() * rhs.z(),
         lhs.x() * rhs.y() - lhs.y() * rhs.x() };
 }

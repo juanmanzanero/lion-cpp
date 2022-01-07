@@ -4,6 +4,7 @@
 #include <type_traits>
 #include <vector>
 #include <array>
+#include "lion/thirdparty/include/cppad/cppad.hpp"
 
 //! This file defines additional type traits to be used for SFINAE
 //! - is_vector<T>
@@ -78,6 +79,28 @@ template<typename T, std::size_t N, std::size_t M, std::size_t L>
 struct is_matrix<std::array<std::array<std::array<T,L>,M>,N>>
 {
     const static inline bool value = false;
+};
+
+template<typename U, typename V>
+struct combine_types
+{};
+
+template<typename T>
+struct combine_types<T,T>
+{
+    using type = T;
+};
+
+template<typename T>
+struct combine_types<CppAD::AD<T>,T>
+{
+    using type = CppAD::AD<T>;    
+};
+
+template<typename T>
+struct combine_types<T,CppAD::AD<T>>
+{
+    using type = CppAD::AD<T>;    
 };
 
 #endif
