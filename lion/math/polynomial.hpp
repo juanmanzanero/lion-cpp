@@ -54,13 +54,28 @@ inline Polynomial<T>::Polynomial(const std::vector<scalar>& x0, const std::vecto
         }
     
         // Add the last block
-        ix0 = x0.cend() - N - 1 ;
-        iy0 = y0.cend() - N - 1 ;
+        if ( x0.size() > N+1 )
+        {
+            // Get the remaining points
+            ix0 = x0.cend() - N - 1 ;
+            iy0 = y0.cend() - N - 1 ;
     
-        _coeffs.back() = compute_coefficients(ix0,iy0,N);
+            _coeffs.back() = compute_coefficients(ix0,iy0,N);
     
-        _ai.back() = *ix0;
-        _bi.back() = x0.back();
+            _ai.back() = *ix0;
+            _bi.back() = x0.back();
+        }
+        else
+        {
+            // Put all points if they are less than the desired order
+            ix0 = x0.cbegin();
+            iy0 = y0.cbegin();
+
+            _coeffs.back() = compute_coefficients(ix0,iy0,x0.size()-1);
+            _ai.back() = x0.front();
+            _bi.back() = x0.back();
+            _n.back()  = x0.size()-1;
+        }
     }
     else
     {
