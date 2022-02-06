@@ -27,6 +27,11 @@ inline Vector3d<T>::Vector3d(const std::vector<T> &v) noexcept(false)
     }
 }
 
+
+template<typename T>
+template<typename U>
+constexpr Vector3d<T>::Vector3d(const Vector3d<U>& other) : base_type{ other[0], other[1], other[2]} {};
+
 template<typename T>
 constexpr Vector3d<T>& Vector3d<T>::normalize()
 {
@@ -36,7 +41,7 @@ constexpr Vector3d<T>& Vector3d<T>::normalize()
 template<typename T>
 constexpr T Vector3d<T>::norm() const
 {
-    return std::sqrt(x() * x() + y() * y() + z() * z());
+    return sqrt(x() * x() + y() * y() + z() * z());
 }
 
 template<typename T>
@@ -161,15 +166,15 @@ constexpr T norm(const Vector3d<T> &arg)
     return arg.norm();
 }
 
-template<typename T>
-constexpr T angle(const Vector3d<T> &lhs, const Vector3d<T> &rhs)
+template<typename U, typename V, typename W>
+constexpr W angle(const Vector3d<U> &lhs, const Vector3d<V> &rhs)
 {
-    return wrap_to_pi<T>(2.0 *
+    return wrap_to_pi<W>(2.0 *
         std::atan2(cross(lhs, rhs).norm(), dot(lhs, rhs) + lhs.safe_norm() * rhs.safe_norm()));
 }
 
-template<typename T>
-constexpr T dot(const Vector3d<T> &lhs, const Vector3d<T> &rhs)
+template<typename U, typename V, typename W>
+constexpr W dot(const Vector3d<U> &lhs, const Vector3d<V> &rhs)
 {
     return lhs.x() * rhs.x() + lhs.y() * rhs.y() + lhs.z() * rhs.z();
 }
@@ -191,9 +196,9 @@ constexpr T distance(const Vector3d<T> &lhs, const Vector3d<T> &rhs)
 template<typename T>
 constexpr Vector3d<T> sqrt(const Vector3d<T> &arg)
 {
-    return Vector3d<T>{ std::sqrt(arg.x()),
-        std::sqrt(arg.y()),
-        std::sqrt(arg.z()) };
+    return Vector3d<T>{ sqrt(arg.x()),
+        sqrt(arg.y()),
+        sqrt(arg.z()) };
 }
 
 template<typename T>
@@ -210,10 +215,10 @@ constexpr T sum(const Vector3d<T> &arg)
     return arg.x() + arg.y() + arg.z();
 }
 
-template<typename T>
-constexpr Vector3d<T> operator+(const Vector3d<T> &lhs, const Vector3d<T> &rhs)
+template<typename U, typename V, typename W>
+constexpr Vector3d<W> operator+(const Vector3d<U> &lhs, const Vector3d<V> &rhs)
 {
-    return Vector3d<T>{ lhs.x() + rhs.x(),
+    return Vector3d<W>{ lhs.x() + rhs.x(),
         lhs.y() + rhs.y(),
         lhs.z() + rhs.z() };
 }
@@ -226,10 +231,10 @@ constexpr Vector3d<T> operator-(const Vector3d<T> &rhs)
         -rhs.z() };
 }
 
-template<typename T>
-constexpr Vector3d<T> operator-(const Vector3d<T> &lhs, const Vector3d<T> &rhs)
+template<typename U, typename V, typename W>
+constexpr Vector3d<W> operator-(const Vector3d<U> &lhs, const Vector3d<V> &rhs)
 {
-    return Vector3d<T>{ lhs.x() - rhs.x(),
+    return Vector3d<W>{ lhs.x() - rhs.x(),
         lhs.y() - rhs.y(),
         lhs.z() - rhs.z() };
 }
@@ -282,18 +287,18 @@ constexpr Vector3d<T> operator-(T val, const Vector3d<T> &rhs)
         val - rhs.z() };
 }
 
-template<typename T>
-constexpr Vector3d<T> operator*(const Vector3d<T> &lhs, T val)
+template<typename U, typename V, typename W>
+constexpr Vector3d<W> operator*(const Vector3d<U> &lhs, V val)
 {
-    return Vector3d<T>{ lhs.x() * val,
+    return Vector3d<W>{ lhs.x() * val,
         lhs.y() * val,
         lhs.z() * val };
 }
 
-template<typename T>
-constexpr Vector3d<T> operator*(T val, const Vector3d<T> &rhs)
+template<typename U, typename V, typename W>
+constexpr Vector3d<W> operator*(U val, const Vector3d<V> &rhs)
 {
-    return Vector3d<T>{ val * rhs.x(),
+    return Vector3d<W>{ val * rhs.x(),
         val * rhs.y(),
         val * rhs.z() };
 }

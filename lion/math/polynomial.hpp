@@ -242,9 +242,10 @@ inline T Polynomial<T>::operator()(scalar x) const
         return T();
 
     // Check bounds
-    if ( (x < _a) || (x > _b) )
+    if ( (x < _a-100*eps) || (x > _b+100.0*eps) )
     {
         std::ostringstream s_out;
+        s_out << std::setprecision(17);
         s_out << "x is out of bounds" << std::endl;
         s_out << "  a: " << _a << std::endl;
         s_out << "  x: " <<  x << std::endl;

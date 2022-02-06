@@ -57,4 +57,83 @@ inline void read_parameters(Xml_document& doc, const std::string& path, const st
 }
 
 
+template<typename T>
+inline bool set_parameter(const std::vector<Database_parameter>& p, const std::string& parameter, const std::string& path, const T value)
+{
+    for (auto ip = p.cbegin(); ip != p.cend(); ++ip)
+    {
+        if ( (path+ip->name) != parameter)
+            continue;
+
+        switch (ip->type)
+        {
+         case(Database_parameter::DOUBLE): 
+            if constexpr (std::is_same<double,T>::value)
+            {
+                *static_cast<double*>(ip->address) = value;
+                return true;
+            }
+            else
+            {   
+                throw std::runtime_error("Attempt to set double from non-double type");
+            }
+            break;
+
+         case(Database_parameter::INT): 
+            if constexpr (std::is_same<int,T>::value)
+            {
+                *static_cast<int*>(ip->address) = value;
+                return true;
+            }
+            else
+            {   
+                throw std::runtime_error("Attempt to set int from non-int type");
+            }
+            break;
+
+         case(Database_parameter::STD_VECTOR_DOUBLE): 
+            if constexpr (std::is_same<std::vector<double>,T>::value)
+            {
+                *static_cast<std::vector<double>*>(ip->address) = value;
+                return true;
+            }
+            else
+            {   
+                throw std::runtime_error("Attempt to set double vector from non-double vector type");
+            }
+            break;
+
+         case(Database_parameter::VECTOR3): 
+            if constexpr (std::is_same<std::vector<double>,T>::value)
+            {
+                *static_cast<sVector3d*>(ip->address) = value;
+                return true;
+            }
+            else
+            {
+                throw std::runtime_error("Attempt to set vector3d from non-vector3d type");
+            }
+            break;
+
+         case(Database_parameter::MATRIX3X3): 
+            if constexpr (std::is_same<std::vector<sMatrix3x3>,T>::value)
+            {
+                *static_cast<sMatrix3x3*>(ip->address) = value;
+                return true;
+            }
+            else
+            {
+                throw std::runtime_error("Attempt to set matrix3x3 from non-matrix3x3 type");
+            }
+            break;
+
+         default:
+            break;
+        }
+    }
+
+    return false;
+}
+
+
 #endif

@@ -6,6 +6,7 @@
 #include<iostream>
 #include "lion/thirdparty/include/logger.hpp"
 #include "types.h"
+#include "lion/math/vector3d.h"
 
 #define PRINTVARIABLE(MSG,VAR) out(2) << "[" << #MSG << "] " << #VAR << ": " << VAR << std::endl
 
@@ -143,8 +144,83 @@ inline std::vector<T> linspace(T a, T b, size_t N) {
     T val;
     for (x = xs.begin(), val = a; x != xs.end(); ++x, val += h)
         *x = val;
+
+    // Make sure the last element numerically fits the endpoint
+    xs.back() = b;
     return xs;
 }
 
+
+template<typename T>
+inline std::pair<Vector3d<T>,T> find_closest_point(const std::vector<sVector3d>& xy_polygon, const Vector3d<T>& x0)
+{
+    // Get number of points
+    const auto N = xy_polygon.size() - 1;
+
+    // (1) do a search along the poly vertices
+    size_t i_closest_poly      = 0;
+    sVector3d x_closest_poly = xy_polygon.front();
+    T d2_closest_poly           = dot(x_closest_poly-x0,x_closest_poly-x0);
+    T d2_current                = d2_closest_poly;
+    
+    for (size_t i = 1; i < N; ++i)
+    {
+        d2_current = dot(xy_polygon[i]-x0,xy_polygon[i]-x0);
+        if ( d2_current < d2_closest_poly )
+        {
+            i_closest_poly = i;
+            d2_closest_poly = d2_current;
+            x_closest_poly = xy_polygon[i];
+        }
+    }
+    
+    T d2_closest = d2_closest_poly;
+    Vector3d<T> x_closest = Vector3d<T>(x_closest_poly);
+    
+    // (2) compute the minimum distance to the next forward face
+    sVector3d x_next_fwd;
+    if ( i_closest_poly == N - 1)
+        x_next_fwd = xy_polygon.front();
+    else
+        x_next_fwd = xy_polygon[i_closest_poly+1];
+
+    sVector3d p = x_next_fwd - x_closest_poly;
+
+    T s_next_fwd_closest = dot(p,x0-x_closest_poly)/dot(p,p);
+    
+    if ( (s_next_fwd_closest > 0.0) && (s_next_fwd_closest < 1.0) )
+    {
+        const auto x_next_fwd_closest = x_closest_poly + p*s_next_fwd_closest;
+        const auto d2_next_fwd_closest = dot(x_next_fwd_closest - x0,x_next_fwd_closest - x0);
+        if ( d2_next_fwd_closest < d2_closest_poly )
+        {
+            x_closest = x_next_fwd_closest;
+            d2_closest = d2_next_fwd_closest;
+        }
+    }
+    
+    // (3) compute the minimum distance to the next backward face
+    sVector3d x_next_bwd;
+    if ( i_closest_poly == 0 )
+        x_next_bwd = xy_polygon.back();
+    else
+        x_next_bwd = xy_polygon[i_closest_poly-1];
+    
+    p = x_next_bwd - x_closest_poly;
+    T s_next_bwd_closest = dot(p,x0-x_closest_poly)/dot(p,p);
+    
+    if ( (s_next_bwd_closest > 0.0) && (s_next_bwd_closest < 1.0) )
+    {
+        const auto x_next_bwd_closest = x_closest_poly + p*s_next_bwd_closest;
+        const auto d2_next_bwd_closest = dot(x_next_bwd_closest - x0, x_next_bwd_closest - x0);
+        if ( d2_next_bwd_closest < d2_closest )
+        {
+            x_closest = x_next_bwd_closest;
+            d2_closest = d2_next_bwd_closest;
+        }
+    }
+
+    return {x_closest,d2_closest};
+}
 
 #endif

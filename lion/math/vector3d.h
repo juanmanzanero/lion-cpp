@@ -7,10 +7,10 @@
 #include <vector>
 #include <array>
 #include <cmath>
-#include "lion/foundation/utils.h"
 #include "lion/foundation/constants.h"
-#include "lion/foundation/types.h"
 #include "lion/foundation/type_traits.h"
+#include "lion/foundation/types.h"
+//#include "lion/foundation/utils.h"
 
 //
 // Defines the typical 3 x 1 array of Ts.
@@ -31,6 +31,9 @@ struct Vector3d : std::array<T, 3>
     constexpr explicit Vector3d(T val);
     constexpr explicit Vector3d(const base_type &arr);
     explicit Vector3d(const std::vector<T> &v) noexcept(false);
+
+    template<typename U>
+    explicit constexpr Vector3d(const Vector3d<U>& other);
 
     constexpr const T& x() const { return (*this)[0]; }
     constexpr const T& y() const { return (*this)[1]; }
@@ -72,8 +75,8 @@ constexpr T norm(const Vector3d<T> &arg);
 template<typename T>
 constexpr T angle(const Vector3d<T> &lhs, const Vector3d<T> &rhs);
 
-template<typename T>
-constexpr T dot(const Vector3d<T> &lhs, const Vector3d<T> &rhs);
+template<typename U, typename V, typename W = typename combine_types<U,V>::type>
+constexpr W dot(const Vector3d<U> &lhs, const Vector3d<V> &rhs);
 
 template<typename U, typename V, typename W = typename combine_types<U,V>::type>
 constexpr Vector3d<W> cross(const Vector3d<U> &lhs, const Vector3d<V> &rhs);
@@ -90,14 +93,14 @@ constexpr Vector3d<T> abs(const Vector3d<T> &arg);
 template<typename T>
 constexpr T sum(const Vector3d<T> &arg);
 
-template<typename T>
-constexpr Vector3d<T> operator+(const Vector3d<T> &lhs, const Vector3d<T> &rhs);
+template<typename U, typename V, typename W = typename combine_types<U,V>::type>
+constexpr Vector3d<W> operator+(const Vector3d<U> &lhs, const Vector3d<V> &rhs);
 
 template<typename T>
 constexpr Vector3d<T> operator-(const Vector3d<T> &rhs);
 
-template<typename T>
-constexpr Vector3d<T> operator-(const Vector3d<T> &lhs, const Vector3d<T> &rhs);
+template<typename U, typename V, typename W = typename combine_types<U,V>::type>
+constexpr Vector3d<W> operator-(const Vector3d<U> &lhs, const Vector3d<V> &rhs);
 
 template<typename T>
 constexpr Vector3d<T> operator*(const Vector3d<T> &lhs, const Vector3d<T> &rhs);
@@ -117,11 +120,11 @@ constexpr Vector3d<T> operator-(const Vector3d<T> &lhs, T val);
 template<typename T>
 constexpr Vector3d<T> operator-(T val, const Vector3d<T> &rhs);
 
-template<typename T>
-constexpr Vector3d<T> operator*(const Vector3d<T> &lhs, T val);
+template<typename U, typename V, typename W = typename combine_types<U,V>::type>
+constexpr Vector3d<W> operator*(const Vector3d<U> &lhs, V val);
 
-template<typename T>
-constexpr Vector3d<T> operator*(T val, const Vector3d<T> &rhs);
+template<typename U, typename V, typename W = typename combine_types<U,V>::type>
+constexpr Vector3d<W> operator*(U val, const Vector3d<V> &rhs);
 
 template<typename T>
 constexpr Vector3d<T> operator/(const Vector3d<T> &lhs, T val);
