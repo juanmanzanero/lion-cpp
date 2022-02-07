@@ -1,7 +1,7 @@
 #ifndef __FRAME_H__
 #define __FRAME_H__
 
-#include "lion/math/vector3d.h"
+#include "lion/math/vector3d.hpp"
 #include "lion/math/matrix3x3.h"
 #include "rotations.h"
 

@@ -2,7 +2,7 @@
 #define __PARAMETERS_H__
 
 #include "Xml_document.h"
-#include "lion/math/vector3d.h"
+#include "lion/math/vector3d.hpp"
 #include "lion/math/matrix3x3.h"
 
 struct Database_parameter

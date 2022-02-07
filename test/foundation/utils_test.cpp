@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "lion/foundation/utils.h"
+#include "lion/foundation/utils.hpp"
 
 
 TEST(utils_test, string_to_double_vector)

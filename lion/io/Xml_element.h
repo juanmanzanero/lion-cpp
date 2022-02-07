@@ -2,8 +2,8 @@
 #define __XML_ELEMENT_H__
 
 #include "lion/thirdparty/include/tinyxml2.h"
-#include "lion/foundation/utils.h"
-#include "lion/math/vector3d.h"
+#include "lion/foundation/utils.hpp"
+#include "lion/math/vector3d.hpp"
 #include "lion/math/matrix3x3.h"
 #include "lion/thirdparty/include/logger.hpp"
 

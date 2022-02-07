@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lion/foundation/utils.h"
+#include "lion/foundation/utils.hpp"
 
 //
 // tr7::Matrix3x3 implementation header, #included by "tr7/base/matrix3x3.h"

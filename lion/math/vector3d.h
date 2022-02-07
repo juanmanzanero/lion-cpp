@@ -10,7 +10,6 @@
 #include "lion/foundation/constants.h"
 #include "lion/foundation/type_traits.h"
 #include "lion/foundation/types.h"
-//#include "lion/foundation/utils.h"
 
 //
 // Defines the typical 3 x 1 array of Ts.
@@ -140,7 +139,6 @@ std::istream& operator>>(std::istream &is, Vector3d<T> &v);
 
 using sVector3d = Vector3d<scalar>;
 
-
 //! Add the capability to add vectors of different type to scalar vectors
 template<typename T>
 typename std::enable_if<!std::is_same<T,scalar>::value,Vector3d<T>>::type operator+(Vector3d<T> lhs, const sVector3d& rhs);
@@ -150,13 +148,5 @@ typename std::enable_if<!std::is_same<T,scalar>::value,Vector3d<T>>::type operat
 
 template<typename T>
 typename std::enable_if<!std::is_same<T,scalar>::value,Vector3d<T>>::type operator/(const Vector3d<T>& lhs, const scalar rhs) { return {lhs[0]/rhs, lhs[1]/rhs, lhs[2]/rhs}; }
-
-
-
-#include "vector3d.hpp"
-
-constexpr sVector3d UX{1.0, 0.0, 0.0};
-constexpr sVector3d UY{0.0, 1.0, 0.0};
-constexpr sVector3d UZ{0.0, 0.0, 1.0};
 
 #endif

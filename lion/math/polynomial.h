@@ -3,7 +3,7 @@
 
 #include "lion/foundation/types.h"
 #include "legendre_algorithms.h"
-#include "vector3d.h"
+#include "vector3d.hpp"
 
 //!         A polynomial class
 //!         ------------------

@@ -6,7 +6,7 @@
 #include "lion/math/matrix_extensions.h"
 #include <math.h>
 #include <iomanip>
-#include "lion/foundation/utils.h"
+#include "lion/foundation/utils.hpp"
 #include "lion/thirdparty/include/logger.hpp"
 
 

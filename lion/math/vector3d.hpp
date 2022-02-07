@@ -1,6 +1,12 @@
 //
 // tr7::Vector3d<T> implementation header, #included by "tr7/base/vector3d.h"
 //
+#ifndef __VECTOR3D_HPP__
+#define __VECTOR3D_HPP__
+
+#include "vector3d.h"
+#include "lion/foundation/utils.hpp"
+
 template<typename T>
 constexpr Vector3d<T>::Vector3d(T x, T y, T z) :
     base_type{ x, y, z } {}
@@ -345,3 +351,9 @@ typename std::enable_if<!std::is_same<T,scalar>::value,Vector3d<T>>::type operat
     return lhs;
 }
 
+constexpr sVector3d UX{1.0, 0.0, 0.0};
+constexpr sVector3d UY{0.0, 1.0, 0.0};
+constexpr sVector3d UZ{0.0, 0.0, 1.0};
+
+
+#endif
