@@ -151,7 +151,7 @@ inline std::vector<T> linspace(T a, T b, size_t N) {
 
 
 template<typename T>
-inline std::pair<Vector3d<T>,T> find_closest_point(const std::vector<sVector3d>& xy_polygon, const Vector3d<T>& x0)
+inline std::pair<Vector3d<T>,T> find_closest_point(const std::vector<sVector3d>& xy_polygon, const Vector3d<T>& x0, bool closed)
 {
     // Get number of points
     const auto N = xy_polygon.size();
@@ -178,8 +178,14 @@ inline std::pair<Vector3d<T>,T> find_closest_point(const std::vector<sVector3d>&
     
     // (2) compute the minimum distance to the next forward face
     sVector3d x_next_fwd;
+    bool skip_calculation = false;
     if ( i_closest_poly == N - 1)
-        x_next_fwd = xy_polygon.front();
+    {
+        if ( closed )
+            x_next_fwd = xy_polygon.front();
+        else
+            skip_calculation = true;
+    }
     else
         x_next_fwd = xy_polygon[i_closest_poly+1];
 
@@ -187,7 +193,7 @@ inline std::pair<Vector3d<T>,T> find_closest_point(const std::vector<sVector3d>&
 
     T s_next_fwd_closest = dot(p,x0-x_closest_poly)/dot(p,p);
     
-    if ( (s_next_fwd_closest > 0.0) && (s_next_fwd_closest < 1.0) )
+    if ( !skip_calculation && (s_next_fwd_closest > 0.0) && (s_next_fwd_closest < 1.0) )
     {
         const auto x_next_fwd_closest = x_closest_poly + p*s_next_fwd_closest;
         const auto d2_next_fwd_closest = dot(x_next_fwd_closest - x0,x_next_fwd_closest - x0);
@@ -200,15 +206,21 @@ inline std::pair<Vector3d<T>,T> find_closest_point(const std::vector<sVector3d>&
     
     // (3) compute the minimum distance to the next backward face
     sVector3d x_next_bwd;
+    skip_calculation = false;
     if ( i_closest_poly == 0 )
-        x_next_bwd = xy_polygon.back();
+    {
+        if ( closed ) 
+            x_next_bwd = xy_polygon.back();
+        else
+            skip_calculation = true;
+    }
     else
         x_next_bwd = xy_polygon[i_closest_poly-1];
     
     p = x_next_bwd - x_closest_poly;
     T s_next_bwd_closest = dot(p,x0-x_closest_poly)/dot(p,p);
     
-    if ( (s_next_bwd_closest > 0.0) && (s_next_bwd_closest < 1.0) )
+    if ( !skip_calculation && (s_next_bwd_closest > 0.0) && (s_next_bwd_closest < 1.0) )
     {
         const auto x_next_bwd_closest = x_closest_poly + p*s_next_bwd_closest;
         const auto d2_next_bwd_closest = dot(x_next_bwd_closest - x0, x_next_bwd_closest - x0);
