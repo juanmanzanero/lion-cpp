@@ -47,7 +47,7 @@ class Xml_element
 
     //! Set the value from string
     //! @param[in] val: new string value
-    void set_value(const std::string& val) { _e->SetText(val.c_str()); }
+    Xml_element& set_value(const std::string& val) { _e->SetText(val.c_str()); return *this;}
 
     //! Get all children to a std::vector
     std::vector<Xml_element> get_children() const;
