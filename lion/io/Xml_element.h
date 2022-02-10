@@ -55,6 +55,9 @@ class Xml_element
     //! Add children
     Xml_element add_child(const std::string& name) { return _e->InsertNewChildElement(name.c_str()); }
 
+    //! Add comment
+    void add_comment(const std::string& text) { _e->InsertNewComment(text.c_str()); }
+
     //! Get child by name
     Xml_element get_child(const std::string& name) const;
 
