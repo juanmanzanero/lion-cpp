@@ -151,16 +151,16 @@ inline std::vector<T> linspace(T a, T b, size_t N) {
 
 
 template<typename T>
-inline std::pair<Vector3d<T>,T> find_closest_point(const std::vector<sVector3d>& xy_polygon, const Vector3d<T>& x0, bool closed)
+inline std::tuple<Vector3d<T>,T,std::array<size_t,2>> find_closest_point(const std::vector<sVector3d>& xy_polygon, const Vector3d<T>& x0, bool closed)
 {
     // Get number of points
     const auto N = xy_polygon.size();
 
     // (1) do a search along the poly vertices
-    size_t i_closest_poly      = 0;
+    size_t i_closest_poly    = 0;
     sVector3d x_closest_poly = xy_polygon.front();
-    T d2_closest_poly           = dot(x_closest_poly-x0,x_closest_poly-x0);
-    T d2_current                = d2_closest_poly;
+    T d2_closest_poly        = dot(x_closest_poly-x0,x_closest_poly-x0);
+    T d2_current             = d2_closest_poly;
     
     for (size_t i = 1; i < N; ++i)
     {
@@ -175,6 +175,7 @@ inline std::pair<Vector3d<T>,T> find_closest_point(const std::vector<sVector3d>&
     
     T d2_closest = d2_closest_poly;
     Vector3d<T> x_closest = Vector3d<T>(x_closest_poly);
+    std::array<size_t,2> i_closest = {i_closest_poly, i_closest_poly};
     
     // (2) compute the minimum distance to the next forward face
     sVector3d x_next_fwd;
@@ -201,6 +202,7 @@ inline std::pair<Vector3d<T>,T> find_closest_point(const std::vector<sVector3d>&
         {
             x_closest = x_next_fwd_closest;
             d2_closest = d2_next_fwd_closest;
+            i_closest = {i_closest_poly, i_closest_poly+1};
         }
     }
     
@@ -228,10 +230,11 @@ inline std::pair<Vector3d<T>,T> find_closest_point(const std::vector<sVector3d>&
         {
             x_closest = x_next_bwd_closest;
             d2_closest = d2_next_bwd_closest;
+            i_closest = {i_closest_poly-1, i_closest_poly};
         }
     }
 
-    return {x_closest,d2_closest};
+    return {x_closest,d2_closest,i_closest};
 }
 
 #endif

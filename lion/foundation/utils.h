@@ -48,6 +48,6 @@ inline std::vector<T> linspace(T a, T b, size_t N);
 
 
 template<typename T>
-inline std::pair<Vector3d<T>,T> find_closest_point(const std::vector<sVector3d>& xy_polygon, const Vector3d<T>& x0, bool closed);
+inline std::tuple<Vector3d<T>,T,std::array<size_t,2>> find_closest_point(const std::vector<sVector3d>& xy_polygon, const Vector3d<T>& x0, bool closed);
 
 #endif
