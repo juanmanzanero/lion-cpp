@@ -1,5 +1,5 @@
-# ifndef CPPAD_IPOPT_SOLVE_HPP
-# define CPPAD_IPOPT_SOLVE_HPP
+# ifndef __IPOPT_CPPAD_HANDLER_HPP__
+# define __IPOPT_CPPAD_HANDLER_HPP__
 
 # include <cppad/cppad.hpp>
 # include <coin-or/IpIpoptApplication.hpp>
