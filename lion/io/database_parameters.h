@@ -104,7 +104,7 @@ inline bool set_parameter(const std::vector<Database_parameter>& p, const std::s
             break;
 
          case(Database_parameter::VECTOR3): 
-            if constexpr (std::is_same<std::vector<double>,T>::value)
+            if constexpr (std::is_same<sVector3d,T>::value)
             {
                 *static_cast<sVector3d*>(ip->address) = value;
                 return true;
@@ -116,7 +116,7 @@ inline bool set_parameter(const std::vector<Database_parameter>& p, const std::s
             break;
 
          case(Database_parameter::MATRIX3X3): 
-            if constexpr (std::is_same<std::vector<sMatrix3x3>,T>::value)
+            if constexpr (std::is_same<sMatrix3x3,T>::value)
             {
                 *static_cast<sMatrix3x3*>(ip->address) = value;
                 return true;
