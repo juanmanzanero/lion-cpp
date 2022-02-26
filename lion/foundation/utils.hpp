@@ -151,25 +151,32 @@ inline std::vector<T> linspace(T a, T b, size_t N) {
 
 
 template<typename T>
-inline std::tuple<Vector3d<T>,T,std::array<size_t,2>> find_closest_point(const std::vector<sVector3d>& xy_polygon, const Vector3d<T>& x0, bool closed)
+inline std::tuple<Vector3d<T>,T,std::array<size_t,2>> find_closest_point(const std::vector<sVector3d>& xy_polygon, const Vector3d<T>& x0, bool closed, const size_t i_start, const scalar maximum_distance)
 {
     // Get number of points
     const auto N = xy_polygon.size();
 
     // (1) do a search along the poly vertices
-    size_t i_closest_poly    = 0;
-    sVector3d x_closest_poly = xy_polygon.front();
+    size_t i_closest_poly    = i_start;
+    sVector3d x_closest_poly = xy_polygon[i_start];
     T d2_closest_poly        = dot(x_closest_poly-x0,x_closest_poly-x0);
     T d2_current             = d2_closest_poly;
-    
-    for (size_t i = 1; i < N; ++i)
+
+    scalar current_distance = 0.0;
+
+    for (size_t i = i_start+1; i < N; ++i)
     {
-        d2_current = dot(xy_polygon[i]-x0,xy_polygon[i]-x0);
-        if ( d2_current < d2_closest_poly )
+        current_distance += norm(xy_polygon[i]-xy_polygon[i-1]);
+
+        if ( (current_distance <= maximum_distance) || (i < i_start + 5) )
         {
-            i_closest_poly = i;
-            d2_closest_poly = d2_current;
-            x_closest_poly = xy_polygon[i];
+            d2_current = dot(xy_polygon[i]-x0,xy_polygon[i]-x0);
+            if ( d2_current < d2_closest_poly )
+            {
+                i_closest_poly = i;
+                d2_closest_poly = d2_current;
+                x_closest_poly = xy_polygon[i];
+            }
         }
     }
     
@@ -178,63 +185,140 @@ inline std::tuple<Vector3d<T>,T,std::array<size_t,2>> find_closest_point(const s
     std::array<size_t,2> i_closest = {i_closest_poly, i_closest_poly};
     
     // (2) compute the minimum distance to the next forward face
-    sVector3d x_next_fwd;
     bool skip_calculation = false;
+    size_t i_next_fwd;
     if ( i_closest_poly == N - 1)
     {
         if ( closed )
-            x_next_fwd = xy_polygon.front();
+            i_next_fwd = 0;
         else
             skip_calculation = true;
     }
     else
-        x_next_fwd = xy_polygon[i_closest_poly+1];
+        i_next_fwd = i_closest_poly + 1;
 
-    sVector3d p = x_next_fwd - x_closest_poly;
-
-    T s_next_fwd_closest = dot(p,x0-x_closest_poly)/dot(p,p);
-    
-    if ( !skip_calculation && (s_next_fwd_closest > 0.0) && (s_next_fwd_closest < 1.0) )
+    if ( !skip_calculation )
     {
-        const auto x_next_fwd_closest = x_closest_poly + p*s_next_fwd_closest;
-        const auto d2_next_fwd_closest = dot(x_next_fwd_closest - x0,x_next_fwd_closest - x0);
-        if ( d2_next_fwd_closest < d2_closest_poly )
+        const sVector3d x_next_fwd = xy_polygon[i_next_fwd];
+        sVector3d p = x_next_fwd - x_closest_poly;
+    
+        T s_next_fwd_closest = dot(p,x0-x_closest_poly)/dot(p,p);
+        
+        if ( (s_next_fwd_closest > 0.0) && (s_next_fwd_closest < 1.0) )
         {
-            x_closest = x_next_fwd_closest;
-            d2_closest = d2_next_fwd_closest;
-            i_closest = {i_closest_poly, i_closest_poly+1};
+            const auto x_next_fwd_closest = x_closest_poly + p*s_next_fwd_closest;
+            const auto d2_next_fwd_closest = dot(x_next_fwd_closest - x0,x_next_fwd_closest - x0);
+            if ( d2_next_fwd_closest < d2_closest_poly )
+            {
+                x_closest = x_next_fwd_closest;
+                d2_closest = d2_next_fwd_closest;
+                i_closest = {i_closest_poly, i_next_fwd};
+            }
         }
     }
-    
+        
     // (3) compute the minimum distance to the next backward face
-    sVector3d x_next_bwd;
+    size_t    i_next_bwd;
     skip_calculation = false;
     if ( i_closest_poly == 0 )
     {
         if ( closed ) 
-            x_next_bwd = xy_polygon.back();
+            i_next_bwd = xy_polygon.size()-1;
         else
             skip_calculation = true;
     }
     else
-        x_next_bwd = xy_polygon[i_closest_poly-1];
+        i_next_bwd = i_closest_poly - 1;
     
-    p = x_next_bwd - x_closest_poly;
-    T s_next_bwd_closest = dot(p,x0-x_closest_poly)/dot(p,p);
-    
-    if ( !skip_calculation && (s_next_bwd_closest > 0.0) && (s_next_bwd_closest < 1.0) )
+    if ( !skip_calculation )
     {
-        const auto x_next_bwd_closest = x_closest_poly + p*s_next_bwd_closest;
-        const auto d2_next_bwd_closest = dot(x_next_bwd_closest - x0, x_next_bwd_closest - x0);
-        if ( d2_next_bwd_closest < d2_closest )
+        const sVector3d x_next_bwd = xy_polygon[i_next_bwd];
+        const sVector3d p = x_next_bwd - x_closest_poly;
+        T s_next_bwd_closest = dot(p,x0-x_closest_poly)/dot(p,p);
+    
+        if ( (s_next_bwd_closest > 0.0) && (s_next_bwd_closest < 1.0) )
         {
-            x_closest = x_next_bwd_closest;
-            d2_closest = d2_next_bwd_closest;
-            i_closest = {i_closest_poly-1, i_closest_poly};
+            const auto x_next_bwd_closest = x_closest_poly + p*s_next_bwd_closest;
+            const auto d2_next_bwd_closest = dot(x_next_bwd_closest - x0, x_next_bwd_closest - x0);
+            if ( d2_next_bwd_closest < d2_closest )
+            {
+                x_closest = x_next_bwd_closest;
+                d2_closest = d2_next_bwd_closest;
+                i_closest = {i_next_bwd, i_closest_poly};
+            }
         }
     }
 
     return {x_closest,d2_closest,i_closest};
+}
+
+
+template<typename T>
+inline std::tuple<Vector3d<T>,T,std::array<size_t,2>> find_intersection(const std::vector<sVector3d>& xy_polygon, const Vector3d<T>& x0, const Vector3d<T>& p0, bool closed)
+{
+    Vector3d<T> v_intersection = {0.0, 0.0, 0.0};
+    T            d_intersection2 = 1.0e18;
+    std::array<size_t,2> i_intersection = {0, 0};
+
+    for (size_t i = 0; i < xy_polygon.size(); ++i)
+    {
+        const sVector3d& r1 = xy_polygon[i];
+        const sVector3d p1 = xy_polygon[i+1]-xy_polygon[i];
+
+        auto [s0,s1] = find_intersection(x0, p0, r1, p1);
+
+        // We only accept solutions with s > 0, and within [xy_polygon[i], xy_polygon[i+1]]
+        if ( s0 < 0.0 || s1 < 0.0 || s1 > 1.0)
+            continue;
+        else if ( s0*s0 < d_intersection2 )
+        {
+            v_intersection = r1 + p1*s1;
+            d_intersection2 = s0*s0;
+            i_intersection = {i,i+1}; 
+        }
+    } 
+
+    if ( closed )
+    {
+        const sVector3d& r1 = xy_polygon.back();
+        const sVector3d p1 = xy_polygon.front()-xy_polygon.back();
+
+        auto [s0,s1] = find_intersection(x0, p0, r1, p1);
+
+        // We only accept solutions with s > 0, and within [xy_polygon[i], xy_polygon[i+1]]
+        if ( s0 < 0.0 || s1 < 0.0 || s1 > 1.0)
+        {
+        }
+        else if ( s0*s0 < d_intersection2 )
+        {
+            v_intersection = r1 + p1*s1;
+            d_intersection2 = s0*s0;
+            i_intersection = {xy_polygon.size()-1,0}; 
+        }
+    }
+
+#ifndef NDEBUG
+    if ( (i_intersection.front() == 0) && (i_intersection.back() == 0) )
+        throw std::runtime_error("The straight given does not intersect the polygon");
+#endif
+
+    return {v_intersection, d_intersection2, i_intersection};
+}
+
+template<typename T>
+inline std::tuple<T,T> find_intersection(const Vector3d<T>& r0, const Vector3d<T>& p0, const sVector3d& r1, const sVector3d& p1)
+{
+    // (1) Check if the straights are parallel 
+    const T detA = -p0[0]*p1[1] + p0[1]*p1[0];
+    if ( std::abs(detA) < 1.0e-10 )
+        return {1.0e18, 1.0e18};
+
+    // (2) Compute the intersection otherwise
+    const auto b = r1-r0;
+    T s0 = (-b[0]*p1[1]+b[1]*p1[0])/detA;
+    T s1 = (p0[0]*b[1] - p0[1]*b[0])/detA;
+
+    return {s0, s1};
 }
 
 #endif

@@ -431,7 +431,7 @@ TEST(utils_test, find_closest_point)
 
     for (size_t i = 0; i < x_closest.size(); ++i)
     {
-        r_closest_computed[i] = std::get<0>(find_closest_point(r_polygon, r_targets[i], true));
+        r_closest_computed[i] = std::get<0>(find_closest_point(r_polygon, r_targets[i], true, 0, 1.0e18));
         EXPECT_DOUBLE_EQ(r_closest_computed[i][0], r_closest[i][0]);
         EXPECT_DOUBLE_EQ(r_closest_computed[i][1], r_closest[i][1]);
         EXPECT_DOUBLE_EQ(r_closest_computed[i][2], r_closest[i][2]);
