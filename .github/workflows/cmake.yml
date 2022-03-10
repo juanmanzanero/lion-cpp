@@ -206,6 +206,11 @@ jobs:
       with:
         name: libraries_debug
         path: ${{runner.workspace}}
+
+    - name: Apt-get update
+      working-directory: ${{runner.workspace}}
+      shell: bash
+      run: sudo apt-get update 
       
     - name: Get valgrind
       working-directory: ${{runner.workspace}}
@@ -301,6 +306,11 @@ jobs:
         name: libraries_debug
         path: ${{runner.workspace}}
       
+    - name: Apt-get update
+      working-directory: ${{runner.workspace}}
+      shell: bash
+      run: sudo apt-get update
+      
     - name: Get valgrind
       working-directory: ${{runner.workspace}}
       shell: bash
@@ -394,6 +404,11 @@ jobs:
       with:
         name: libraries_debug
         path: ${{runner.workspace}}
+      
+    - name: Apt-get update
+      working-directory: ${{runner.workspace}}
+      shell: bash
+      run: sudo apt-get update
       
     - name: Get valgrind
       working-directory: ${{runner.workspace}}
@@ -504,6 +519,11 @@ jobs:
         name: io_test_debug_data
         path: ${{runner.workspace}}/data
 
+    - name: Apt-get update
+      working-directory: ${{runner.workspace}}
+      shell: bash
+      run: sudo apt-get update
+      
     - name: Get valgrind
       working-directory: ${{runner.workspace}}
       shell: bash
@@ -597,6 +617,11 @@ jobs:
       with:
         name: libraries_debug
         path: ${{runner.workspace}}
+      
+    - name: Apt-get update
+      working-directory: ${{runner.workspace}}
+      shell: bash
+      run: sudo apt-get update
       
     - name: Get valgrind
       working-directory: ${{runner.workspace}}

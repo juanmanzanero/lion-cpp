@@ -3,6 +3,7 @@
 
 # include <cppad/cppad.hpp>
 # include <coin-or/IpIpoptApplication.hpp>
+#include  <coin-or/IpSolveStatistics.hpp>
 # include <coin-or/IpTNLP.hpp>
 
 namespace CppAD 
@@ -33,6 +34,8 @@ public:
 
     /// possible values for solution status
     status_type status;
+    /// The number of iterations
+    Ipopt::Number iter_count;
     /// the approximation solution
     Dvector x;
     /// Lagrange multipliers corresponding to lower bounds on x
@@ -84,6 +87,14 @@ private:
     const Dvector&                  gl_;
     /// upper limit for g(x)
     const Dvector&                  gu_;
+    /// are lagrange multipliers required?
+    bool                            init_lambda_;
+    /// initial guess of the lagrange multipliers
+    const Dvector*                  lambda_i_;
+    /// initial guess of lagrange multipliers for x lower bounds
+    const Dvector*                  zl_i_;
+    /// initial guess of lagrange multipliers for x upper bounds
+    const Dvector*                  zu_i_;
     /// object that evaluates f(x) and g(x)
     FG_eval&                        fg_eval_;
     /// should operation sequence be retaped for each new x.
@@ -184,6 +195,31 @@ private:
         fg0_ = adfun_.Forward(0, x0_);
     }
 public:
+ 
+    ipopt_cppad_callback(
+        size_t                 nf              ,
+        size_t                 nx              ,
+        size_t                 ng              ,
+        const Dvector&         xi              ,
+        const Dvector&         xl              ,
+        const Dvector&         xu              ,
+        const Dvector&         gl              ,
+        const Dvector&         gu              ,
+        const Dvector&         lambda_i        ,
+        const Dvector&         zl_i            ,
+        const Dvector&         zu_i            ,
+        FG_eval&               fg_eval         ,
+        bool                   retape          ,
+        bool                   sparse_forward  ,
+        bool                   sparse_reverse  ,
+        ipopt_cppad_result<Dvector>& solution ) 
+    : ipopt_cppad_callback(nf,nx,ng,xi,xl,xu,gl,gu,fg_eval,retape,sparse_forward,sparse_reverse,solution)
+    {
+        init_lambda_ = true;
+        lambda_i_ = &lambda_i;
+        zl_i_     = &zl_i;
+        zu_i_     = &zu_i;
+    }
 
     ipopt_cppad_callback(
         size_t                 nf              ,
@@ -207,6 +243,10 @@ public:
     xu_ ( xu ),
     gl_ ( gl ),
     gu_ ( gu ),
+    init_lambda_ (false),
+    lambda_i_(nullptr),
+    zl_i_(nullptr),
+    zu_i_(nullptr),
     fg_eval_ ( fg_eval ),
     retape_ ( retape ),
     sparse_forward_ ( sparse_forward ),
@@ -560,11 +600,31 @@ public:
         CPPAD_ASSERT_UNKNOWN(static_cast<size_t>(n) == nx_ );
         CPPAD_ASSERT_UNKNOWN(static_cast<size_t>(m) == ng_ );
         CPPAD_ASSERT_UNKNOWN(init_x == true);
-        CPPAD_ASSERT_UNKNOWN(init_z == false);
-        CPPAD_ASSERT_UNKNOWN(init_lambda == false);
 
         for(j = 0; j < nx_; j++)
             x[j] = xi_[j];
+
+        if ( !init_lambda_ )
+        {
+            CPPAD_ASSERT_UNKNOWN(init_z == false);
+            CPPAD_ASSERT_UNKNOWN(init_lambda == false);
+        }
+        else
+        {
+            if ( init_z ) 
+            {
+                for (j = 0; j < nx_; ++j)
+                {
+                    z_L[j] = zl_i_->operator[](j);
+                    z_U[j] = zu_i_->operator[](j);
+                }
+            }
+            if ( init_lambda )
+            {
+                for (j = 0; j < ng_; ++j)
+                    lambda[j] = lambda_i_->operator[](j);
+            }
+        }
 
         return true;
     }
@@ -1153,41 +1213,15 @@ public:
     }
 };
 
-template <class Dvector, class FG_eval>
-void ipopt_cppad_solve(
-    const std::string&                   options   ,
-    const Dvector&                       xi        ,
-    const Dvector&                       xl        ,
-    const Dvector&                       xu        ,
-    const Dvector&                       gl        ,
-    const Dvector&                       gu        ,
-    FG_eval&                             fg_eval   ,
-    ipopt_cppad_result<Dvector>&        solution  )
-{   bool ok = true;
 
-    typedef typename FG_eval::ADvector ADvector;
-
-    CPPAD_ASSERT_KNOWN(
-        xi.size() == xl.size() && xi.size() == xu.size() ,
-        "ipopt::solve: size of xi, xl, and xu are not all equal."
-    );
-    CPPAD_ASSERT_KNOWN(
-        gl.size() == gu.size() ,
-        "ipopt::solve: size of gl and gu are not equal."
-    );
-    size_t nx = xi.size();
-    size_t ng = gl.size();
-
-    // Create an IpoptApplication
-    using Ipopt::IpoptApplication;
-    Ipopt::SmartPtr<IpoptApplication> app = new IpoptApplication();
-
+inline void parse_options(Ipopt::SmartPtr<Ipopt::IpoptApplication>& app, const std::string& options, bool& retape, bool& sparse_forward, bool& sparse_reverse)
+{
     // process the options argument
     size_t begin_1, end_1, begin_2, end_2, begin_3, end_3;
     begin_1     = 0;
-    bool retape          = false;
-    bool sparse_forward  = false;
-    bool sparse_reverse  = false;
+    retape          = false;
+    sparse_forward  = false;
+    sparse_reverse  = false;
     while( begin_1 < options.size() )
     {   // split this line into tokens
         while( options[begin_1] == ' ')
@@ -1287,6 +1321,42 @@ void ipopt_cppad_solve(
         );
         begin_1++;
     }
+
+
+}
+
+
+template <class Dvector, class FG_eval>
+void ipopt_cppad_solve(
+    const std::string&                   options   ,
+    const Dvector&                       xi        ,
+    const Dvector&                       xl        ,
+    const Dvector&                       xu        ,
+    const Dvector&                       gl        ,
+    const Dvector&                       gu        ,
+    FG_eval&                             fg_eval   ,
+    ipopt_cppad_result<Dvector>&        solution  )
+{   bool ok = true;
+
+    typedef typename FG_eval::ADvector ADvector;
+
+    CPPAD_ASSERT_KNOWN(
+        xi.size() == xl.size() && xi.size() == xu.size() ,
+        "ipopt::solve: size of xi, xl, and xu are not all equal."
+    );
+    CPPAD_ASSERT_KNOWN(
+        gl.size() == gu.size() ,
+        "ipopt::solve: size of gl and gu are not equal."
+    );
+    size_t nx = xi.size();
+    size_t ng = gl.size();
+
+    // Create an IpoptApplication
+    using Ipopt::IpoptApplication;
+    Ipopt::SmartPtr<IpoptApplication> app = new IpoptApplication();
+
+    bool retape = false, sparse_forward = false, sparse_reverse = false;
+    parse_options(app, options, retape, sparse_forward, sparse_reverse);
 //  CPPAD_ASSERT_KNOWN(
 //      ! ( retape & (sparse_forward | sparse_reverse) ) ,
 //      "ipopt::solve: retape and sparse both true is not supported."
@@ -1323,8 +1393,95 @@ void ipopt_cppad_solve(
     // Run the IpoptApplication
     app->OptimizeTNLP(cppad_nlp);
 
+    solution.iter_count = app->Statistics()->IterationCount();
+
     return;
 }
+
+template <class Dvector, class FG_eval>
+void ipopt_cppad_solve(
+    const std::string&                   options   ,
+    const Dvector&                       xi        ,
+    const Dvector&                       xl        ,
+    const Dvector&                       xu        ,
+    const Dvector&                       gl        ,
+    const Dvector&                       gu        ,
+    const Dvector&                       lambda_i  ,
+    const Dvector&                       zl_i      ,
+    const Dvector&                       zu_i      ,
+    FG_eval&                             fg_eval   ,
+    ipopt_cppad_result<Dvector>&        solution  )
+{   bool ok = true;
+
+    typedef typename FG_eval::ADvector ADvector;
+
+    CPPAD_ASSERT_KNOWN(
+        xi.size() == xl.size() && xi.size() == xu.size() ,
+        "ipopt::solve: size of xi, xl, and xu are not all equal."
+    );
+    CPPAD_ASSERT_KNOWN(
+        gl.size() == gu.size() ,
+        "ipopt::solve: size of gl and gu are not equal."
+    );
+    size_t nx = xi.size();
+    size_t ng = gl.size();
+
+    // Create an IpoptApplication
+    using Ipopt::IpoptApplication;
+    Ipopt::SmartPtr<IpoptApplication> app = new IpoptApplication();
+
+    // Set warm initialization
+    app->Options()->SetStringValue("warm_start_init_point", "yes");
+    app->Options()->SetNumericValue("warm_start_bound_frac", 1.0e-16);
+    app->Options()->SetNumericValue("warm_start_mult_bound_push",1.0e-16);
+    app->Options()->SetNumericValue("warm_start_slack_bound_frac",1.0e-16);
+    app->Options()->SetNumericValue("warm_start_slack_bound_push",1.0e-16);
+
+    bool retape = false, sparse_forward = false, sparse_reverse = false;
+    parse_options(app, options, retape, sparse_forward, sparse_reverse);
+
+    // Initialize the IpoptApplication and process the options
+    Ipopt::ApplicationReturnStatus status = app->Initialize();
+    ok    &= status == Ipopt::Solve_Succeeded;
+    if( ! ok )
+    {   solution.status = ipopt_cppad_result<Dvector>::unknown;
+        return;
+    }
+
+    // Create an interface from Ipopt to this specific problem.
+    // Note the assumption here that ADvector is same as cppd_ipopt::ADvector
+    size_t nf = 1;
+    Ipopt::SmartPtr<Ipopt::TNLP> cppad_nlp =
+    new CppAD::ipopt_cppad_callback<Dvector, ADvector, FG_eval>(
+        nf,
+        nx,
+        ng,
+        xi,
+        xl,
+        xu,
+        gl,
+        gu,
+        lambda_i,
+        zl_i,
+        zu_i,
+        fg_eval,
+        retape,
+        sparse_forward,
+        sparse_reverse,
+        solution
+    );
+
+
+    // Run the IpoptApplication
+    app->OptimizeTNLP(cppad_nlp);
+
+    solution.iter_count = app->Statistics()->IterationCount();
+
+    return;
+}
+
+
+
 }
 
 # endif
