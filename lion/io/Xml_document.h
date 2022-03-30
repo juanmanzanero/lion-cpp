@@ -38,6 +38,9 @@ class Xml_document
     //! Get an element
     Xml_element get_element(const std::string& name);
 
+    //! Add an element from its full path
+    Xml_element add_element(const std::string& full_path);
+
     //! See if an element exists
     bool has_element(const std::string& name);
 
@@ -89,6 +92,36 @@ inline Xml_element Xml_document::get_element(const std::string& name)
     else
         return get_root_element().get_child(the_rest);
 }
+
+inline Xml_element Xml_document::add_element(const std::string& full_path)
+{
+    // Divide the string in root_name/the_rest
+    std::string::size_type pos = full_path.find('/');
+    std::string root_name;
+    std::string the_rest;
+
+    if (pos != std::string::npos)
+    {
+        root_name = full_path.substr(0, pos);
+        the_rest = full_path.substr(pos+1);
+    }
+    else
+    {
+        root_name = full_path;
+    }
+
+    // Look for root_name, and make sure it is the only occurrence
+    // Check that the root full_path coincides 
+    if ( root_name != get_root_element().get_name() )
+        throw std::runtime_error("Root full_path does not match");
+
+    if ( the_rest.size() == 0 )
+        throw std::runtime_error("Element already exists");
+
+    else
+        return get_root_element().add_child(the_rest);
+}
+
 
 
 inline bool Xml_document::has_element(const std::string& name)

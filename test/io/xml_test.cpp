@@ -199,3 +199,23 @@ TEST_F(Xml_test, create_child)
     sOut << doc_out;
     EXPECT_EQ(sOut.str(), "<root>\n    <child>value for child</child>\n</root>\n");
 }
+
+TEST_F(Xml_test, get_value_as_bool)
+{
+    Xml_document doc;
+    doc.parse("<doc> <a> true </a> <b> false </b> </doc>");
+
+    EXPECT_TRUE(doc.get_element("doc/a").get_value(bool()));
+    EXPECT_FALSE(doc.get_element("doc/b").get_value(bool()));
+}
+
+
+TEST_F(Xml_test, add_child)
+{
+    Xml_document doc;
+    doc.create_root_element("root");
+
+    doc.add_element("root/a/b/../b/./c/d").set_value("my value");
+
+    EXPECT_EQ(doc.get_element("root/a/b/c/d").get_value(), "my value");
+}

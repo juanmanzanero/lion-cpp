@@ -12,7 +12,7 @@ class Database_parameter_test : public ::testing::Test
 TEST_F(Database_parameter_test, double_parameter)
 {
     double d;
-    Database_parameter p = { "double_parameter", d };
+    Database_parameter_mutable p = { "double_parameter", d };
 
     read_parameters(doc, "xml_doc/parameters/", {p} );
 
@@ -23,7 +23,7 @@ TEST_F(Database_parameter_test, double_parameter)
 TEST_F(Database_parameter_test, int_parameter)
 {
     int i;
-    Database_parameter p = { "int_parameter", i };
+    Database_parameter_mutable p = { "int_parameter", i };
 
     read_parameters(doc, "xml_doc/parameters/", {p} );
 
@@ -34,7 +34,7 @@ TEST_F(Database_parameter_test, vector_parameter)
 {
     std::vector<double> v;
     std::vector<double> v_expected = { 1.0, 3.0, 5.0, 5.0, 6.0, -6 };
-    Database_parameter p = { "vector_parameter", v };
+    Database_parameter_mutable p = { "vector_parameter", v };
 
     read_parameters(doc, "xml_doc/parameters/", {p} );
 
@@ -49,7 +49,7 @@ TEST_F(Database_parameter_test, vector3_parameter)
 {
     sVector3d v;
     sVector3d v_expected = { 0.6,0.8,-1.0 };
-    Database_parameter p = { "vector3_parameter", v };
+    Database_parameter_mutable p = { "vector3_parameter", v };
 
     read_parameters(doc, "xml_doc/parameters/", {p} );
 
@@ -63,7 +63,7 @@ TEST_F(Database_parameter_test, matrix3x3_parameter)
 {
     sMatrix3x3 m;
     sMatrix3x3 m_expected = { 1,2,3,4,5,6,7,8,9 };
-    Database_parameter p = { "matrix3_parameter", m };
+    Database_parameter_mutable p = { "matrix3_parameter", m };
 
     read_parameters(doc, "xml_doc/parameters/", {p} );
 

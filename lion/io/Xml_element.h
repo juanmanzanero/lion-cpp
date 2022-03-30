@@ -45,6 +45,10 @@ class Xml_element
     //! @param[in] simply pass Matrix3x3() to overload this function
     sMatrix3x3 get_value(sMatrix3x3&&) { return transpose(sMatrix3x3(string_to_double_vector(get_value()))); }
 
+    //! Get value as bool
+    //! @param[in] simply pass bool() to overload this function
+    bool get_value(bool&&) { return to_bool(get_value()); }
+
     //! Set the value from string
     //! @param[in] val: new string value
     Xml_element& set_value(const std::string& val) { _e->SetText(val.c_str()); return *this;}
@@ -53,7 +57,7 @@ class Xml_element
     std::vector<Xml_element> get_children() const;
 
     //! Add children
-    Xml_element add_child(const std::string& name) { return _e->InsertNewChildElement(name.c_str()); }
+    Xml_element add_child(const std::string& name); 
 
     //! Add comment
     void add_comment(const std::string& text) { _e->InsertNewComment(text.c_str()); }
@@ -103,6 +107,7 @@ inline std::ostream& operator<<(std::ostream& os, const Xml_element& e)
     e.print(os);
     return os;
 }
+
 
 #include "Xml_element.hpp"
 

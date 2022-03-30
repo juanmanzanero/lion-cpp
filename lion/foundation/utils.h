@@ -1,9 +1,14 @@
 #ifndef __UTILS_H__
 #define __UTILS_H__
 
+#include <sstream>
+#include <string>
+#include <iomanip>
+#include <algorithm>
+#include <cctype>
 #include "constants.h"
 #include <regex>
-#include<iostream>
+#include <iostream>
 #include "lion/thirdparty/include/logger.hpp"
 #include "types.h"
 #include "lion/math/vector3d.h"
@@ -12,6 +17,15 @@
 
 constexpr double& Value(double& val);
 constexpr const double& Value(const double& val);
+
+inline bool to_bool(std::string str) 
+{
+    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+    std::istringstream is(str);
+    bool b;
+    is >> std::boolalpha >> b;
+    return b;
+}
 
 template <typename T> 
 constexpr int sign(T val); 

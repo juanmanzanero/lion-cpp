@@ -60,7 +60,7 @@ inline Xml_element Xml_element::get_child(const std::string& name) const
         child = _e->FirstChildElement(child_name.c_str());
     }
 
-    if (_e->NextSiblingElement(child_name.c_str()) != nullptr ) 
+    if (child._e->NextSiblingElement(child_name.c_str()) != nullptr ) 
         throw std::runtime_error("There are several children with name \"" + child_name + "\"");
 
     if ( the_rest.size() == 0 )
@@ -75,6 +75,69 @@ inline Xml_element Xml_element::get_child(const std::string& name) const
     throw;
  }
 }
+
+
+inline Xml_element Xml_element::add_child(const std::string& name) 
+{
+    // Divide the string in child_name/the_rest
+    std::string::size_type pos = name.find('/');
+    std::string child_name;
+    std::string the_rest;
+
+    if (pos != std::string::npos)
+    {
+        child_name = name.substr(0, pos);
+        the_rest = name.substr(pos+1);
+    }
+    else
+    {
+        child_name = name;
+    }
+
+    // Look for child_name: if exists, make sure there's only one occurrence. If it does not, create it
+    Xml_element child(_e);
+
+    if ( the_rest.size() > 0 )
+    {
+        // The child exists and its me
+        if ( child_name == "." )
+            child = _e;
+
+        // The child exists and its my parent
+        else if ( child_name == ".." )
+            child = get_parent();
+
+        else
+        {
+            // The children does not exist -> create it
+            if ( _e->FirstChildElement(child_name.c_str()) == nullptr )
+            {
+                child = _e->InsertNewChildElement(child_name.c_str());
+            }
+            else
+            {
+                // The children does exist -> point to it
+                child = _e->FirstChildElement(child_name.c_str());
+        
+                // Check uniqueness
+                if (child._e->NextSiblingElement(child_name.c_str()) != nullptr ) 
+                    throw std::runtime_error("There are several children with name \"" + child_name + "\"");
+            }
+        }
+
+        // Call add child
+        return child.add_child(the_rest);
+    } 
+    else
+    {
+        // Make sure that the node does not already exist
+        if ( _e->FirstChildElement(child_name.c_str()) != nullptr )
+            throw std::runtime_error("Node \"" + child_name + "\" already exists");
+
+        return {_e->InsertNewChildElement(name.c_str())};
+    }
+}
+
 
 inline bool Xml_element::has_child(const std::string& name) const
 {
@@ -117,7 +180,5 @@ inline bool Xml_element::has_child(const std::string& name) const
     else
         return child.has_child(the_rest);
 }
-
-
 
 #endif
