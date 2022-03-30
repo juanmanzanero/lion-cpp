@@ -8,7 +8,7 @@
 template<typename T>
 struct Database_parameter
 {
-    static_assert(std::is_same_v<T,void> || std::is_same_v<T,const void>);
+    static_assert(std::is_same_v<T,void> || std::is_same_v<T,const void>);
 
     enum Parameter_type { DOUBLE, INT, STD_VECTOR_DOUBLE, VECTOR3, MATRIX3X3 };
 
