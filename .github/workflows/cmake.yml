@@ -56,6 +56,12 @@ jobs:
 
     - uses: actions/upload-artifact@v2 
       with:
+        name: propagators_test_release_data
+        path: test/propagators/data/
+        retention-days: 1 
+
+    - uses: actions/upload-artifact@v2 
+      with:
         name: libraries_release
         path: ${{runner.workspace}}/build/lion/thirdparty/lib/*
         retention-days: 1 
@@ -102,6 +108,12 @@ jobs:
       with:
         name: io_test_debug_data
         path: test/io/data/
+        retention-days: 1 
+
+    - uses: actions/upload-artifact@v2 
+      with:
+        name: propagators_test_debug_data
+        path: test/propagators/data/
         retention-days: 1 
 
     - uses: actions/upload-artifact@v2 
@@ -336,6 +348,11 @@ jobs:
     steps:
     - uses: actions/download-artifact@v2
       with:
+        name: propagators_test_release_data
+        path: ${{runner.workspace}}/data
+
+    - uses: actions/download-artifact@v2
+      with:
         name: tests_release
         path: ${{runner.workspace}}
       
@@ -364,6 +381,11 @@ jobs:
     steps:
     - uses: actions/download-artifact@v2
       with:
+        name: propagators_test_debug_data
+        path: ${{runner.workspace}}/data
+
+    - uses: actions/download-artifact@v2
+      with:
         name: tests_debug
         path: ${{runner.workspace}}
       
@@ -390,6 +412,11 @@ jobs:
     needs: [valgrind]
     
     steps:
+    - uses: actions/download-artifact@v2
+      with:
+        name: propagators_test_debug_data
+        path: ${{runner.workspace}}/data
+
     - uses: actions/download-artifact@v2
       with:
         name: valgrind_utils
@@ -658,6 +685,11 @@ jobs:
       with:
         name: io_test_release_data
 
+    - uses: geekyeggo/delete-artifact@v1
+      continue-on-error: true
+      with:
+        name: propagators_test_release_data
+
   remove_artifacts_debug:
   
     runs-on: ubuntu-latest
@@ -680,6 +712,13 @@ jobs:
       continue-on-error: true
       with:
         name: io_test_debug_data
+
+    - uses: geekyeggo/delete-artifact@v1
+      continue-on-error: true
+      with:
+        name: propagators_test_debug_data
+
+
 
     - uses: geekyeggo/delete-artifact@v1
       continue-on-error: true

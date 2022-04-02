@@ -3,6 +3,64 @@
 
 #include <cmath>
 
+// matmul
+template<typename T>
+static void matmul(T *X, const T *A, const T *B, int rows_A, int cols_A_rows_B, int cols_B)
+{
+    // X = A * B
+
+    if (cols_A_rows_B != 1) {
+
+        auto k{ cols_A_rows_B };
+        auto m{ rows_A };
+        auto c{ rows_A * (cols_B - 1) };
+        auto br{ 0 };
+        auto cr{ 0 };
+
+        while (cr <= c) {
+            auto i0{ cr + m };
+            for (auto ic = cr; ic + 1 <= i0; ic++) {
+                X[ic] = static_cast<T>(0.0);
+            }
+            cr += m;
+        }
+
+        cr = 0;
+        while (cr <= c) {
+            auto ar{ -1 };
+            auto i0{ br + k };
+            for (auto ib = br; ib + 1 <= i0; ++ib) {
+                if (B[ib] != static_cast<T>(0.0)) {
+                    auto ia{ ar };
+                    auto i1{ cr + m };
+                    for (auto ic = cr; ic + 1 <= i1; ++ic) {
+                        ++ia;
+                        X[ic] += B[ib] * A[ia];
+                    }
+                }
+                ar += m;
+            }
+            br += k;
+            cr += m;
+        }
+    }
+    else {
+        auto br{ rows_A };
+        auto ar{ cols_B };
+        auto c{ cols_A_rows_B };
+        for (auto i0 = 0; i0 < br; ++i0) {
+            for (auto i1 = 0; i1 < ar; ++i1) {
+                X[i0 + rows_A * i1] = static_cast<T>(0.0);
+                for (auto cr = 0; cr < c; ++cr) {
+                    X[i0 + rows_A * i1] +=
+                        A[i0 + rows_A * cr] * B[cr + cols_A_rows_B * i1];
+                }
+            }
+        }
+    }
+    return;
+}
+
 // lusolve
 template<typename T>
 inline int lusolve(T *B, T *A, int rows_A, int cols_B)
