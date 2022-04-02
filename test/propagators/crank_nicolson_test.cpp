@@ -8,7 +8,7 @@ class Armonic_oscillator_DAE
  public:
     template<typename T>
     std::tuple<std::array<T,2>,std::array<T,0>> operator()
-        (const std::array<T,2>& q, const std::array<T,0>& qa, const std::array<T,0>& u, const T t) 
+        (const std::array<T,2>& q, const std::array<T,0>& qa, const std::array<T,0>& u, const scalar t) 
     { return { { q[1], -w0*w0*q[0] }, {}}; }
 
     inline static scalar w0 = 0.5;
@@ -19,7 +19,7 @@ class Robertson_equation
  public:
     template<typename T>
     std::tuple<std::array<T,2>,std::array<T,1>> operator()
-        (const std::array<T,2>& q, const std::array<T,1>& qa, const std::array<T,0>& u, const T t)
+        (const std::array<T,2>& q, const std::array<T,1>& qa, const std::array<T,0>& u, const scalar t)
     {
         std::array<T,2> dqdt = {-0.04*q[0] + 1.0e4*q[1]*qa[0], 0.04*q[0] - 3.0e7*q[1]*q[1] - 1.0e4*q[1]*qa[0]}; 
         std::array<T,1> dqa  = {q[0] + q[1] + qa[0] - 1.0};

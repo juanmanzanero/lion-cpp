@@ -20,8 +20,15 @@ class Crank_nicolson
     //! @param[inout] dt: time step before and after of the step
     static void take_step(F& f, const std::array<scalar,NCONTROL> u_ini, const std::array<scalar,NCONTROL>& u_fin, std::array<scalar,NSTATE>& q, std::array<scalar,NALGEBRAIC>& qa, scalar& t, scalar dt)
     {
-        // (1) Evaluate f at the initial point
-        const auto [dqdt0,dqa0] = f(q,qa,u_ini,t);
+        // (1) Evaluate f at the initial point: CppAD variables are needed
+        std::array<CppAD::AD<scalar>,NSTATE> q0_cppad;          std::copy(q.cbegin(), q.cend(), q0_cppad.begin());
+        std::array<CppAD::AD<scalar>,NALGEBRAIC> qa0_cppad;     std::copy(qa.cbegin(), qa.cend(), qa0_cppad.begin());
+        std::array<CppAD::AD<scalar>,NCONTROL> u0_cppad;        std::copy(u_ini.cbegin(), u_ini.cend(), u0_cppad.begin());
+        
+        const auto [dqdt0_cppad,dqa0_cppad] = f(q0_cppad,qa0_cppad,u0_cppad,t);
+
+        std::array<scalar,NSTATE> dqdt0;    std::transform(dqdt0_cppad.cbegin(), dqdt0_cppad.cend(), dqdt0.begin(), [](const auto& q) -> auto { return Value(q); });
+        std::array<scalar,NALGEBRAIC> dqa0;  std::transform(dqa0_cppad.cbegin(), dqa0_cppad.cend(), dqa0.begin(), [](const auto& q) -> auto { return Value(q); });
 
         // (2) Start from the initial point 
         std::array<scalar,NSTATE> q_new;
@@ -178,7 +185,7 @@ class Crank_nicolson
         std::copy(u.cbegin()          , u.cend()            , u0.begin());
     
         // (4) Call operator(), transform arrays to vectors
-        auto [dqdt_out,dqa_out] = f(q0,qa0,u0,CppAD::AD<scalar>(t));
+        auto [dqdt_out,dqa_out] = f(q0,qa0,u0,t);
         std::vector<CppAD::AD<scalar>> out_vector(dqdt_out.cbegin(), dqdt_out.cend());
         out_vector.insert(out_vector.end(), dqa_out.cbegin(), dqa_out.cend());
     

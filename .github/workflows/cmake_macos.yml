@@ -121,6 +121,12 @@ jobs:
 
     - uses: actions/upload-artifact@v2 
       with:
+        name: propagators_test_debug_data
+        path: test/propagators/data/
+        retention-days: 1 
+
+    - uses: actions/upload-artifact@v2 
+      with:
         name: libraries_debug
         path: ${{runner.workspace}}/build/lion/thirdparty/lib/*
         retention-days: 1 
