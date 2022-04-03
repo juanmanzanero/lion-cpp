@@ -4,6 +4,8 @@
 #include <array>
 #include "lion/foundation/types.h"
 #include "lion/math/linear_algebra.h"
+#include "lion/math/ipopt_cppad_handler.hpp"
+#include "lion/math/matrix_extensions.h"
 #include <cppad/cppad.hpp>
 
 template<typename F, size_t NSTATE, size_t NALGEBRAIC, size_t NCONTROL>
@@ -73,29 +75,17 @@ class Crank_nicolson
             std::array<scalar,NSTATE+NALGEBRAIC> rhs;
     
             // (3.2.1) For ODEs, rhs = q + 0.5.dt.dqdt0 + 0.5.dt.dqdt_new - 0.5.dt.jac_dqdt_q_new.q_new - 0.5.dt.jac_dqdt_qa_new.qa_new
-            std::array<scalar,NSTATE> jac_dqdt_q_times_q;                
-            matmul(jac_dqdt_q_times_q.begin(), jac_dqdt_q_new.begin(), q_new.begin(), NSTATE, NSTATE, 1);
-
-            std::array<scalar,NSTATE> jac_dqdt_qa_times_qa;                
-            matmul(jac_dqdt_qa_times_qa.begin(), jac_dqdt_qa_new.begin(), qa_new.begin(), NSTATE, NALGEBRAIC, 1);
-
             for (size_t i = 0; i < NSTATE; ++i)
             {
-                rhs[i] = q[i] + 0.5*dt*(dqdt0[i] + dqdt_new[i] - jac_dqdt_q_times_q[i] - jac_dqdt_qa_times_qa[i]);
+                rhs[i] = -q_new[i] + q[i] + 0.5*dt*(dqdt0[i] + dqdt_new[i]);
             }
 
-            // (3.2.2) For AEs, rhs = dqa_new - jac_dqa_q_new.q_new - jac_dqa_qa_new.qa_new
+            // (3.2.2) For AEs, rhs = dqa_new
             if constexpr (NALGEBRAIC > 0)
             {
-                std::array<scalar,NALGEBRAIC> jac_dqa_q_times_q;                
-                matmul(jac_dqa_q_times_q.begin(), jac_dqa_q_new.begin(), q_new.begin(), NALGEBRAIC, NSTATE, 1);
-    
-                std::array<scalar,NALGEBRAIC> jac_dqa_qa_times_qa;                
-                matmul(jac_dqa_qa_times_qa.begin(), jac_dqa_qa_new.begin(), qa_new.begin(), NALGEBRAIC, NALGEBRAIC, 1);
-    
                 for (size_t i = 0; i < NALGEBRAIC; ++i)
                 {
-                    rhs[i + NSTATE] = dqa_new[i] - jac_dqa_q_times_q[i] - jac_dqa_qa_times_qa[i];
+                    rhs[i + NSTATE] = dqa_new[i];
                 }
             }
 
@@ -132,8 +122,13 @@ class Crank_nicolson
             lusolve(rhs.data(), A.data(), NSTATE+NALGEBRAIC, 1);
 
             // (3.5) Update q_new and qa_new
-            std::copy(rhs.cbegin(), rhs.cbegin() + NSTATE, q_new.begin());
-            std::copy(rhs.cbegin() + NSTATE, rhs.cend(), qa_new.begin());
+            std::array<scalar,NSTATE> dq;
+            std::array<scalar,NALGEBRAIC> dqa;
+            std::copy(rhs.cbegin(), rhs.cbegin() + NSTATE, dq.begin());
+            std::copy(rhs.cbegin() + NSTATE, rhs.cend(), dqa.begin());
+
+            q_new = q_new + relaxation_factor*(dq);
+            qa_new = qa_new + relaxation_factor*(dqa);
         }
 
         // (4) Check status
@@ -148,6 +143,55 @@ class Crank_nicolson
         t += dt;
 
         return;
+    }
+
+
+    static void take_step_ipopt(F& f, const std::array<scalar,NCONTROL> u_ini, const std::array<scalar,NCONTROL>& u_fin, std::array<scalar,NSTATE>& q, std::array<scalar,NALGEBRAIC>& qa, scalar& t, scalar dt)
+    {
+
+        const size_t n_total = NSTATE + NALGEBRAIC;
+
+        std::vector<scalar> x_lb(n_total,-1.0e3);
+        std::vector<scalar> x_ub(n_total,+1.0e3);
+        std::vector<scalar> c_lb(n_total,0.0);
+        std::vector<scalar> c_ub(n_total,0.0);
+
+        std::vector<scalar> x0(n_total);
+        std::copy(q.cbegin(), q.cend(), x0.begin());
+        std::copy(qa.cbegin(), qa.cend(), x0.begin() + NSTATE);
+
+        std::string ipoptoptions;
+        // turn off any printing
+        ipoptoptions += "Integer print_level  ";
+        ipoptoptions += std::to_string(5);
+        ipoptoptions += "\n";
+        ipoptoptions += "Integer max_iter ";
+        ipoptoptions += std::to_string(300);
+        ipoptoptions += "\n";
+        ipoptoptions += "String  sb           yes\n";
+        ipoptoptions += "Sparse true forward\n";
+        ipoptoptions += "Numeric tol          1e-10\n";
+        ipoptoptions += "Numeric constr_viol_tol  1e-10\n";
+        ipoptoptions += "Numeric acceptable_tol  1e-8\n";
+    
+        // place to return solution
+        CppAD::ipopt_cppad_result<std::vector<scalar>> result;
+
+        Crank_nicolson_fitness fg(f, q, qa, u_ini, t, dt, u_fin);
+    
+        // solve the problem
+        CppAD::ipopt_cppad_solve<std::vector<scalar>, Crank_nicolson_fitness>(ipoptoptions, x0, x_lb, x_ub, c_lb, c_ub, fg, result);
+    
+        bool success = result.status == CppAD::ipopt_cppad_result<std::vector<scalar>>::success; 
+    
+        if ( !success )
+        {
+            throw std::runtime_error("Optimization did not succeed");
+        }
+
+        // Return the new solution
+        std::copy(result.x.begin(), result.x.begin() + NSTATE, q.begin());
+        std::copy(result.x.begin() + NSTATE, result.x.end(), qa.begin());
     }
 
  private:
@@ -231,9 +275,76 @@ class Crank_nicolson
         return solution;
     }
 
+    class Crank_nicolson_fitness
+    {
+     public:
+        using ADvector = std::vector<CppAD::AD<scalar>>;
+
+        Crank_nicolson_fitness(F& f, const std::array<scalar,NSTATE>& q, const std::array<scalar,NALGEBRAIC>& qa, 
+            const std::array<scalar,NCONTROL>& u_ini, const scalar t, const scalar dt, const std::array<scalar,NCONTROL>& u_fin) : _f(f), _q_ini(q),
+            _qa_ini(qa), _u_ini(u_ini), _t(t), _dt(dt) 
+        {
+            // Transform final controls to cppad vector
+            std::copy(u_fin.cbegin(), u_fin.cend(), _u_fin.begin());
+
+            // Evaluate initial dqdt
+            std::array<CppAD::AD<scalar>,NSTATE> q_ini_cppad;
+            std::array<CppAD::AD<scalar>,NALGEBRAIC> qa_ini_cppad;
+            std::array<CppAD::AD<scalar>,NCONTROL> u_ini_cppad;
+
+            std::copy(q.cbegin(), q.cend(), q_ini_cppad.begin());
+            std::copy(qa.cbegin(), qa.cend(), qa_ini_cppad.begin());
+            std::copy(u_ini.cbegin(), u_ini.cend(), u_ini_cppad.begin());
+
+            auto [dqdt_ini_cppad, dqa_ini] = _f(q_ini_cppad,qa_ini_cppad,u_ini_cppad,t);
+
+            std::transform(dqdt_ini_cppad.begin(), dqdt_ini_cppad.end(), _dqdt_ini.begin(), [](const auto& dqdt_i) -> auto { return Value(dqdt_i); });
+        }
+
+        void operator()(ADvector& fg, const ADvector& x)
+        {
+            // Load q and qa
+            std::array<CppAD::AD<scalar>,NSTATE> q_fin;
+            std::array<CppAD::AD<scalar>,NALGEBRAIC> qa_fin;
+
+            std::copy(x.begin(), x.begin() + NSTATE, q_fin.begin());
+            std::copy(x.begin() + NSTATE, x.end(), qa_fin.begin());
+
+            // Fitness function: minimize distance to the original point
+            fg[0] = 0.0;
+            for (size_t i = 0; i < NSTATE; ++i)
+                fg[0] += (q_fin[i]-_q_ini[i])*(q_fin[i]-_q_ini[i]);
+
+            for (size_t i = 0; i < NALGEBRAIC; ++i)
+                fg[0] += (qa_fin[i]-_qa_ini[i])*(qa_fin[i]-_qa_ini[i]);
+    
+
+            auto [dqdt, dqa] = _f(q_fin, qa_fin, _u_fin, _t + _dt);
+
+            for (size_t i = 0; i < NSTATE; ++i)
+                fg[i] = q_fin[i] - _q_ini[i] - 0.5*_dt*(_dqdt_ini[i]+ dqdt[i]);
+
+            for (size_t i = 0; i < NALGEBRAIC; ++i)
+                fg[i + NSTATE] = dqa[i];
+        }
+
+     private:
+        F _f;
+        std::array<scalar,NSTATE> _q_ini;
+        std::array<scalar,NALGEBRAIC> _qa_ini;
+        std::array<scalar,NCONTROL> _u_ini;
+        scalar _t;
+        scalar _dt;
+        std::array<scalar,NSTATE> _dqdt_ini;
+
+        std::array<CppAD::AD<scalar>,NCONTROL> _u_fin;
+
+    };
+
  private:
-    inline static size_t max_iter = 10;
-    inline static scalar error_tolerance = 1.0e-10;
+    inline static size_t max_iter = 100000;
+    inline static scalar error_tolerance = 1.0e-12;
+    inline static scalar relaxation_factor = 0.25;
 };
 
 
