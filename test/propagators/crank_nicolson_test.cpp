@@ -41,7 +41,7 @@ TEST(Crank_nicolson_test, ode_armonic_oscillator)
     Armonic_oscillator_DAE armonic_oscillator;
 
     for (size_t i = 0; i < n_timesteps; ++i)
-        Crank_nicolson<Armonic_oscillator_DAE,2,0,0>::take_step(armonic_oscillator, {}, {}, q, qa, t, dt);
+        Crank_nicolson<Armonic_oscillator_DAE,2,0,0>::take_step(armonic_oscillator, {}, {}, q, qa, t, dt, {});
 
     EXPECT_NEAR(tf, t, 2.0e-14);
 
@@ -70,7 +70,7 @@ TEST(Crank_nicolson_test, robertson_equation)
     {
         scalar dt = t[i+1] - t[i];
         scalar t_val = t[i];
-        Crank_nicolson<Robertson_equation,2,1,0>::take_step(robertson_equation, {}, {}, q, qa, t_val, dt);
+        Crank_nicolson<Robertson_equation,2,1,0>::take_step(robertson_equation, {}, {}, q, qa, t_val, dt, {});
 
         q_values.push_back(q);
         qa_values.push_back(qa);
@@ -91,3 +91,4 @@ TEST(Crank_nicolson_test, robertson_equation)
         EXPECT_NEAR(qa_values[i][0], qa0_saved[i], 1.0e-6);
     }
 }
+

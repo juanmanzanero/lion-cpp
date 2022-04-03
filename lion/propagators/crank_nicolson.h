@@ -12,6 +12,15 @@ template<typename F, size_t NSTATE, size_t NALGEBRAIC, size_t NCONTROL>
 class Crank_nicolson
 {
  public:
+
+    struct Options
+    {
+        scalar sigma = 0.5;
+        size_t max_iter = 100000;
+        scalar error_tolerance = 1.0e-12;
+        scalar relaxation_factor = 0.25;
+    };
+
     //! Perform a Crank-Nicolson step for a differential-algebraic equations system
     //! @param[inout] f: ODE functor, [dqdt,dqa] = f(q,qa,u,t)
     //! @param[inout] u_ini: initial control vector
@@ -20,7 +29,7 @@ class Crank_nicolson
     //! @param[inout] qa: algebraic state vector values before and after of the step
     //! @param[inout] t: time before and after of the step
     //! @param[inout] dt: time step before and after of the step
-    static void take_step(F& f, const std::array<scalar,NCONTROL> u_ini, const std::array<scalar,NCONTROL>& u_fin, std::array<scalar,NSTATE>& q, std::array<scalar,NALGEBRAIC>& qa, scalar& t, scalar dt)
+    static void take_step(F& f, const std::array<scalar,NCONTROL> u_ini, const std::array<scalar,NCONTROL>& u_fin, std::array<scalar,NSTATE>& q, std::array<scalar,NALGEBRAIC>& qa, scalar& t, scalar dt, Options opts)
     {
         // (1) Evaluate f at the initial point: CppAD variables are needed
         std::array<CppAD::AD<scalar>,NSTATE> q0_cppad;          std::copy(q.cbegin(), q.cend(), q0_cppad.begin());
@@ -41,7 +50,7 @@ class Crank_nicolson
 
         // (3) Iterate
         bool success = false;
-        for (size_t iter = 0; iter < max_iter; ++iter)
+        for (size_t iter = 0; iter < opts.max_iter; ++iter)
         {
             // (3.1) Evaluate the ODE, and compute its Jacobian at the new point
             const auto f_and_jac = evaluate_f_and_jac(f, u_fin, q_new, qa_new, t+dt); 
@@ -57,7 +66,7 @@ class Crank_nicolson
             scalar max_error = 0.0;
             for (size_t i = 0; i < NSTATE; ++i)
             {
-                max_error = max(max_error, std::abs(q_new[i] - q[i] - 0.5*dt*(dqdt0[i] + dqdt_new[i])));
+                max_error = max(max_error, std::abs(q_new[i] - q[i] - dt*((1.0-opts.sigma)*dqdt0[i] + opts.sigma*dqdt_new[i])));
             }
 
             for (size_t i = 0; i < NALGEBRAIC; ++i)
@@ -65,7 +74,7 @@ class Crank_nicolson
                 max_error = max(max_error, std::abs(dqa_new[i]));
             }
 
-            if ( max_error < error_tolerance )
+            if ( max_error < opts.error_tolerance )
             {
                 success = true;
                 break;
@@ -77,7 +86,7 @@ class Crank_nicolson
             // (3.2.1) For ODEs, rhs = q + 0.5.dt.dqdt0 + 0.5.dt.dqdt_new - 0.5.dt.jac_dqdt_q_new.q_new - 0.5.dt.jac_dqdt_qa_new.qa_new
             for (size_t i = 0; i < NSTATE; ++i)
             {
-                rhs[i] = -q_new[i] + q[i] + 0.5*dt*(dqdt0[i] + dqdt_new[i]);
+                rhs[i] = -q_new[i] + q[i] + dt*((1.0-opts.sigma)*dqdt0[i] + opts.sigma*dqdt_new[i]);
             }
 
             // (3.2.2) For AEs, rhs = dqa_new
@@ -100,12 +109,12 @@ class Crank_nicolson
             // (3.3.1) Block A_qq
             for (size_t j = 0; j < NSTATE; ++j)
                 for (size_t i = 0; i < NSTATE; ++i)
-                    A[i + (NSTATE+NALGEBRAIC)*j] = (i == j ? 1.0 : 0.0) - 0.5*dt*jac_dqdt_q_new[i + NSTATE*j]; 
+                    A[i + (NSTATE+NALGEBRAIC)*j] = (i == j ? 1.0 : 0.0) - opts.sigma*dt*jac_dqdt_q_new[i + NSTATE*j]; 
 
             // (3.3.2) Block A_qqa
             for (size_t j = 0; j < NALGEBRAIC; ++j)
                 for (size_t i = 0; i < NSTATE; ++i)
-                    A[i + (NSTATE+NALGEBRAIC)*(j + NSTATE)] = -0.5*dt*jac_dqdt_qa_new[i + NSTATE*j]; 
+                    A[i + (NSTATE+NALGEBRAIC)*(j + NSTATE)] = -opts.sigma*dt*jac_dqdt_qa_new[i + NSTATE*j]; 
 
             // (3.3.3) Block A_qaq
             for (size_t j = 0; j < NSTATE; ++j)
@@ -127,8 +136,8 @@ class Crank_nicolson
             std::copy(rhs.cbegin(), rhs.cbegin() + NSTATE, dq.begin());
             std::copy(rhs.cbegin() + NSTATE, rhs.cend(), dqa.begin());
 
-            q_new = q_new + relaxation_factor*(dq);
-            qa_new = qa_new + relaxation_factor*(dqa);
+            q_new = q_new + opts.relaxation_factor*(dq);
+            qa_new = qa_new + opts.relaxation_factor*(dqa);
         }
 
         // (4) Check status
@@ -146,7 +155,7 @@ class Crank_nicolson
     }
 
 
-    static void take_step_ipopt(F& f, const std::array<scalar,NCONTROL> u_ini, const std::array<scalar,NCONTROL>& u_fin, std::array<scalar,NSTATE>& q, std::array<scalar,NALGEBRAIC>& qa, scalar& t, scalar dt)
+    static void take_step_ipopt(F& f, const std::array<scalar,NCONTROL> u_ini, const std::array<scalar,NCONTROL>& u_fin, std::array<scalar,NSTATE>& q, std::array<scalar,NALGEBRAIC>& qa, scalar& t, scalar dt, Options opts)
     {
 
         const size_t n_total = NSTATE + NALGEBRAIC;
@@ -166,7 +175,7 @@ class Crank_nicolson
         ipoptoptions += std::to_string(5);
         ipoptoptions += "\n";
         ipoptoptions += "Integer max_iter ";
-        ipoptoptions += std::to_string(300);
+        ipoptoptions += std::to_string(opts.max_iter);
         ipoptoptions += "\n";
         ipoptoptions += "String  sb           yes\n";
         ipoptoptions += "Sparse true forward\n";
@@ -177,7 +186,7 @@ class Crank_nicolson
         // place to return solution
         CppAD::ipopt_cppad_result<std::vector<scalar>> result;
 
-        Crank_nicolson_fitness fg(f, q, qa, u_ini, t, dt, u_fin);
+        Crank_nicolson_fitness fg(f, q, qa, u_ini, t, dt, u_fin, opts.sigma);
     
         // solve the problem
         CppAD::ipopt_cppad_solve<std::vector<scalar>, Crank_nicolson_fitness>(ipoptoptions, x0, x_lb, x_ub, c_lb, c_ub, fg, result);
@@ -281,8 +290,8 @@ class Crank_nicolson
         using ADvector = std::vector<CppAD::AD<scalar>>;
 
         Crank_nicolson_fitness(F& f, const std::array<scalar,NSTATE>& q, const std::array<scalar,NALGEBRAIC>& qa, 
-            const std::array<scalar,NCONTROL>& u_ini, const scalar t, const scalar dt, const std::array<scalar,NCONTROL>& u_fin) : _f(f), _q_ini(q),
-            _qa_ini(qa), _u_ini(u_ini), _t(t), _dt(dt) 
+            const std::array<scalar,NCONTROL>& u_ini, const scalar t, const scalar dt, const std::array<scalar,NCONTROL>& u_fin, const scalar sigma) : _f(f), _q_ini(q),
+            _qa_ini(qa), _u_ini(u_ini), _t(t), _dt(dt), _sigma(sigma) 
         {
             // Transform final controls to cppad vector
             std::copy(u_fin.cbegin(), u_fin.cend(), _u_fin.begin());
@@ -322,7 +331,7 @@ class Crank_nicolson
             auto [dqdt, dqa] = _f(q_fin, qa_fin, _u_fin, _t + _dt);
 
             for (size_t i = 0; i < NSTATE; ++i)
-                fg[i] = q_fin[i] - _q_ini[i] - 0.5*_dt*(_dqdt_ini[i]+ dqdt[i]);
+                fg[i] = q_fin[i] - _q_ini[i] - _dt*((1.0-_sigma)*_dqdt_ini[i]+ _sigma*dqdt[i]);
 
             for (size_t i = 0; i < NALGEBRAIC; ++i)
                 fg[i + NSTATE] = dqa[i];
@@ -335,6 +344,7 @@ class Crank_nicolson
         std::array<scalar,NCONTROL> _u_ini;
         scalar _t;
         scalar _dt;
+        scalar _sigma;
         std::array<scalar,NSTATE> _dqdt_ini;
 
         std::array<CppAD::AD<scalar>,NCONTROL> _u_fin;
@@ -342,9 +352,6 @@ class Crank_nicolson
     };
 
  private:
-    inline static size_t max_iter = 100000;
-    inline static scalar error_tolerance = 1.0e-12;
-    inline static scalar relaxation_factor = 0.25;
 };
 
 
