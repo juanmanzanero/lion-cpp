@@ -1211,6 +1211,39 @@ public:
         solution_.obj_value = obj_value;
         return;
     }
+
+    virtual bool intermediate_callback(
+       Ipopt::AlgorithmMode              mode,
+       Ipopt::Index                      iter,
+       Ipopt::Number                     obj_value,
+       Ipopt::Number                     inf_pr,
+       Ipopt::Number                     inf_du,
+       Ipopt::Number                     mu,
+       Ipopt::Number                     d_norm,
+       Ipopt::Number                     regularization_size,
+       Ipopt::Number                     alpha_du,
+       Ipopt::Number                     alpha_pr,
+       Ipopt::Index                      ls_trials,
+       const Ipopt::IpoptData*           ip_data,
+       Ipopt::IpoptCalculatedQuantities* ip_cq
+    )
+    // [TNLP_intermediate_callback]
+    {
+       (void) mode;
+       (void) iter;
+       (void) obj_value;
+       (void) inf_pr;
+       (void) inf_du;
+       (void) mu;
+       (void) d_norm;
+       (void) regularization_size;
+       (void) alpha_du;
+       (void) alpha_pr;
+       (void) ls_trials;
+       (void) ip_data;
+       (void) ip_cq;
+       return true;
+    }
 };
 
 

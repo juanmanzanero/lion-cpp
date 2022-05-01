@@ -1,5 +1,3 @@
-include(python)
-
 # Find lapack
 set(BUILD_LAPACK NO)
 find_package(blaslapack) 
@@ -31,16 +29,6 @@ find_package(ipopt)
 
 if (NOT ${ipopt_FOUND})
     set(BUILD_IPOPT YES)
-endif()
-
-# Python and matplotlib cpp
-if ( ${Python3_FOUND} AND ${Python3_MATPLOTLIB} )
-    find_package(matplotlibcpp)
-    if (NOT ${matplotlibcpp_FOUND})
-        set(BUILD_MATPLOTLIBCPP YES)
-    endif()
-else()
-    configure_file(cmake/third-party/fake_matplotlibcpp.h ${CMAKE_BINARY_DIR}/thirdparty/include/matplotlibcpp.h COPYONLY)
 endif()
 
 # Logger cpp
@@ -84,9 +72,6 @@ endif()
 find_package(blaslapack REQUIRED)
 find_package(tinyxml2 REQUIRED)
 find_package(ipopt REQUIRED)
-if ( ${Python3_FOUND} AND ${Python3_MATPLOTLIB} )
-    find_package(matplotlibcpp)
-endif()
 find_package(loggercpp REQUIRED)
 find_package(cppad REQUIRED)
 
