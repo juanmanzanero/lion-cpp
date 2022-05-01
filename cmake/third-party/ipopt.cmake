@@ -16,7 +16,7 @@ if (${BUILD_IPOPT})
       SOURCE_DIR ${THIRD_PARTY_DIR}/mumps/source
       BINARY_DIR ${THIRD_PARTY_DIR}/mumps/build 
       INSTALL_DIR ${THIRD_PARTY_DIR}/lion/thirdparty
-      CONFIGURE_COMMAND cd ${THIRD_PARTY_DIR}/mumps/source && ./get.Mumps && ./configure --prefix=${THIRD_PARTY_DIR}/lion/thirdparty --enable-static=yes --enable-shared=no ${lapack_flags} ${disable_dependency_tracking}
+      CONFIGURE_COMMAND cd ${THIRD_PARTY_DIR}/mumps/source && ./get.Mumps && ./configure --prefix=${THIRD_PARTY_DIR}/lion/thirdparty --enable-static=yes --enable-shared=no ${lapack_flags} ${disable_dependency_tracking} --libdir=${THIRD_PARTY_DIR}/lion/thirdparty/lib --without-metis
       BUILD_COMMAND cd ${THIRD_PARTY_DIR}/mumps/source && make && make install
       INSTALL_COMMAND ""
       UPDATE_COMMAND ""
@@ -36,6 +36,7 @@ if (${BUILD_IPOPT})
 			../source/configure CXX=${CMAKE_CXX_COMPILER} CC=${CMAKE_C_COMPILER} F77=${CMAKE_FORTRAN_COMPILER}
 					   --disable-java --with-mumps-cflags=-I${THIRD_PARTY_DIR}/lion/thirdparty/include/coin-or/mumps --enable-static=yes --enable-shared=no --with-lapack ${lapack_flags}
 					       --with-mumps-lflags="-L${THIRD_PARTY_DIR}/lion/thirdparty/lib -lcoinmumps" --prefix=${THIRD_PARTY_DIR}/lion/thirdparty
+                      --libdir=${THIRD_PARTY_DIR}/lion/thirdparty/lib
 	      DEPENDS mumps
 	    )
     else()

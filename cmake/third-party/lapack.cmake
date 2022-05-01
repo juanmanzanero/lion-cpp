@@ -13,7 +13,8 @@ ExternalProject_Add(lapack
                 -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
                 -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
                 -DCMAKE_INSTALL_PREFIX:PATH=${THIRD_PARTY_DIR}/lion/thirdparty
-		-DBUILD_SHARED_LIBS:BOOL=YES
+                -DCMAKE_INSTALL_LIBDIR=lib
+        		-DBUILD_SHARED_LIBS:BOOL=YES
                 ${THIRD_PARTY_DIR}/lapack/source
 )
 
