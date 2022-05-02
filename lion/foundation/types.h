@@ -2,6 +2,7 @@
 #define __TYPES_H__
 
 #include <cstddef>
+#include <algorithm>
 
 using scalar = double;
 

@@ -1,10 +1,13 @@
 # ifndef __IPOPT_CPPAD_HANDLER_HPP__
 # define __IPOPT_CPPAD_HANDLER_HPP__
 
-# include <cppad/cppad.hpp>
-# include <coin-or/IpIpoptApplication.hpp>
+#include <cppad/cppad.hpp>
+#include <coin-or/IpIpoptApplication.hpp>
 #include  <coin-or/IpSolveStatistics.hpp>
-# include <coin-or/IpTNLP.hpp>
+#include <coin-or/IpTNLP.hpp>
+#include <coin-or/IpIpoptData.hpp>
+#include <coin-or/IpDenseVector.hpp>
+#include "lion/math/matrix_extensions.h"
 
 namespace CppAD 
 {
@@ -48,6 +51,12 @@ public:
     Dvector lambda;
     /// value of f(x)
     double obj_value;
+    /// slack variables
+    Dvector s;
+    /// Lagrange multipliers corresponding to lower bounds on x
+    Dvector vl;
+    /// Lagrange multipliers corresponding to upper bounds on x
+    Dvector vu;
     /// constructor initializes solution status as not yet defined
     ipopt_cppad_result(void)
     {   status = not_defined; }
@@ -1209,6 +1218,23 @@ public:
             solution_.lambda[i] = lambda[i];
         }
         solution_.obj_value = obj_value;
+
+        for (j=0; j < nx_; ++j)
+        {
+            if ( std::abs(solution_.x[j] - (dynamic_cast<const Ipopt::DenseVector*>(GetRawPtr(ip_data->curr()->x()))->Values())[j]) > 1.0e-10 )
+                throw std::runtime_error("x is not ip_data->curr()->x()");
+        }
+
+        // Return slack variables
+        const Ipopt::Number* s_values = dynamic_cast<const Ipopt::DenseVector*>(GetRawPtr(ip_data->curr()->s()))->Values();
+        solution_.s = Dvector(s_values, s_values + ip_data->curr()->s()->Dim());
+
+        const Ipopt::Number* vl_values = dynamic_cast<const Ipopt::DenseVector*>(GetRawPtr(ip_data->curr()->v_L()))->Values();
+        solution_.vl = Dvector(vl_values, vl_values + ip_data->curr()->v_L()->Dim());
+
+        const Ipopt::Number* vu_values = dynamic_cast<const Ipopt::DenseVector*>(GetRawPtr(ip_data->curr()->v_U()))->Values();
+        solution_.vu = Dvector(vu_values, vu_values + ip_data->curr()->v_U()->Dim());
+            
         return;
     }
 
