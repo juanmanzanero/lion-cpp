@@ -1,78 +1,83 @@
-#ifndef CHECK_OPTIMALITY_HPP
-#define CHECK_OPTIMALITY_HPP
+#ifndef SENSITIVITY_ANALYSIS_HPP
+#define SENSITIVITY_ANALYSIS_HPP
+
+#include "lion/math/mumps_interface.h" 
 
 template<typename FG>
-void Check_optimality<FG>::check_inputs() const
+void Sensitivity_analysis<FG>::check_inputs() const
 {
     if ( _zl.size() != _n )
-        throw std::runtime_error("[ERROR] void Check_optimality<FG>::check_inputs() -> z_lb.size() != n");
+        throw std::runtime_error("[ERROR] void Sensitivity_analysis<FG>::check_inputs() -> z_lb.size() != n");
 
     if ( _zu.size() != _n )
-        throw std::runtime_error("[ERROR] void Check_optimality<FG>::check_inputs() -> z_ub.size() != n");
+        throw std::runtime_error("[ERROR] void Sensitivity_analysis<FG>::check_inputs() -> z_ub.size() != n");
 
     if ( _x_lb.size() != _n )
-        throw std::runtime_error("[ERROR] void Check_optimality<FG>::check_inputs() -> x_lb.size() != n");
+        throw std::runtime_error("[ERROR] void Sensitivity_analysis<FG>::check_inputs() -> x_lb.size() != n");
 
     if ( _x_ub.size() != _n )
-        throw std::runtime_error("[ERROR] void Check_optimality<FG>::check_inputs() -> x_ub.size() != n");
+        throw std::runtime_error("[ERROR] void Sensitivity_analysis<FG>::check_inputs() -> x_ub.size() != n");
 
     if ( _c_lb.size() != _nc )
-        throw std::runtime_error("[ERROR] void Check_optimality<FG>::check_inputs() -> c_lb.size() != nc");
+        throw std::runtime_error("[ERROR] void Sensitivity_analysis<FG>::check_inputs() -> c_lb.size() != nc");
 
     if ( _c_ub.size() != _nc )
-        throw std::runtime_error("[ERROR] void Check_optimality<FG>::check_inputs() -> c_ub.size() != nc");
+        throw std::runtime_error("[ERROR] void Sensitivity_analysis<FG>::check_inputs() -> c_ub.size() != nc");
 }
 
 
 
 template<typename FG>
-void Check_optimality<FG>::check_optimality()
+void Sensitivity_analysis<FG>::check_optimality()
 {
-    // (1) Classify the constraints in equalities and inequalities
-    classify_constraints();
-
-    // (4) Construct the full problem
-    // (4.1) Construct the full fitness function
-    FG_full fg_full(_fg, _n, _nc, _x_lb, _x_ub, _c_lb, _c_ub, _equality_constraints,
+    // (1) Construct the full problem
+    // (1.1) Construct the full fitness function
+    FG_full fg_full(_fg, _np, _n, _nc, _c_lb, _equality_constraints,
                     _inequality_constraints_lb, _inequality_constraints_ub);
 
+
   
-    // (4.2) Construct the full independent variables: [x, s, lambda]
-    std::vector<scalar> x_full(_n + _n_equality + 2*_n_inequality);
+    // (1.2) Construct the full independent variables: [x, s, lambda, parameters]
+    _x_full = std::vector<scalar>(_n + _n_equality + 2*_n_inequality + _np);
 
-    std::copy(_x.cbegin(), _x.cend(), x_full.begin());
+    // (1.1.1) Original variables, x
+    std::copy(_x.cbegin(), _x.cend(), _x_full.begin());
 
+    // (1.1.2) Slack variables, s
     size_t slack_var_counter = 0;
     for (size_t i = 0; i < _nc; ++i)
     {
         if ( !_equality_constraints[i] )
         {
-            x_full[_n + slack_var_counter] = _s[slack_var_counter];
+            _x_full[_n + slack_var_counter] = _s[slack_var_counter];
             ++slack_var_counter;
         }
     }
 
+    // (1.1.3) Lagrange multipliers
     for (size_t i = 0; i < _nc; ++i)
-        x_full[_n + _n_inequality + i] = _lambda[i];
+        _x_full[_n + _n_inequality + i] = _lambda[i];
 
-    // (4) Construct the ADFun
-    typename FG::ADvector x_full_0(x_full.size()), fg_full_0(1);
-    std::copy(x_full.cbegin(), x_full.cend(), x_full_0.begin());
+    // (1.1.4) Parameters
+    for (size_t i = 0; i < _np; ++i)
+        _x_full[_n + _n_inequality + _nc + i] = _p[i];
 
-    CppAD::Independent(x_full_0);
+    // (2) Construct the ADFun
+    typename FG::ADvector _x_full_0(_x_full.size()), fg_full_0(1);
+    std::copy(_x_full.cbegin(), _x_full.cend(), _x_full_0.begin());
 
-    fg_full(fg_full_0, x_full_0);
+    CppAD::Independent(_x_full_0);
 
-    CppAD::ADFun<scalar> fg_full_adfun;
+    fg_full(fg_full_0, _x_full_0);
 
-    fg_full_adfun.Dependent(x_full_0, fg_full_0);
+    _fg_full_adfun.Dependent(_x_full_0, fg_full_0);
 
-    // (5) Evaluate the Jacobian
-    fg_full_adfun.Forward(0, x_full);
+    // (3) Evaluate the Jacobian
+    _fg_full_adfun.Forward(0, _x_full);
+    auto& grad_f = optimality_check.grad_f;
+    grad_f = _fg_full_adfun.Reverse(1, std::vector<scalar>{1.0});
 
-    grad_f = fg_full_adfun.Reverse(1, std::vector<scalar>{1.0});
-
-    // (5.1) Add the bound multipliers jacobian
+    // (3.1) Add the bound multipliers jacobian
     for (size_t i = 0; i < _n; ++i)
     {
         grad_f[i] -= _zl[i];
@@ -99,19 +104,98 @@ void Check_optimality<FG>::check_optimality()
         }
     }
 
-    for (size_t i = 0; i < grad_f.size(); ++i)
+    // (4) Look for errors and export the solution
+    for (size_t i = 0; i < grad_f.size() - _np; ++i)
     {
         const auto& grad_f_i = grad_f[i];
 
-        if ( std::abs(grad_f_i) > _opts.constraint_viol_tolerance )
-            id_not_ok.push_back(i);
+        if ( std::abs(grad_f_i) > _opts.max_error_dual_problem )
+            optimality_check.id_not_ok.push_back(i);
     }
 
-    success = (id_not_ok.size() == 0);
+    optimality_check.success = (optimality_check.id_not_ok.size() == 0);
+}
+
+
+template<typename FG>
+void Sensitivity_analysis<FG>::compute_sensitivity()
+{
+    // (1) Compute the Hessian of the extended problem: x_extended = [params, x, s, lambda]
+    auto sparsity_patterns = compute_sparsity_pattern(_n + 2*_n_inequality + _n_equality + _np, 0, _fg_full_adfun, true);
+
+    size_t n_hes = sparsity_patterns.row_hes.size();
+    std::vector<scalar> w = {1.0};
+    std::vector<scalar> hes(n_hes);
+    CppAD::sparse_hessian_work      work_hes;
+    _fg_full_adfun.SparseHessian(_x_full, w, sparsity_patterns.pattern_hes, sparsity_patterns.row_hes, sparsity_patterns.col_hes, hes, work_hes);
+
+    // (2) Get the location of the main diagonal
+    std::vector<size_t> diag_loc(_n + 2*_n_inequality + _n_equality + _np);
+    std::vector<size_t> diag_set(_n + 2*_n_inequality + _n_equality + _np, false);
+
+    for (size_t ij = 0; ij < n_hes; ++ij)
+    {
+        if ( sparsity_patterns.row_hes[ij] == sparsity_patterns.col_hes[ij] )
+        {
+            diag_loc[sparsity_patterns.row_hes[ij]] = ij;
+            diag_set[sparsity_patterns.row_hes[ij]] = true;
+        }
+    }
+
+    if ( std::count(diag_set.cbegin(), diag_set.cend(), false) > 0 )
+        throw std::runtime_error("Some diagonal positions were not found");
+
+    // (2) Add the bound multipliers Hessian
+
+    // (2.1) Variables
+    for (size_t ij = 0; ij < _n; ++ij)
+    {
+        hes[diag_loc[ij]] += _zl[ij]/(_x[ij] - _x_lb[ij]) + _zu[ij]/(_x_ub[ij] - _x[ij]); 
+    }
+
+    // (2.2) Slack variables
+    for (size_t ij = 0; ij < _n_inequality; ++ij)
+    {
+        hes[diag_loc[_n+ij]] += _vl.at(ij)/(1.0e-8 + _s.at(ij) - _c_lb.at(ij)) + _vu.at(ij)/(1.0e-8 + _c_ub.at(ij) - _s.at(ij));
+    }
+
+    // (3) Prepare the system to be solved with mumps
+    size_t n_total = _n + 2*_n_inequality + _n_equality;
+    std::vector<size_t> rows_lhs;
+    std::vector<size_t> cols_lhs;
+    std::vector<double> lhs;
+    std::vector<double> rhs(n_total,0.0);
+
+    for (size_t ij = 0; ij < n_hes; ++ij)
+    {
+        if ( (sparsity_patterns.row_hes[ij] < n_total) && (sparsity_patterns.col_hes[ij] < n_total ) )
+        {
+            // If indexes are less than n_total, it's the lhs
+            rows_lhs.push_back(sparsity_patterns.row_hes[ij]);
+            cols_lhs.push_back(sparsity_patterns.col_hes[ij]);
+            lhs.push_back(hes[ij]);
+
+            if ( sparsity_patterns.row_hes[ij] != sparsity_patterns.col_hes[ij] )
+            {
+                rows_lhs.push_back(sparsity_patterns.col_hes[ij]);
+                cols_lhs.push_back(sparsity_patterns.row_hes[ij]);
+                lhs.push_back(hes[ij]);
+            }
+        }
+        else
+        {
+            if ( sparsity_patterns.col_hes[ij] != n_total ) 
+                // Else goes to the rhs: TODO this only works for 1 parameter!
+                rhs[sparsity_patterns.col_hes[ij]] = -hes[ij];
+        }
+    }
+
+    // (4) Solve the system
+    dxdparams = {mumps_solve_linear_system(n_total, lhs.size(), rows_lhs, cols_lhs, lhs, rhs)};
 }
 
 template<typename FG>
-void Check_optimality<FG>::classify_constraints() 
+void Sensitivity_analysis<FG>::classify_constraints() 
 {
     // (1) Check equality constraints
     for (size_t i = 0; i < _nc; ++i)
@@ -143,12 +227,12 @@ void Check_optimality<FG>::classify_constraints()
 
 
 template<typename FG>
-typename Check_optimality<FG>::Sparsity_pattern Check_optimality<FG>::compute_sparsity_pattern(const size_t n, const size_t nc, CppAD::ADFun<scalar>& fg_ad)
+typename Sensitivity_analysis<FG>::Sparsity_pattern Sensitivity_analysis<FG>::compute_sparsity_pattern(const size_t n, const size_t nc, CppAD::ADFun<scalar>& fg_ad, const bool force_diagonal)
 {
     using ADvector = typename FG::ADvector;
 
     size_t i, j;
-    const size_t m = n + nc;
+    const size_t m = 1 + nc;
     //
     // -----------------------------------------------------------
     // Jacobian
@@ -230,6 +314,7 @@ typename Check_optimality<FG>::Sparsity_pattern Check_optimality<FG>::compute_sp
             }
         }
     }
+
     // Set row and column indices in Jacoian of [f(x), g(x)]
     // for Jacobian of g(x). These indices are in row major order.
     // -----------------------------------------------------------
@@ -275,6 +360,10 @@ typename Check_optimality<FG>::Sparsity_pattern Check_optimality<FG>::compute_sp
         }
     }
 
+    // Force the diagonal
+    for (i = 0; i < n; ++i)
+        pattern_hes[i*n + i] = true;
+
     // Set row and column indices for Lower triangle of Hessian
     // of Lagragian.  These indices are in row major order.
     CppAD::vector<size_t> row_hes, col_hes;
@@ -296,7 +385,10 @@ typename Check_optimality<FG>::Sparsity_pattern Check_optimality<FG>::compute_sp
     {
         .col_jac = col_jac,
         .row_jac = row_jac,
-        .pattern_jac = pattern_jac
+        .pattern_jac = pattern_jac,
+        .col_hes = col_hes,
+        .row_hes = row_hes,
+        .pattern_hes = pattern_hes
     };
 }
 
