@@ -383,11 +383,11 @@ typename Sensitivity_analysis<FG>::Sparsity_pattern Sensitivity_analysis<FG>::co
 
     return (Sparsity_pattern)
     {
+        .row_jac = row_jac,        
         .col_jac = col_jac,
-        .row_jac = row_jac,
         .pattern_jac = pattern_jac,
-        .col_hes = col_hes,
         .row_hes = row_hes,
+        .col_hes = col_hes,        
         .pattern_hes = pattern_hes
     };
 }
