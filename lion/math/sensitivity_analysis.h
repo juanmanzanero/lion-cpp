@@ -89,7 +89,7 @@ class Sensitivity_analysis
         bool success;
     } optimality_check;
 
-    std::vector<std::vector<scalar>> dxdparams;
+    std::vector<std::vector<scalar>> dxdp;
 
  private:
 

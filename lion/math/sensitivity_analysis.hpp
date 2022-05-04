@@ -188,7 +188,7 @@ void Sensitivity_analysis<FG>::compute_sensitivity()
     }
 
     // (4) Solve the system
-    dxdparams = mumps_solve_linear_system(n_total, lhs.size(), rows_lhs, cols_lhs, lhs, rhs, true);
+    dxdp = mumps_solve_linear_system(n_total, lhs.size(), rows_lhs, cols_lhs, lhs, rhs, true);
 }
 
 template<typename FG>
