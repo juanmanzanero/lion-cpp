@@ -137,6 +137,7 @@ TEST(Sensitivity_analysis_test, compute_sensitivity_analysis)
 
     EXPECT_TRUE(sensitivity_analysis.optimality_check.success);
 
+    EXPECT_EQ(sensitivity_analysis.dxdparams.size(), 1);
     EXPECT_NEAR(sensitivity_analysis.dxdparams.front()[0], 1.0, 1.0e-8);
     EXPECT_NEAR(sensitivity_analysis.dxdparams.front()[1], 1.0, 1.0e-8);
 }

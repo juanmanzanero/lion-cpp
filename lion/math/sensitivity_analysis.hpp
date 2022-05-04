@@ -164,34 +164,31 @@ void Sensitivity_analysis<FG>::compute_sensitivity()
     std::vector<size_t> rows_lhs;
     std::vector<size_t> cols_lhs;
     std::vector<double> lhs;
-    std::vector<double> rhs(n_total,0.0);
+    std::vector<std::vector<double>> rhs(_np,std::vector<double>(n_total,0.0));
 
     for (size_t ij = 0; ij < n_hes; ++ij)
     {
-        if ( (sparsity_patterns.row_hes[ij] < n_total) && (sparsity_patterns.col_hes[ij] < n_total ) )
+        if ( sparsity_patterns.row_hes[ij] < sparsity_patterns.col_hes[ij] )
+            throw std::runtime_error("[ERROR] Matrix was expected to be lower triangular (i>=j)");
+
+        if ( (sparsity_patterns.row_hes[ij] < n_total) )
         {
             // If indexes are less than n_total, it's the lhs
             rows_lhs.push_back(sparsity_patterns.row_hes[ij]);
             cols_lhs.push_back(sparsity_patterns.col_hes[ij]);
             lhs.push_back(hes[ij]);
 
-            if ( sparsity_patterns.row_hes[ij] != sparsity_patterns.col_hes[ij] )
-            {
-                rows_lhs.push_back(sparsity_patterns.col_hes[ij]);
-                cols_lhs.push_back(sparsity_patterns.row_hes[ij]);
-                lhs.push_back(hes[ij]);
-            }
         }
         else
         {
-            if ( sparsity_patterns.col_hes[ij] != n_total ) 
-                // Else goes to the rhs: TODO this only works for 1 parameter!
-                rhs[sparsity_patterns.col_hes[ij]] = -hes[ij];
+            size_t i_p = sparsity_patterns.row_hes[ij] - n_total;
+            if ( sparsity_patterns.col_hes[ij] < n_total ) 
+                rhs[i_p][sparsity_patterns.col_hes[ij]] = -hes[ij];
         }
     }
 
     // (4) Solve the system
-    dxdparams = {mumps_solve_linear_system(n_total, lhs.size(), rows_lhs, cols_lhs, lhs, rhs)};
+    dxdparams = mumps_solve_linear_system(n_total, lhs.size(), rows_lhs, cols_lhs, lhs, rhs, true);
 }
 
 template<typename FG>

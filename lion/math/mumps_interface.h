@@ -6,13 +6,19 @@
 #include "coin-or/mumps/dmumps_c.h"
 #define USE_COMM_WORLD -987654
 
-inline std::vector<double> mumps_solve_linear_system(size_t n_cpp, size_t nnz_cpp, std::vector<size_t>& rows_cpp, std::vector<size_t>& cols_cpp, 
-    std::vector<double>& lhs_cpp, const std::vector<double>& rhs_cpp)
+inline std::vector<std::vector<double>> mumps_solve_linear_system(size_t n_cpp, size_t nnz_cpp, std::vector<size_t>& rows_cpp, std::vector<size_t>& cols_cpp, 
+    std::vector<double>& lhs_cpp, const std::vector<std::vector<double>>& rhs_cpp, bool symmetric)
 {
   assert(rows_cpp.size() == nnz_cpp);
   assert(cols_cpp.size() == nnz_cpp);
   assert(lhs_cpp.size()  == nnz_cpp);
-  assert(rhs_cpp.size()  == n_cpp);
+  size_t n_rhs = rhs_cpp.size();
+  assert(n_rhs > 0);
+  for ( const auto& rhs_i : rhs_cpp )
+  {
+    assert(rhs_i.size() == n_cpp);
+  }
+
   DMUMPS_STRUC_C id;
   MUMPS_INT n = static_cast<MUMPS_INT>(n_cpp);
   MUMPS_INT8 nnz = static_cast<MUMPS_INT8>(nnz_cpp);
@@ -36,7 +42,7 @@ inline std::vector<double> mumps_solve_linear_system(size_t n_cpp, size_t nnz_cp
   id.par = 1;     
 
   // Solve general symmetric matrix
-  id.sym = 0;
+  id.sym = (symmetric ? 2 : 0);
 
   // Job -1 is the initialization
   id.job = -1;
@@ -50,7 +56,6 @@ inline std::vector<double> mumps_solve_linear_system(size_t n_cpp, size_t nnz_cp
   id.irn = irn.data(); 
   id.jcn = jcn.data();
   id.a   = lhs_cpp.data(); 
-  id.rhs = x.data();
 
 #define ICNTL(I) icntl[(I)-1] /* macro s.t. indices match documentation */
 
@@ -68,8 +73,8 @@ inline std::vector<double> mumps_solve_linear_system(size_t n_cpp, size_t nnz_cp
   // ICNTL(4) is the level of printing for error, warning, and diagnostic messages. Maximum value is 4 and default value is 2 (errors and warnings printed)
   id.ICNTL(4)=0;
 
-  /* Call the MUMPS package (analyse, factorization and solve). */
-  id.job=6;
+  /* Call the MUMPS package (analyse, factorization). */
+  id.job=4;
   dmumps_c(&id);
   if (id.infog[0]<0) {
     printf(" (PROC %d) ERROR RETURN: \tINFOG(1)= %d\n\t\t\t\tINFOG(2)= %d\n",
@@ -77,14 +82,30 @@ inline std::vector<double> mumps_solve_linear_system(size_t n_cpp, size_t nnz_cp
     error = 1;
   }
 
+  // (2) Solve the systems
+  for (size_t i = 0; i < n_rhs; ++i)
+  {
+    id.rhs = x[i].data();
+    id.job=3;
+    dmumps_c(&id);
+    if (id.infog[0]<0) {
+      printf(" (PROC %d) ERROR RETURN: \tINFOG(1)= %d\n\t\t\t\tINFOG(2)= %d\n",
+        myid, id.infog[0], id.infog[1]);
+      error = 1;
+
+    }
+    if ( error ) 
+    {
+     /* Terminate instance. */
+     id.job = -2;
+     dmumps_c(&id);
+      throw std::runtime_error("[ERROR] Mumps has thrown an error");
+    }
+  }
+
   /* Terminate instance. */
   id.job = -2;
   dmumps_c(&id);
-
-  if ( error ) 
-  {
-    throw std::runtime_error("[ERROR] Mumps has thrown an error");
-  }
 
   return x;
 }
