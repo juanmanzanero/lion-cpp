@@ -4,13 +4,14 @@
 #include "Xml_document.h"
 #include "lion/math/vector3d.hpp"
 #include "lion/math/matrix3x3.h"
+#include "lion/thirdparty/include/cppad/cppad.hpp"
 
 template<typename T>
 struct Database_parameter
 {
     static_assert(std::is_same_v<T,void> || std::is_same_v<T,const void>);
 
-    enum Parameter_type { DOUBLE, INT, STD_VECTOR_DOUBLE, VECTOR3, MATRIX3X3 };
+    enum Parameter_type { DOUBLE, INT, STD_VECTOR_DOUBLE, VECTOR3, MATRIX3X3, AD };
 
     Database_parameter(const std::string& name_, const Parameter_type type_, T* address_) : name(name_), type(type_), address(address_) {}
 
@@ -23,6 +24,9 @@ struct Database_parameter
     Database_parameter(const std::string& n, typename std::conditional<std::is_const<T>::value, const sVector3d&, sVector3d&>::type v): name(n), type(VECTOR3), address(&v) {}
     
     Database_parameter(const std::string& n, typename std::conditional<std::is_const<T>::value, const sMatrix3x3&, sMatrix3x3&>::type v): name(n), type(MATRIX3X3), address(&v) {}
+
+    Database_parameter(const std::string& n, typename std::conditional<std::is_const<T>::value, const CppAD::AD<scalar>&, CppAD::AD<scalar>&>::type v)
+    : name(n), type(AD), address(&v) {}
         
     std::string name;
     Parameter_type type;
@@ -62,6 +66,10 @@ inline void read_parameters(Xml_document& doc, const std::string& path, const st
 
          case(Database_parameter_mutable::MATRIX3X3): 
             *static_cast<sMatrix3x3*>(ip->address) = doc.get_element(path + ip->name).get_value(sMatrix3x3());
+            break;
+
+         case(Database_parameter_mutable::AD): 
+            *static_cast<CppAD::AD<scalar>*>(ip->address) = doc.get_element(path + ip->name).get_value(scalar());
             break;
 
          default:
@@ -141,6 +149,18 @@ inline bool set_parameter(const std::vector<Database_parameter_mutable>& p, cons
             }
             break;
 
+         case(Database_parameter_mutable::AD): 
+            if constexpr (std::is_same<scalar,T>::value || std::is_same<CppAD::AD<scalar>,T>::value)
+            {
+                *static_cast<CppAD::AD<scalar>*>(ip->address) = value;
+                return true;
+            }
+            else
+            {
+                throw std::runtime_error("Attempt to set AD variable from non-scalar or CppAD::AD<scalar> types");
+            }
+            break;
+
          default:
             break;
         }
@@ -195,6 +215,13 @@ inline void write_parameters(Xml_document& doc, const std::string& path, const s
             doc.add_element(path + ip->name).set_value(s_out.str());
             break;
          }
+         case(Database_parameter<T>::AD): 
+         {
+            s_out << Value(*static_cast<const CppAD::AD<scalar>*>(ip->address));
+            doc.add_element(path + ip->name).set_value(s_out.str());
+            break;
+         }
+
          default:
             break;
         }

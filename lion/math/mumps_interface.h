@@ -73,6 +73,18 @@ inline std::vector<std::vector<double>> mumps_solve_linear_system(size_t n_cpp, 
   // ICNTL(4) is the level of printing for error, warning, and diagnostic messages. Maximum value is 4 and default value is 2 (errors and warnings printed)
   id.ICNTL(4)=0;
 
+  id.ICNTL(14)=1000.0;
+
+   id.icntl[5] = 7;
+   id.icntl[6] = 7;
+   id.icntl[7] = 77;
+   id.icntl[9] = 0;   //no iterative refinement iterations
+
+   id.icntl[12] = 1;   //avoid lapack bug, ensures proper inertia; mentioned to be very expensive in mumps manual
+   id.cntl[0] = 1.0e-6;  // Set pivot tolerance
+
+
+
   /* Call the MUMPS package (analyse, factorization). */
   id.job=4;
   dmumps_c(&id);
@@ -80,11 +92,19 @@ inline std::vector<std::vector<double>> mumps_solve_linear_system(size_t n_cpp, 
     printf(" (PROC %d) ERROR RETURN: \tINFOG(1)= %d\n\t\t\t\tINFOG(2)= %d\n",
         myid, id.infog[0], id.infog[1]);
     error = 1;
+    if ( error ) 
+    {
+     /* Terminate instance. */
+     id.job = -2;
+     dmumps_c(&id);
+      throw std::runtime_error("[ERROR] Mumps has thrown an error");
+    }
   }
 
   // (2) Solve the systems
   for (size_t i = 0; i < n_rhs; ++i)
   {
+    error = 0;
     id.rhs = x[i].data();
     id.job=3;
     dmumps_c(&id);

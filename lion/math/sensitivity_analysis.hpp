@@ -71,6 +71,7 @@ void Sensitivity_analysis<FG>::check_optimality()
     fg_full(fg_full_0, _x_full_0);
 
     _fg_full_adfun.Dependent(_x_full_0, fg_full_0);
+    _fg_full_adfun.optimize();
 
     // (3) Evaluate the Jacobian
     _fg_full_adfun.Forward(0, _x_full);
@@ -156,7 +157,9 @@ void Sensitivity_analysis<FG>::compute_sensitivity()
     // (2.2) Slack variables
     for (size_t ij = 0; ij < _n_inequality; ++ij)
     {
-        hes[diag_loc[_n+ij]] += _vl.at(ij)/(1.0e-8 + _s.at(ij) - _c_lb.at(ij)) + _vu.at(ij)/(1.0e-8 + _c_ub.at(ij) - _s.at(ij));
+        //constexpr const scalar relax_bound_factor = 1.0e-8; 
+        constexpr const scalar relax_bound_factor = 0.0; 
+        hes[diag_loc[_n+ij]] += _vl.at(ij)/(relax_bound_factor + _s.at(ij) - _c_lb.at(ij)) + _vu.at(ij)/(relax_bound_factor + _c_ub.at(ij) - _s.at(ij));
     }
 
     // (3) Prepare the system to be solved with mumps
@@ -188,6 +191,7 @@ void Sensitivity_analysis<FG>::compute_sensitivity()
     }
 
     // (4) Solve the system
+    out(2) << "[INFO] Sensitivity_analysis -> calling mumps to solve linear system" << std::endl;
     dxdp = mumps_solve_linear_system(n_total, lhs.size(), rows_lhs, cols_lhs, lhs, rhs, true);
 }
 
