@@ -150,7 +150,7 @@ inline bool set_parameter(const std::vector<Database_parameter_mutable>& p, cons
             break;
 
          case(Database_parameter_mutable::AD): 
-            if constexpr (std::is_same<scalar,T>::value || std::is_same<CppAD::AD<scalar>,T>::value)
+            if constexpr (std::is_same<scalar,T>::value || std::is_same<CppAD::AD<scalar>,T>::value)
             {
                 *static_cast<CppAD::AD<scalar>*>(ip->address) = value;
                 return true;
