@@ -159,7 +159,7 @@ void Sensitivity_analysis<FG>::compute_sensitivity()
     {
         //constexpr const scalar relax_bound_factor = 1.0e-8; 
         constexpr const scalar relax_bound_factor = 0.0; 
-        hes[diag_loc[_n+ij]] += _vl.at(ij)/(relax_bound_factor + _s.at(ij) - _c_lb.at(ij)) + _vu.at(ij)/(relax_bound_factor + _c_ub.at(ij) - _s.at(ij));
+        hes[diag_loc[_n+ij]] += _vl.at(ij)/(relax_bound_factor + _s.at(ij) - _c_lb.at(_lb_inequality_positions[ij])) + _vu.at(ij)/(relax_bound_factor + _c_ub.at(_ub_inequality_positions[ij]) - _s.at(ij));
     }
 
     // (3) Prepare the system to be solved with mumps
@@ -209,14 +209,20 @@ void Sensitivity_analysis<FG>::classify_constraints()
     for (size_t i = 0; i < _nc; ++i)
     {
         if ( !_equality_constraints[i] && _c_lb[i] > -1.0e18 ) 
+        {
             _inequality_constraints_lb[i] = true;
+            _lb_inequality_positions.push_back(i);
+        }
     }
 
     // (3) Check upper bound inequalities
     for (size_t i = 0; i < _nc; ++i)
     {
         if ( !_equality_constraints[i] && _c_ub[i] <  1.0e18 ) 
+        {
             _inequality_constraints_ub[i] = true;
+            _ub_inequality_positions.push_back(i);
+        }
     }
 
     // (4) Count them
@@ -224,6 +230,9 @@ void Sensitivity_analysis<FG>::classify_constraints()
     _n_inequalities_lb = std::count(_inequality_constraints_lb.cbegin(), _inequality_constraints_lb.cend(), true);
     _n_inequalities_ub = std::count(_inequality_constraints_ub.cbegin(), _inequality_constraints_ub.cend(), true);
     _n_inequality = _nc - _n_equality;
+
+    assert(_lb_inequality_positions.size() == _n_inequalities_lb);
+    assert(_ub_inequality_positions.size() == _n_inequalities_ub);
 }
 
 

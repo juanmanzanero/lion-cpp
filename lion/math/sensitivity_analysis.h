@@ -132,6 +132,8 @@ class Sensitivity_analysis
     std::vector<bool>    _equality_constraints;
     std::vector<bool>    _inequality_constraints_lb;
     std::vector<bool>    _inequality_constraints_ub;
+    std::vector<size_t>  _lb_inequality_positions;
+    std::vector<size_t>  _ub_inequality_positions;
     size_t               _n_equality;
     size_t               _n_inequalities_lb;
     size_t               _n_inequalities_ub;
