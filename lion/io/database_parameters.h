@@ -15,11 +15,11 @@ struct Database_parameter
 
     Database_parameter(const std::string& name_, const Parameter_type type_, T* address_) : name(name_), type(type_), address(address_) {}
 
-    Database_parameter(const std::string& n, typename std::conditional<std::is_const<T>::value, const double&, double&>::type v) : name(n), type(DOUBLE), address(&v) {}
+    Database_parameter(const std::string& n, typename std::conditional<std::is_const<T>::value, const scalar&, scalar&>::type v) : name(n), type(DOUBLE), address(&v) {}
     
     Database_parameter(const std::string& n, typename std::conditional<std::is_const<T>::value, const int&, int&>::type v): name(n), type(INT), address(&v) {}
 
-    Database_parameter(const std::string& n, typename std::conditional<std::is_const<T>::value, const std::vector<double>&, std::vector<double>&>::type v): name(n), type(STD_VECTOR_DOUBLE), address(&v) {}
+    Database_parameter(const std::string& n, typename std::conditional<std::is_const<T>::value, const std::vector<scalar>&, std::vector<scalar>&>::type v): name(n), type(STD_VECTOR_DOUBLE), address(&v) {}
 
     Database_parameter(const std::string& n, typename std::conditional<std::is_const<T>::value, const sVector3d&, sVector3d&>::type v): name(n), type(VECTOR3), address(&v) {}
     
@@ -49,7 +49,7 @@ inline void read_parameters(Xml_document& doc, const std::string& path, const st
         switch (ip->type)
         {
          case(Database_parameter_mutable::DOUBLE): 
-            *static_cast<double*>(ip->address) = doc.get_element(path + ip->name).get_value(double());
+            *static_cast<scalar*>(ip->address) = doc.get_element(path + ip->name).get_value(scalar());
             break;
 
          case(Database_parameter_mutable::INT): 
@@ -57,7 +57,7 @@ inline void read_parameters(Xml_document& doc, const std::string& path, const st
             break;
 
          case(Database_parameter_mutable::STD_VECTOR_DOUBLE): 
-            *static_cast<std::vector<double>*>(ip->address) = doc.get_element(path + ip->name).get_value(std::vector<double>());
+            *static_cast<std::vector<scalar>*>(ip->address) = doc.get_element(path + ip->name).get_value(std::vector<scalar>());
             break;
 
          case(Database_parameter_mutable::VECTOR3): 
@@ -90,14 +90,19 @@ inline bool set_parameter(const std::vector<Database_parameter_mutable>& p, cons
         switch (ip->type)
         {
          case(Database_parameter_mutable::DOUBLE): 
-            if constexpr (std::is_same<double,T>::value)
+            if constexpr (std::is_same<scalar,T>::value)
             {
-                *static_cast<double*>(ip->address) = value;
+                *static_cast<scalar*>(ip->address) = value;
+                return true;
+            }
+            else if constexpr (std::is_same<CppAD::AD<scalar>,T>::value)
+            {
+                *static_cast<scalar*>(ip->address) = Value(CppAD::Var2Par(value));
                 return true;
             }
             else
             {   
-                throw std::runtime_error("Attempt to set double from non-double type");
+                throw std::runtime_error("Attempt to set scalar from non-scalar type");
             }
             break;
 
@@ -114,14 +119,14 @@ inline bool set_parameter(const std::vector<Database_parameter_mutable>& p, cons
             break;
 
          case(Database_parameter_mutable::STD_VECTOR_DOUBLE): 
-            if constexpr (std::is_same<std::vector<double>,T>::value)
+            if constexpr (std::is_same<std::vector<scalar>,T>::value)
             {
-                *static_cast<std::vector<double>*>(ip->address) = value;
+                *static_cast<std::vector<scalar>*>(ip->address) = value;
                 return true;
             }
             else
             {   
-                throw std::runtime_error("Attempt to set double vector from non-double vector type");
+                throw std::runtime_error("Attempt to set scalar vector from non-scalar vector type");
             }
             break;
 
@@ -180,7 +185,7 @@ inline void write_parameters(Xml_document& doc, const std::string& path, const s
         {
          case(Database_parameter<T>::DOUBLE): 
          {
-            s_out << *static_cast<const double*>(ip->address);
+            s_out << *static_cast<const scalar*>(ip->address);
             doc.add_element(path + ip->name).set_value(s_out.str());
             break;
          }
@@ -191,7 +196,7 @@ inline void write_parameters(Xml_document& doc, const std::string& path, const s
          }
          case(Database_parameter<T>::STD_VECTOR_DOUBLE): 
          {
-            const auto& v = *static_cast<const std::vector<double>*>(ip->address);
+            const auto& v = *static_cast<const std::vector<scalar>*>(ip->address);
             
             for (auto it = v.cbegin(); it != v.cend()-1; ++it )
                 s_out << *it << ", " ;

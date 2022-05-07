@@ -11,9 +11,10 @@ This section gives guidelines regarding the programming style for C++ code.
 - A header `.h` file should include function and class declarations, and a `.hpp` file includes the implementation. 
 - The `.h` file shall include the `.hpp` file, and other files only should include the `.h` file.
 - Always include safeguards, named after the name of the file. E.g., for `my_class.h` use `#ifndef MY_CLASS_H__`, and `my_class.hpp` `#ifndef MY_CLASS_HPP__`
+- There shall not be commented code lines.
 - Use 4 spaces to indent, instead of tabs. An exception can be the switch case, where the `case` statements can have a spacing of 1 space.
 - Variable names should be descriptive. Never use ambiguous names such as 'aux', 'temp', or 'old'.
-- Always use snake_case (https://betterprogramming.pub/string-case-styles-camel-pascal-snake-and-kebab-case-981407998841)
+- Always use [snake_case](https://betterprogramming.pub/string-case-styles-camel-pascal-snake-and-kebab-case-981407998841)
 - Variable names must be lower case (except if it refers to a human name, e.g. Hermite, Lagrange)
 - Function names must be lower case 
 - File names must be lower case
@@ -35,7 +36,7 @@ This section gives guidelines regarding the programming style for C++ code.
 - Use ```// comment``` for comments instead of ```/*  comment */```
 - Add `const` statements whenever it applies.
 - Avoid manual dynamic allocation of variables (i.e. avoid using `new` and `delete`). Use `std::vector` and smart pointers instead.
-- Add comments in doxygen format.
+- Document well your code through comments in doxygen format.
  
 ### Classes
 
