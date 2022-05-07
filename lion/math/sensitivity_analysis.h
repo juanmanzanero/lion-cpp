@@ -16,6 +16,7 @@ class Sensitivity_analysis
     struct Options
     {
         scalar max_error_dual_problem = 1.0e-9;
+        scalar ipopt_bound_relax_factor = 1.0e-8;
         bool skip_optimality_check = false;
     };
 

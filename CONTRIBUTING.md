@@ -57,4 +57,4 @@ This section gives guidelines regarding the programming style for C++ code.
 
 - Try to use C++ most recent features, within the C++ standard. C++17 is preferred.
 - Before writing an algorithm, make sure it is not in the STL already (standard template library): https://www.cplusplus.com/reference/algorithm/
-- If an algorithm is to be used by the laptime optimal simulator, make sure it is templatized 
+- If an algorithm is to be used by the laptime optimal simulator, make sure it is templatized to support both `scalar` (aka `double`) and `CppAD::AD<scalar>`
