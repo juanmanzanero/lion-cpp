@@ -30,88 +30,133 @@ void Sensitivity_analysis<FG>::check_inputs() const
 template<typename FG>
 void Sensitivity_analysis<FG>::check_optimality()
 {
-    // (1) Construct the full problem
-    // (1.1) Construct the full fitness function
-    FG_full fg_full(_fg, _np, _n, _nc, _c_lb, _equality_constraints,
-                    _inequality_constraints_lb, _inequality_constraints_ub);
+    // (1) Construct the augmented unknowns vector with x_aug = [x,p]
+    _x_aug.resize(_n + _np);
+    std::copy(_x.cbegin(), _x.cend(), _x_aug.begin());
+    std::copy(_p.cbegin(), _p.cend(), _x_aug.begin() + _n);
+
+    // (2) Construct the CppAD function and record the operations
+    typename FG::ADvector x_aug_cppad(_n + _np), fg_0(_nc+1);
+    std::copy(_x_aug.cbegin(), _x_aug.cend(), x_aug_cppad.begin());
+    CppAD::Independent(x_aug_cppad);
+
+    // (2.1) Divide again the cppad vector into [x_cppad, p_cppad]
+    typename FG::ADvector x_cppad(_n);
+    typename FG::ADvector p_cppad(_np);
+    std::copy(x_aug_cppad.begin(), x_aug_cppad.begin() + _n, x_cppad.begin());
+    std::copy(x_aug_cppad.begin() + _n, x_aug_cppad.end(), p_cppad.begin());
+
+    
+    _fg(fg_0, x_cppad, p_cppad);
+    _fg_adfun.Dependent(x_aug_cppad, fg_0);
 
 
-  
-    // (1.2) Construct the full independent variables: [x, s, lambda, parameters]
-    _x_full = std::vector<scalar>(_n + _n_equality + 2*_n_inequality + _np);
+    // (2) Compute the sparsity pattern
+    _sparsity_pattern = compute_sparsity_pattern(_n+_np, _nc, _fg_adfun);
 
-    // (1.1.1) Original variables, x
-    std::copy(_x.cbegin(), _x.cend(), _x_full.begin());
+    // (3) Evaluate the gradient of f(x;p)
+    _fg_adfun.Forward(0, _x_aug);
+    std::vector<scalar> eqs_to_compute(_nc+1,0.0);
+    eqs_to_compute.front() = 1.0;
 
-    // (1.1.2) Slack variables, s
-    size_t slack_var_counter = 0;
+    _fg_adfun.Forward(0, _x_aug);
+    auto grad_f = _fg_adfun.Reverse(1, eqs_to_compute);
+    _dfdx = std::vector<scalar>(grad_f.cbegin(), grad_f.cbegin() + _n);
+    _dfdp = std::vector<scalar>(grad_f.cbegin() + _n, grad_f.cend());
+
+    // (4) Evaluate the (sparse) gradient of c(x;p)
+    std::vector<scalar> grad_c(_sparsity_pattern.nnz_jac);
+    CppAD::sparse_jacobian_work work_jac;
+    _fg_adfun.SparseJacobianForward(_x_aug , _sparsity_pattern.pattern_jac, _sparsity_pattern.row_jac, _sparsity_pattern.col_jac, grad_c, work_jac);
+
+    // (4.1) Split the full Jacobian into derivatives w.r.t. x and w.r.t. p
+    for (size_t i = 0; i < _sparsity_pattern.nnz_jac; ++i)
+    {
+        if ( _sparsity_pattern.col_jac[i] < _n )
+        {
+            _dcdx_rows.push_back(_sparsity_pattern.row_jac[i] - 1); 
+            _dcdx_cols.push_back(_sparsity_pattern.col_jac[i]);
+            _dcdx.push_back(grad_c[i]);
+        }
+        else
+        {
+            _dcdp_rows.push_back(_sparsity_pattern.row_jac[i] - 1);
+            _dcdp_cols.push_back(_sparsity_pattern.col_jac[i] - _n);
+            _dcdp.push_back(grad_c[i]);
+        }
+    }
+
+    // (5) Compute the NLP error: [dfdx + sum(lambda.dcdx) - sum(zlb) + sum(zub), -lambda_ineq - sum(vlb) + sum(vub), eq ? c - c_lb : c - s]
+    optimality_check.nlp_error.resize(_n + _n_equality + 2*_n_inequality);
+
+    // (5.1) Compute gradient w.r.t. x
+    
+    // (5.1.1) Add gradient of fitness function
+    std::copy(_dfdx.cbegin(), _dfdx.cend(), optimality_check.nlp_error.begin());
+
+    // (5.1.2) Add gradient of the constraints 
+    for (size_t i = 0; i < _dcdx.size(); ++i)
+        optimality_check.nlp_error[_dcdx_cols[i]] += _lambda[_dcdx_rows[i]]*_dcdx[i];
+
+    // (5.1.3) Add the bound multipliers
+    for (size_t i = 0; i < _n; ++i)
+        optimality_check.nlp_error[i] += _zu[i] - _zl[i];
+
+    // (5.2) Compute gradient w.r.t. s
+    
+    // (5.2.1) Add the lagrange multipliers corresponding to inequalities
+    for (size_t i = 0; i < _n_inequality; ++i)
+        optimality_check.nlp_error[_n + i] = -_lambda[_inequality_positions[i]];
+
+    // (5.2.2) Add the lower bound multipliers
+    size_t ineq_counter = 0;
+    size_t lb_ineq_counter = 0;
+    size_t ub_ineq_counter = 0;
     for (size_t i = 0; i < _nc; ++i)
     {
         if ( !_equality_constraints[i] )
         {
-            _x_full[_n + slack_var_counter] = _s[slack_var_counter];
-            ++slack_var_counter;
+            if ( _inequality_constraints_lb[i] )
+            { 
+                optimality_check.nlp_error[_n + ineq_counter] -= _vl[lb_ineq_counter];
+                ++lb_ineq_counter;
+            }
+
+            if ( _inequality_constraints_ub[i] )
+            {
+                optimality_check.nlp_error[_n + ineq_counter] += _vu[ub_ineq_counter];
+                ++ub_ineq_counter;
+            }
+
+            ++ineq_counter;
         }
     }
 
-    // (1.1.3) Lagrange multipliers
-    for (size_t i = 0; i < _nc; ++i)
-        _x_full[_n + _n_inequality + i] = _lambda[i];
+    assert(ineq_counter == _n_inequality);
+    assert(lb_ineq_counter == _n_inequalities_lb);
+    assert(ub_ineq_counter == _n_inequalities_ub);
 
-    // (1.1.4) Parameters
-    for (size_t i = 0; i < _np; ++i)
-        _x_full[_n + _n_inequality + _nc + i] = _p[i];
-
-    // (2) Construct the ADFun
-    typename FG::ADvector _x_full_0(_x_full.size()), fg_full_0(1);
-    std::copy(_x_full.cbegin(), _x_full.cend(), _x_full_0.begin());
-
-    CppAD::Independent(_x_full_0);
-
-    fg_full(fg_full_0, _x_full_0);
-
-    _fg_full_adfun.Dependent(_x_full_0, fg_full_0);
-    _fg_full_adfun.optimize();
-
-    // (3) Evaluate the Jacobian
-    _fg_full_adfun.Forward(0, _x_full);
-    auto& grad_f = optimality_check.grad_f;
-    grad_f = _fg_full_adfun.Reverse(1, std::vector<scalar>{1.0});
-
-    // (3.1) Add the bound multipliers jacobian
-    for (size_t i = 0; i < _n; ++i)
-    {
-        grad_f[i] -= _zl[i];
-        grad_f[i] += _zu[i];
-    }
-
-    size_t counter = 0;
+    // (5.3) Compute gradient w.r.t. lambda
+    ineq_counter = 0;
     for (size_t i = 0; i < _nc; ++i)
     {
-        if ( _inequality_constraints_lb[i] )
+        if ( _equality_constraints[i] )
         {
-            grad_f[_n+counter] -= _vl[counter];
-            counter++;
+            optimality_check.nlp_error[_n + _n_inequality + i] = Value(fg_0[i+1]) - _c_lb[i];
         }
-    }
-
-    counter = 0;
-    for (size_t i = 0; i < _nc; ++i)
-    {
-        if ( _inequality_constraints_ub[i] )
+        else
         {
-            grad_f[_n+counter] += _vu[counter];
-            counter++;
+            optimality_check.nlp_error[_n + _n_inequality + i] = Value(fg_0[i+1]) - _s[ineq_counter++]; 
         }
     }
 
-    // (4) Look for errors and export the solution
-    for (size_t i = 0; i < grad_f.size() - _np; ++i)
-    {
-        const auto& grad_f_i = grad_f[i];
+    assert(ineq_counter == _n_inequality);
 
-        if ( std::abs(grad_f_i) > _opts.max_error_dual_problem )
-            optimality_check.id_not_ok.push_back(i);
+    // (6) Look for errors and export the solution
+    for (auto it_error = optimality_check.nlp_error.cbegin(); it_error != optimality_check.nlp_error.cend(); ++it_error)
+    {
+        if ( std::abs(*it_error) > _opts.max_error_dual_problem )
+            optimality_check.id_not_ok.push_back(std::distance(optimality_check.nlp_error.cbegin(), it_error));
     }
 
     optimality_check.success = (optimality_check.id_not_ok.size() == 0);
@@ -121,75 +166,126 @@ void Sensitivity_analysis<FG>::check_optimality()
 template<typename FG>
 void Sensitivity_analysis<FG>::compute_sensitivity()
 {
-    // (1) Compute the Hessian of the extended problem: x_extended = [params, x, s, lambda]
-    auto sparsity_patterns = compute_sparsity_pattern(_n + 2*_n_inequality + _n_equality + _np, 0, _fg_full_adfun, true);
+    // (1) Compute the Hessian matrix of f(x) + sum(lambda.c) 
+    std::vector<scalar> w(1+_nc);
+    w.front() = 1.0;
+    std::copy(_lambda.cbegin(), _lambda.cend(), w.begin() + 1);
+    std::vector<scalar> hes(_sparsity_pattern.nnz_hes);
+    CppAD::sparse_hessian_work work_hes;
+    _fg_adfun.SparseHessian(_x_aug, w, _sparsity_pattern.pattern_hes, _sparsity_pattern.row_hes, _sparsity_pattern.col_hes, hes, work_hes);
 
-    size_t n_hes = sparsity_patterns.row_hes.size();
-    std::vector<scalar> w = {1.0};
-    std::vector<scalar> hes(n_hes);
-    CppAD::sparse_hessian_work      work_hes;
-    _fg_full_adfun.SparseHessian(_x_full, w, sparsity_patterns.pattern_hes, sparsity_patterns.row_hes, sparsity_patterns.col_hes, hes, work_hes);
+    // (1.1) Split the Hessian between Hxx and Hxp. Recall that CppAD computes a lower triangular matrix (i >= j)
+    std::vector<size_t> hxx_rows;
+    std::vector<size_t> hxx_cols;
+    std::vector<scalar> hxx;
 
-    // (2) Get the location of the main diagonal
-    std::vector<size_t> diag_loc(_n + 2*_n_inequality + _n_equality + _np);
-    std::vector<size_t> diag_set(_n + 2*_n_inequality + _n_equality + _np, false);
-
-    for (size_t ij = 0; ij < n_hes; ++ij)
+    std::vector<size_t> hxp_rows;
+    std::vector<size_t> hxp_cols;
+    std::vector<scalar> hxp;
+    for (size_t i = 0; i < _sparsity_pattern.nnz_hes; ++i)
     {
-        if ( sparsity_patterns.row_hes[ij] == sparsity_patterns.col_hes[ij] )
+        if ( _sparsity_pattern.row_hes[i] < _n )
         {
-            diag_loc[sparsity_patterns.row_hes[ij]] = ij;
-            diag_set[sparsity_patterns.row_hes[ij]] = true;
+            hxx_rows.push_back(_sparsity_pattern.row_hes[i]);
+            hxx_cols.push_back(_sparsity_pattern.col_hes[i]);
+            hxx.push_back(hes[i]);
+        }
+        else if ( _sparsity_pattern.col_hes[i] < _n )
+        {
+            hxp_rows.push_back(_sparsity_pattern.row_hes[i] - _n);
+            hxp_cols.push_back(_sparsity_pattern.col_hes[i]);
+            hxp.push_back(hes[i]);
         }
     }
 
-    if ( std::count(diag_set.cbegin(), diag_set.cend(), false) > 0 )
-        throw std::runtime_error("Some diagonal positions were not found");
+    // (2) Write the lhs matrix (Lower triangular)
+    std::vector<size_t> lhs_rows;
+    std::vector<size_t> lhs_cols;
+    std::vector<scalar> lhs;
 
-    // (2) Add the bound multipliers Hessian
+    // (2.1) Add fitness and constraints hessian
+    lhs_rows = hxx_rows;
+    lhs_cols = hxx_cols;
+    lhs      = hxx;
 
-    // (2.1) Variables
-    for (size_t ij = 0; ij < _n; ++ij)
+    // (2.2) Add the lower and upper bound multipliers
+    for (size_t i = 0; i < _n; ++i)
     {
-        hes[diag_loc[ij]] += _zl[ij]/(_x[ij] - _x_lb[ij]) + _zu[ij]/(_x_ub[ij] - _x[ij]); 
+        lhs_rows.push_back(i);
+        lhs_cols.push_back(i);
+        lhs.push_back(_zl[i]/(_x[i] - _x_lb[i]) + _zu[i]/(_x_ub[i] - _x[i]));
     }
 
-    // (2.2) Slack variables
-    for (size_t ij = 0; ij < _n_inequality; ++ij)
+    // (2.3) Add the Jacobian of the constraints
+    for (size_t i = 0; i < _dcdx.size(); ++i)
     {
-        hes[diag_loc[_n+ij]] += _vl[ij]/(_opts.ipopt_bound_relax_factor + _s[ij] - _c_lb[_lb_inequality_positions[ij]]) + _vu[ij]/(_opts.ipopt_bound_relax_factor + _c_ub[_ub_inequality_positions[ij]] - _s[ij]);
+        lhs_rows.push_back(_n + _n_inequality + _dcdx_rows[i]);
+        lhs_cols.push_back(_dcdx_cols[i]);
+        lhs.push_back(_dcdx[i]);
     }
 
-    // (3) Prepare the system to be solved with mumps
+    // (2.4) add the slack vars lower bound multipliers
+    size_t lb_ineq_counter = 0;
+    size_t ineq_counter = 0;
+    for (size_t i = 0; i < _nc; ++i)
+    {
+        if ( !_equality_constraints[i] )
+        {
+            if ( _inequality_constraints_lb[i] )
+            {
+                lhs_rows.push_back(_n + ineq_counter);
+                lhs_cols.push_back(_n + ineq_counter);
+                lhs.push_back(_vl[lb_ineq_counter]/(_opts.ipopt_bound_relax_factor + _s[ineq_counter] - _c_lb[i]));
+                ++lb_ineq_counter;
+            }
+       
+            ++ineq_counter;
+        }
+    }
+
+    // (2.5) add the slack vars upper bound multipliers
+    size_t ub_ineq_counter = 0;
+    ineq_counter = 0;
+    for (size_t i = 0; i < _nc; ++i)
+    {
+        if ( !_equality_constraints[i] )
+        {
+            if ( _inequality_constraints_lb[i] )
+            {
+                lhs_rows.push_back(_n + ineq_counter);
+                lhs_cols.push_back(_n + ineq_counter);
+                lhs.push_back(_vu[ub_ineq_counter]/(_opts.ipopt_bound_relax_factor + _c_ub[i] - _s[ineq_counter]));
+                ++ub_ineq_counter;
+            }
+            ++ineq_counter;
+        }
+    }
+
+    // (2.6) Add the identity matrix associated to -\partial(lambda_i.s_j)/\partial lambda_i \partial s_j
+    ineq_counter = 0;
+    for (size_t i = 0; i < _nc; ++i)
+    {
+        if ( !_equality_constraints[i] )
+        {
+            lhs_rows.push_back(_n + _n_inequality + i); 
+            lhs_cols.push_back(_n + ineq_counter);
+            lhs.push_back(-1.0);
+            ++ineq_counter;
+        }
+    }
+
+    // (3) Write the vector of rhs (dense)
     size_t n_total = _n + 2*_n_inequality + _n_equality;
-    std::vector<size_t> rows_lhs;
-    std::vector<size_t> cols_lhs;
-    std::vector<double> lhs;
-    std::vector<std::vector<double>> rhs(_np,std::vector<double>(n_total,0.0));
+    std::vector<std::vector<scalar>> rhs(_np, std::vector<scalar>(n_total,0.0));
 
-    for (size_t ij = 0; ij < n_hes; ++ij)
-    {
-        if ( sparsity_patterns.row_hes[ij] < sparsity_patterns.col_hes[ij] )
-            throw std::runtime_error("[ERROR] Matrix was expected to be lower triangular (i>=j)");
+    for (size_t i = 0; i < hxp.size(); ++i)
+        rhs[hxp_rows[i]][hxp_cols[i]] = -hxp[i];
 
-        if ( (sparsity_patterns.row_hes[ij] < n_total) )
-        {
-            // If indexes are less than n_total, it's the lhs
-            rows_lhs.push_back(sparsity_patterns.row_hes[ij]);
-            cols_lhs.push_back(sparsity_patterns.col_hes[ij]);
-            lhs.push_back(hes[ij]);
-
-        }
-        else
-        {
-            size_t i_p = sparsity_patterns.row_hes[ij] - n_total;
-            if ( sparsity_patterns.col_hes[ij] < n_total ) 
-                rhs[i_p][sparsity_patterns.col_hes[ij]] = -hes[ij];
-        }
-    }
+    for (size_t i = 0; i < _dcdp.size(); ++i)
+        rhs[_dcdp_cols[i]][_n + _n_inequality + _dcdp_rows[i]] = -_dcdp[i];
 
     // (4) Solve the system
-    dxdp = mumps_solve_linear_system(n_total, lhs.size(), rows_lhs, cols_lhs, lhs, rhs, true);
+    dxdp = mumps_solve_linear_system(n_total, lhs.size(), lhs_rows, lhs_cols, lhs, rhs, true);
 }
 
 template<typename FG>
@@ -199,7 +295,13 @@ void Sensitivity_analysis<FG>::classify_constraints()
     for (size_t i = 0; i < _nc; ++i)
     {
         if ( std::abs(_c_lb[i] - _c_ub[i]) < 1.0e-8 )
+        {
             _equality_constraints[i] = true;
+        }
+        else
+        {
+            _inequality_positions.push_back(i);
+        }
     }
 
     // (2) Check lower bound inequalities
@@ -234,7 +336,7 @@ void Sensitivity_analysis<FG>::classify_constraints()
 
 
 template<typename FG>
-typename Sensitivity_analysis<FG>::Sparsity_pattern Sensitivity_analysis<FG>::compute_sparsity_pattern(const size_t n, const size_t nc, CppAD::ADFun<scalar>& fg_ad, const bool force_diagonal)
+typename Sensitivity_analysis<FG>::Sparsity_pattern Sensitivity_analysis<FG>::compute_sparsity_pattern(const size_t n, const size_t nc, CppAD::ADFun<scalar>& fg_ad)
 {
     using ADvector = typename FG::ADvector;
 
@@ -367,10 +469,6 @@ typename Sensitivity_analysis<FG>::Sparsity_pattern Sensitivity_analysis<FG>::co
         }
     }
 
-    // Force the diagonal
-    for (i = 0; i < n; ++i)
-        pattern_hes[i*n + i] = true;
-
     // Set row and column indices for Lower triangle of Hessian
     // of Lagragian.  These indices are in row major order.
     CppAD::vector<size_t> row_hes, col_hes;
@@ -390,9 +488,11 @@ typename Sensitivity_analysis<FG>::Sparsity_pattern Sensitivity_analysis<FG>::co
 
     return (Sparsity_pattern)
     {
+        .nnz_jac = row_jac.size(),
         .row_jac = row_jac,        
         .col_jac = col_jac,
         .pattern_jac = pattern_jac,
+        .nnz_hes = row_hes.size(),
         .row_hes = row_hes,
         .col_hes = col_hes,        
         .pattern_hes = pattern_hes
