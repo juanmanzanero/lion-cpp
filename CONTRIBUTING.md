@@ -1,10 +1,12 @@
 # Contributing to Lion
 
-Please read these carefully these lines before contributing with your own source code to this project. 
+Please read carefully these lines before contributing with your own source code to this project. 
 
 ## C++ coding guidelines
 
-This section gives guidelines regarding the programming style for C++ code.
+This section gives guidelines regarding the programming style for C++ code. 
+
+C++ is not easy, and it needs time to master. Therefore, if you are new to C++, think of spending some time reading the code first and try to understand how C++ works before even thinking to implement new features in the project.
 
 ### General style
 
@@ -37,9 +39,11 @@ This section gives guidelines regarding the programming style for C++ code.
 - Add `const` statements whenever it applies.
 - Avoid manual dynamic allocation of variables (i.e. avoid using `new` and `delete`). Use `std::vector` and smart pointers instead.
 - Document well your code through comments in doxygen format.
+- Use spacing between operators (i.e. `i = 0` instead of `i=0`)
  
 ### Classes
 
+- Class names must start with upper case, and should use Snake_case
 - Avoid polymorphism and virtual functions as long as it is possible. Use template versions instead.
 - If a class is derived, save its parent as `base_type`:
 
@@ -53,9 +57,11 @@ This section gives guidelines regarding the programming style for C++ code.
 - Make `public:` only what it is truly required. The rest should default to `private:`
 - Use `static` member functions if their implementation does not require an instance of the class.
 - Use `const` member functions if the instance of the class is readonly in the their implementation.
+- Define one data member per line (e.g. don't `int i,j;`)
 
 ### Algorithms
 
 - Try to use C++ most recent features, within the C++ standard. C++17 is preferred.
 - Before writing an algorithm, make sure it is not in the STL already (standard template library): https://www.cplusplus.com/reference/algorithm/
 - If an algorithm is to be used by the laptime optimal simulator, make sure it is templatized to support both `scalar` (aka `double`) and `CppAD::AD<scalar>`
+- If applies, use range based for loops instead of index based, to loop over containers

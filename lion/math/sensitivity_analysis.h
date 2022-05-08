@@ -79,7 +79,8 @@ class Sensitivity_analysis
     
         check_optimality();
 
-        compute_sensitivity();
+        if ( p.size() > 0 )
+            compute_sensitivity();
     }
 
     //! Helper class to group the results of the optimality check
