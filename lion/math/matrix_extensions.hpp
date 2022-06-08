@@ -183,8 +183,8 @@ constexpr std::array<T,M> operator*(const std::array<T,N>& lhs, const std::array
 }
 
 
-template<typename VEC, typename is_vector<VEC>::type*>
-constexpr VEC operator*(const VEC& lhs, const double rhs)
+template<typename VEC, typename T, typename is_vector<VEC>::type*>
+constexpr VEC operator*(const VEC& lhs, const T& rhs)
 {
     auto result = lhs;
     

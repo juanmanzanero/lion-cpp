@@ -100,8 +100,8 @@ constexpr std::array<T,M> operator*(const std::array<T,N>& lhs, const std::array
 //! Multiply a vector by a constant
 //! @param[in] lhs: the vector
 //! @param[in] rhs: the constant
-template<typename VEC, typename is_vector<VEC>::type* = nullptr>
-constexpr VEC operator*(const VEC& lhs, const double rhs);
+template<typename VEC, typename T, typename is_vector<VEC>::type* = nullptr>
+constexpr VEC operator*(const VEC& lhs, const T& rhs);
 
 //! Multiply a vector by a constant
 //! @param[in] lhs: the vector
@@ -112,8 +112,8 @@ constexpr VEC& operator*=(VEC& lhs, const double rhs);
 //! Multiply a constant by a vector
 //! @param[in] lhs: the constant
 //! @param[in] rhs: the vector
-template<typename VEC, typename is_vector<VEC>::type* = nullptr>
-constexpr VEC operator*(const double lhs, const VEC& rhs) { return rhs*lhs; }
+template<typename VEC, typename T, typename is_vector<VEC>::type* = nullptr>
+constexpr VEC operator*(const T& lhs, const VEC& rhs) { return rhs*lhs; }
 
 //! Compute a component wise vector division
 //! @param[in] lhs: dividend vector
