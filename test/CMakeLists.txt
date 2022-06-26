@@ -56,12 +56,36 @@ if (CODE_COVERAGE)
 
 	add_executable(${BINARY} ${TEST_SOURCES})
 
-	target_link_libraries(${BINARY} PUBLIC gtest)
+    target_link_libraries(${BINARY} LINK_PRIVATE GTest::gtest lion)
 
-	set_target_properties(${BINARY} PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
+	set_target_properties(${BINARY} PROPERTIES 
+        EXCLUDE_FROM_ALL 1 
+        EXCLUDE_FROM_DEFAULT_BUILD 1
+    )
 
 	target_code_coverage(${BINARY} AUTO ALL EXCLUDE test/* build/googletest-src/*) 
+
+    # Copy required files
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/test/data)
+
+    add_custom_command(TARGET ${BINARY} PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/test/foundation/data/ ${CMAKE_BINARY_DIR}/test/data)
+
+    add_custom_command(TARGET ${BINARY} PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/test/frame/data/ ${CMAKE_BINARY_DIR}/test/data)
+
+    add_custom_command(TARGET ${BINARY} PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/test/io/data/ ${CMAKE_BINARY_DIR}/test/data)
+
+    add_custom_command(TARGET ${BINARY} PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/test/math/data/ ${CMAKE_BINARY_DIR}/test/data)
+
+    add_custom_command(TARGET ${BINARY} PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/test/propagators/data/ ${CMAKE_BINARY_DIR}/test/data)
+
 endif()
-
-
-
