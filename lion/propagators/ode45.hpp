@@ -20,7 +20,7 @@ void ODE45<F,U,N>::set(const std::string& name, const double value)
         _hmax = value;
 
     else
-        throw std::runtime_error("Property \"" + name + "\" is not recognized");
+        throw lion_exception("Property \"" + name + "\" is not recognized");
 }
 
 template<typename F, typename U, size_t N>
@@ -33,7 +33,7 @@ const double& ODE45<F,U,N>::get(const std::string& name)
         return _hmax;
 
     else
-        throw std::runtime_error("Property \"" + name + "\" is not recognized");
+        throw lion_exception("Property \"" + name + "\" is not recognized");
 }
 
 
@@ -126,7 +126,7 @@ void ODE45<F,U,N>::take_step(F& f, U& u, std::array<scalar,N>& q, scalar& t, sca
         else
         {
             if (absh <= hmin)
-                throw std::runtime_error("The current timestep is lower than the minimum timestep allowed");
+                throw lion_exception("The current timestep is lower than the minimum timestep allowed");
             
             if (nofailed)
             {

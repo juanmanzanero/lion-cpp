@@ -26,7 +26,7 @@ inline typename Optimise<F,C>::Optimisation_result Optimise<F,C>::optimise(const
     Ipopt::ApplicationReturnStatus status = app->Initialize();
 
     if ( status != Ipopt::Solve_Succeeded )
-        throw std::runtime_error("Ipopt: error during initialization");
+        throw lion_exception("Ipopt: error during initialization");
 
     // Configure options
     app->Options()->SetStringValue ("hessian_approximation", options.hessian_approximation);
@@ -50,7 +50,7 @@ inline typename Optimise<F,C>::Optimisation_result Optimise<F,C>::optimise(const
     bool succeed = (status == Ipopt::Solve_Succeeded) || (status == Ipopt::Solved_To_Acceptable_Level);
 
     if ( !succeed ) 
-        throw std::runtime_error("Ipopt did not succeed");
+        throw lion_exception("Ipopt did not succeed");
 
     // Get solution
     const std::vector<scalar> x = static_cast<Ipopt_handler<F,C>*>(GetRawPtr(nlp))->x();
@@ -90,7 +90,7 @@ inline typename Optimise<F,C>::Optimisation_result Optimise<F,C>::optimise(const
             PRINTVARIABLE(JMT,constraints[i]);
         }
 
-        throw std::runtime_error("Even though Ipopt succeeded, the constraints are not satisfied to the desired tolerance");
+        throw lion_exception("Even though Ipopt succeeded, the constraints are not satisfied to the desired tolerance");
     }
 
 

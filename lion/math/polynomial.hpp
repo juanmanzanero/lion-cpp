@@ -26,7 +26,7 @@ inline Polynomial<T>::Polynomial(const std::vector<scalar>& x0, const std::vecto
   _coeffs(_n_blocks)
 {
     if ( x0.size() != y0.size() )
-        throw std::runtime_error("x0 and y0 must have the same length");
+        throw lion_exception("x0 and y0 must have the same length");
 
     if ( x0.size() == 0 )
     {
@@ -122,7 +122,7 @@ inline Polynomial<T>::Polynomial(const double x0, const std::vector<scalar>& L, 
 {
     // Check consistency
     if ( L.size() != y0.size() )
-        throw std::runtime_error("L and y0 must have the same length");
+        throw lion_exception("L and y0 must have the same length");
 
     if ( L.size() == 0 )
     {
@@ -161,7 +161,7 @@ inline Polynomial<T>::Polynomial(const std::vector<std::vector<scalar>>& x0, con
 {
     // Check sizes consistency
     if ( x0.size() != y0.size() )
-        throw std::runtime_error("x0 and y0 must have the same length");
+        throw lion_exception("x0 and y0 must have the same length");
 
     if ( x0.size() == 0 )
     {
@@ -172,13 +172,13 @@ inline Polynomial<T>::Polynomial(const std::vector<std::vector<scalar>>& x0, con
     // Check x0 consistency
     for (auto it = x0.cbegin(); it != x0.cend()-1; ++it)
         if ( (*(it+1)).back() < ((*it).back() + eps) )
-            throw std::runtime_error("blocks are not contiguous");
+            throw lion_exception("blocks are not contiguous");
 
     // Check y0 consistency if continuous
     if ( continuous ) 
         for (auto it = y0.cbegin(); it != y0.cend()-1; ++it)
             if ( std::abs( (*it).back() - ((*(it+1)).front()) ) > eps )
-                throw std::runtime_error("blocks are not continuous, and continuous = true");
+                throw lion_exception("blocks are not continuous, and continuous = true");
 
 
     std::vector<Polynomial> p(x0.size());
@@ -250,7 +250,7 @@ inline T Polynomial<T>::operator()(scalar x) const
         s_out << "  a: " << _a << std::endl;
         s_out << "  x: " <<  x << std::endl;
         s_out << "  b: " << _b ;
-        throw std::runtime_error(s_out.str());
+        throw lion_exception(s_out.str());
     }
 
     // Call operator[]

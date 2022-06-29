@@ -7,22 +7,22 @@ template<typename FG>
 void Sensitivity_analysis_slow<FG>::check_inputs() const
 {
     if ( _zl.size() != _n )
-        throw std::runtime_error("[ERROR] void Sensitivity_analysis_slow<FG>::check_inputs() -> z_lb.size() != n");
+        throw lion_exception("[ERROR] void Sensitivity_analysis_slow<FG>::check_inputs() -> z_lb.size() != n");
 
     if ( _zu.size() != _n )
-        throw std::runtime_error("[ERROR] void Sensitivity_analysis_slow<FG>::check_inputs() -> z_ub.size() != n");
+        throw lion_exception("[ERROR] void Sensitivity_analysis_slow<FG>::check_inputs() -> z_ub.size() != n");
 
     if ( _x_lb.size() != _n )
-        throw std::runtime_error("[ERROR] void Sensitivity_analysis_slow<FG>::check_inputs() -> x_lb.size() != n");
+        throw lion_exception("[ERROR] void Sensitivity_analysis_slow<FG>::check_inputs() -> x_lb.size() != n");
 
     if ( _x_ub.size() != _n )
-        throw std::runtime_error("[ERROR] void Sensitivity_analysis_slow<FG>::check_inputs() -> x_ub.size() != n");
+        throw lion_exception("[ERROR] void Sensitivity_analysis_slow<FG>::check_inputs() -> x_ub.size() != n");
 
     if ( _c_lb.size() != _nc )
-        throw std::runtime_error("[ERROR] void Sensitivity_analysis_slow<FG>::check_inputs() -> c_lb.size() != nc");
+        throw lion_exception("[ERROR] void Sensitivity_analysis_slow<FG>::check_inputs() -> c_lb.size() != nc");
 
     if ( _c_ub.size() != _nc )
-        throw std::runtime_error("[ERROR] void Sensitivity_analysis_slow<FG>::check_inputs() -> c_ub.size() != nc");
+        throw lion_exception("[ERROR] void Sensitivity_analysis_slow<FG>::check_inputs() -> c_ub.size() != nc");
 }
 
 
@@ -144,7 +144,7 @@ void Sensitivity_analysis_slow<FG>::compute_sensitivity()
     }
 
     if ( std::count(diag_set.cbegin(), diag_set.cend(), false) > 0 )
-        throw std::runtime_error("Some diagonal positions were not found");
+        throw lion_exception("Some diagonal positions were not found");
 
     // (2) Add the bound multipliers Hessian
 
@@ -170,7 +170,7 @@ void Sensitivity_analysis_slow<FG>::compute_sensitivity()
     for (size_t ij = 0; ij < n_hes; ++ij)
     {
         if ( sparsity_patterns.row_hes[ij] < sparsity_patterns.col_hes[ij] )
-            throw std::runtime_error("[ERROR] Matrix was expected to be lower triangular (i>=j)");
+            throw lion_exception("[ERROR] Matrix was expected to be lower triangular (i>=j)");
 
         if ( (sparsity_patterns.row_hes[ij] < n_total) )
         {

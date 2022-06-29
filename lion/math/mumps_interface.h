@@ -98,7 +98,7 @@ inline std::vector<std::vector<double>> mumps_solve_linear_system(size_t n_cpp, 
      /* Terminate instance. */
      id.job = -2;
      dmumps_c(&id);
-      throw std::runtime_error("[ERROR] Mumps has thrown an error");
+      throw lion_exception("[ERROR] Mumps has thrown an error");
     }
   }
 
@@ -120,7 +120,7 @@ inline std::vector<std::vector<double>> mumps_solve_linear_system(size_t n_cpp, 
      /* Terminate instance. */
      id.job = -2;
      dmumps_c(&id);
-      throw std::runtime_error("[ERROR] Mumps has thrown an error");
+      throw lion_exception("[ERROR] Mumps has thrown an error");
     }
   }
 

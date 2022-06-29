@@ -1,6 +1,8 @@
 #ifndef __LEGENDRE_ALGORITHMS_HPP__
 #define __LEGENDRE_ALGORITHMS_HPP__
 
+#include "lion/foundation/lion_exception.h"
+
 //
 //     ----------------------------------------------------------------------
 //     Compute the  Legendre Polynomial by the three point recursion
@@ -169,7 +171,7 @@ inline std::pair<std::vector<scalar>,std::vector<scalar>> gauss_legendre_lobatto
     const scalar tolerance = tolerance_factor*eps;
 
     if ( N == 0 )
-        throw std::runtime_error("Order must be N>0 for GL points");
+        throw lion_exception("Order must be N>0 for GL points");
 
     else if ( N == 1 ) 
         return std::pair(std::vector<scalar>{-1.0,1.0}, std::vector<scalar>{1.0,1.0});
@@ -224,10 +226,10 @@ inline std::pair<std::vector<scalar>,std::vector<scalar>> gauss_legendre_lobatto
 inline std::tuple<scalar,scalar,scalar> q_and_L_evaluation(const size_t N, const scalar x)
 {
     if ( N == 0 )
-        throw std::runtime_error("q_and_L_evaluation cannot be called for N=0");
+        throw lion_exception("q_and_L_evaluation cannot be called for N=0");
 
     else if ( N == 1 )
-        throw std::runtime_error("q_and_L_evaluation cannot be called for N=1");
+        throw lion_exception("q_and_L_evaluation cannot be called for N=1");
 
     else
     {

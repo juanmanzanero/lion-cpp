@@ -23,7 +23,7 @@ void generic_inertial_frame_tests(sFrame& inertial_frame)
         out(2) << &parent << std::endl;
         FAIL();
     } 
-    catch( const std::runtime_error& error )
+    catch( const lion_exception& error )
     {
         SUCCEED();
     } 

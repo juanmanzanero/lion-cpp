@@ -8,6 +8,7 @@
 #include "lion/foundation/types.h"
 #include "lion/foundation/constants.h"
 #include "lion/math/matrix_extensions.h"
+#include "lion/foundation/lion_exception.h"
 
 //! Implementation of the ode45 propagator
 //! @param F: type of the ODE functor dqdt = f(q,u,t)

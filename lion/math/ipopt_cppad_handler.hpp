@@ -8,6 +8,7 @@
 #include <coin-or/IpIpoptData.hpp>
 #include <coin-or/IpDenseVector.hpp>
 #include "lion/math/matrix_extensions.h"
+#include "lion/foundation/lion_exception.h"
 
 namespace CppAD 
 {
@@ -1222,7 +1223,7 @@ public:
         for (j=0; j < nx_; ++j)
         {
             if ( std::abs(solution_.x[j] - (dynamic_cast<const Ipopt::DenseVector*>(GetRawPtr(ip_data->curr()->x()))->Values())[j]) > 1.0e-10 )
-                throw std::runtime_error("x is not ip_data->curr()->x()");
+                throw lion_exception("x is not ip_data->curr()->x()");
         }
 
         // Return slack variables

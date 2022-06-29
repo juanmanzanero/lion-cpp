@@ -299,7 +299,7 @@ inline std::tuple<Vector3d<T>,T,std::array<size_t,2>> find_intersection(const st
 
 #ifndef NDEBUG
     if ( (i_intersection.front() == 0) && (i_intersection.back() == 0) )
-        throw std::runtime_error("The straight given does not intersect the polygon");
+        throw lion_exception("The straight given does not intersect the polygon");
 #endif
 
     return {v_intersection, d_intersection2, i_intersection};

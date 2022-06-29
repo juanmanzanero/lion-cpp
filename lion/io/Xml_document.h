@@ -84,7 +84,7 @@ inline Xml_element Xml_document::get_element(const std::string& name)
     // Look for root_name, and make sure it is the only occurrence
     // Check that the root name coincides 
     if ( root_name != get_root_element().get_name() )
-        throw std::runtime_error("Root name does not match");
+        throw lion_exception("Root name does not match");
 
     if ( the_rest.size() == 0 )
         return get_root_element();
@@ -113,10 +113,10 @@ inline Xml_element Xml_document::add_element(const std::string& full_path)
     // Look for root_name, and make sure it is the only occurrence
     // Check that the root full_path coincides 
     if ( root_name != get_root_element().get_name() )
-        throw std::runtime_error("Root full_path does not match");
+        throw lion_exception("Root full_path does not match");
 
     if ( the_rest.size() == 0 )
-        throw std::runtime_error("Element already exists");
+        throw lion_exception("Element already exists");
 
     else
         return get_root_element().add_child(the_rest);

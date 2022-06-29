@@ -7,22 +7,22 @@ template<typename FG>
 void Sensitivity_analysis<FG>::check_inputs() const
 {
     if ( _zl.size() != _n )
-        throw std::runtime_error("[ERROR] void Sensitivity_analysis<FG>::check_inputs() -> z_lb.size() != n");
+        throw lion_exception("[ERROR] void Sensitivity_analysis<FG>::check_inputs() -> z_lb.size() != n");
 
     if ( _zu.size() != _n )
-        throw std::runtime_error("[ERROR] void Sensitivity_analysis<FG>::check_inputs() -> z_ub.size() != n");
+        throw lion_exception("[ERROR] void Sensitivity_analysis<FG>::check_inputs() -> z_ub.size() != n");
 
     if ( _x_lb.size() != _n )
-        throw std::runtime_error("[ERROR] void Sensitivity_analysis<FG>::check_inputs() -> x_lb.size() != n");
+        throw lion_exception("[ERROR] void Sensitivity_analysis<FG>::check_inputs() -> x_lb.size() != n");
 
     if ( _x_ub.size() != _n )
-        throw std::runtime_error("[ERROR] void Sensitivity_analysis<FG>::check_inputs() -> x_ub.size() != n");
+        throw lion_exception("[ERROR] void Sensitivity_analysis<FG>::check_inputs() -> x_ub.size() != n");
 
     if ( _c_lb.size() != _nc )
-        throw std::runtime_error("[ERROR] void Sensitivity_analysis<FG>::check_inputs() -> c_lb.size() != nc");
+        throw lion_exception("[ERROR] void Sensitivity_analysis<FG>::check_inputs() -> c_lb.size() != nc");
 
     if ( _c_ub.size() != _nc )
-        throw std::runtime_error("[ERROR] void Sensitivity_analysis<FG>::check_inputs() -> c_ub.size() != nc");
+        throw lion_exception("[ERROR] void Sensitivity_analysis<FG>::check_inputs() -> c_ub.size() != nc");
 }
 
 

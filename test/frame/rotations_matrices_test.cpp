@@ -513,7 +513,7 @@ TEST_F(Rotated_frames_test, Bad_construction_test)
         sFrame error_frame(sVector3d(0.0), sVector3d(0.0), {0.0,1.0}, {0.0}, {X}, inertial_frame );
         FAIL();
     }
-    catch(const std::runtime_error& error)
+    catch(const lion_exception& error)
     {
         SUCCEED();
     }
@@ -523,7 +523,7 @@ TEST_F(Rotated_frames_test, Bad_construction_test)
         sFrame error_frame(sVector3d(0.0), sVector3d(0.0), {0.0,1.0}, {0.0,1.0}, {X}, inertial_frame );
         FAIL();
     }
-    catch(const std::runtime_error& error)
+    catch(const lion_exception& error)
     {
         SUCCEED();
     }
@@ -533,7 +533,7 @@ TEST_F(Rotated_frames_test, Bad_construction_test)
         sFrame error_frame(sVector3d(0.0), sVector3d(0.0), {0.0,1.0}, {0.0,1.0}, {X,static_cast<Axis>(5)}, inertial_frame);
         FAIL();
     }
-    catch(const std::runtime_error& error)
+    catch(const lion_exception& error)
     {
         SUCCEED();
     }
@@ -780,7 +780,7 @@ TEST_F(Rotation_wrt_target_test, rotation_matrix_wrt_target)
         frame4.get_rotation_matrix(frame11);
         FAIL();
     }
-    catch (const std::runtime_error& error)
+    catch (const lion_exception& error)
     {
         SUCCEED();
     }
@@ -791,7 +791,7 @@ TEST_F(Rotation_wrt_target_test, rotation_matrix_wrt_target)
         out(2) << dummy << std::endl;
         FAIL();
     }
-    catch (const std::runtime_error& error)
+    catch (const lion_exception& error)
     {
         SUCCEED();
     }
@@ -858,7 +858,7 @@ TEST_F(Rotation_wrt_target_test, omega_wrt_target)
         frame4.get_omega_in_body(frame11);
         FAIL();
     }
-    catch (const std::runtime_error& error)
+    catch (const lion_exception& error)
     {
         SUCCEED();
     }
@@ -868,7 +868,7 @@ TEST_F(Rotation_wrt_target_test, omega_wrt_target)
         frame4.get_omega_in_target(frame11);
         FAIL();
     }
-    catch (const std::runtime_error& error)
+    catch (const lion_exception& error)
     {
         SUCCEED();
     }
@@ -878,7 +878,7 @@ TEST_F(Rotation_wrt_target_test, omega_wrt_target)
         frame4.get_omega_in_parent(frame11);
         FAIL();
     }
-    catch (const std::runtime_error& error)
+    catch (const lion_exception& error)
     {
         SUCCEED();
     }

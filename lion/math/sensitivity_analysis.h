@@ -7,6 +7,7 @@
 #include <vector>
 #include "lion/math/matrix_extensions.h"
 #include "lion/thirdparty/include/logger.hpp"
+#include "lion/foundation/lion_exception.h"
 
 template<typename FG>
 class Sensitivity_analysis

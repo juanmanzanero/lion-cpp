@@ -12,6 +12,7 @@
 #include "lion/thirdparty/include/logger.hpp"
 #include "types.h"
 #include "lion/math/vector3d.h"
+#include "lion/foundation/lion_exception.h"
 
 #define PRINTVARIABLE(MSG,VAR) out(2) << "[" << #MSG << "] " << #VAR << ": " << VAR << std::endl
 

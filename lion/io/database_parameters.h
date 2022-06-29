@@ -102,7 +102,7 @@ inline bool set_parameter(const std::vector<Database_parameter_mutable>& p, cons
             }
             else
             {   
-                throw std::runtime_error("Attempt to set scalar from non-scalar type");
+                throw lion_exception("Attempt to set scalar from non-scalar type");
             }
             break;
 
@@ -114,7 +114,7 @@ inline bool set_parameter(const std::vector<Database_parameter_mutable>& p, cons
             }
             else
             {   
-                throw std::runtime_error("Attempt to set int from non-int type");
+                throw lion_exception("Attempt to set int from non-int type");
             }
             break;
 
@@ -126,7 +126,7 @@ inline bool set_parameter(const std::vector<Database_parameter_mutable>& p, cons
             }
             else
             {   
-                throw std::runtime_error("Attempt to set scalar vector from non-scalar vector type");
+                throw lion_exception("Attempt to set scalar vector from non-scalar vector type");
             }
             break;
 
@@ -138,7 +138,7 @@ inline bool set_parameter(const std::vector<Database_parameter_mutable>& p, cons
             }
             else
             {
-                throw std::runtime_error("Attempt to set vector3d from non-vector3d type");
+                throw lion_exception("Attempt to set vector3d from non-vector3d type");
             }
             break;
 
@@ -150,7 +150,7 @@ inline bool set_parameter(const std::vector<Database_parameter_mutable>& p, cons
             }
             else
             {
-                throw std::runtime_error("Attempt to set matrix3x3 from non-matrix3x3 type");
+                throw lion_exception("Attempt to set matrix3x3 from non-matrix3x3 type");
             }
             break;
 
@@ -162,7 +162,7 @@ inline bool set_parameter(const std::vector<Database_parameter_mutable>& p, cons
             }
             else
             {
-                throw std::runtime_error("Attempt to set AD variable from non-scalar or CppAD::AD<scalar> types");
+                throw lion_exception("Attempt to set AD variable from non-scalar or CppAD::AD<scalar> types");
             }
             break;
 

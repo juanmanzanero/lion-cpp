@@ -26,7 +26,7 @@ inline typename Solve_nonlinear_system<C>::Nonlinear_system_solution Solve_nonli
     Ipopt::ApplicationReturnStatus status = app->Initialize();
 
     if ( status != Ipopt::Solve_Succeeded )
-        throw std::runtime_error("Ipopt: error during initialization");
+        throw lion_exception("Ipopt: error during initialization");
 
     // Configure options
     app->Options()->SetStringValue ("hessian_approximation", options.hessian_approximation);
@@ -107,7 +107,7 @@ inline typename Solve_nonlinear_system<C>::Nonlinear_system_solution Solve_nonli
         if ( options.throw_if_fail )
         { 
             out(2) << sOut.str();
-            throw std::runtime_error("Nonlinear system solution not found");
+            throw lion_exception("Nonlinear system solution not found");
         }
     }
 

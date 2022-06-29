@@ -11,7 +11,7 @@ public:
 
     void operator()(ADvector& fg, const ADvector& x, const ADvector& p)
     {
-        if (p.size() > 0) throw std::runtime_error("class FG_eval has no parameters");
+        if (p.size() > 0) throw lion_exception("class FG_eval has no parameters");
 
         (*this)(fg,x);
     }

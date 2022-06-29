@@ -142,7 +142,7 @@ class Crank_nicolson
 
         // (4) Check status
         if (!success)
-            throw std::runtime_error("[ERROR] Crank-Nicolson::take_step -> maximum number of iterations exceeded");
+            throw lion_exception("[ERROR] Crank-Nicolson::take_step -> maximum number of iterations exceeded");
 
         // (5) Copy solution
         std::copy(q_new.begin(), q_new.end(), q.begin());
@@ -195,7 +195,7 @@ class Crank_nicolson
     
         if ( !success )
         {
-            throw std::runtime_error("Optimization did not succeed");
+            throw lion_exception("Optimization did not succeed");
         }
 
         // Return the new solution

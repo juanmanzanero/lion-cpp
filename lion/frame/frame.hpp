@@ -15,11 +15,11 @@ inline Frame<T>::Frame(const typename Frame<T>::tVector3d& x, const typename Fra
  { 
     if ( _angles.size() != _dangles.size() ) 
     {
-        throw std::runtime_error("angles and angles derivatives vectors do not have the same size"); 
+        throw lion_exception("angles and angles derivatives vectors do not have the same size"); 
     } 
     if ( _angles.size() != _axis.size() ) 
     {
-        throw std::runtime_error("angles and rotation axis vectors do not have the same size"); 
+        throw lion_exception("angles and rotation axis vectors do not have the same size"); 
     } 
 
     for (size_t i = 0; i < _axis.size(); ++i)
@@ -31,13 +31,13 @@ inline Frame<T>::Frame(const typename Frame<T>::tVector3d& x, const typename Fra
          case Z: break;
 
          default:
-            throw std::runtime_error("Invalid rotation axis: "+std::to_string(_axis[i])+", in position "+std::to_string(i)); 
+            throw lion_exception("Invalid rotation axis: "+std::to_string(_axis[i])+", in position "+std::to_string(i)); 
          }
     }
 
     update();
  } 
- catch( const std::runtime_error& error )
+ catch( const lion_exception& error )
  {
     throw;
  }
@@ -130,10 +130,10 @@ inline const Frame<T>& Frame<T>::get_parent() const
     if ( !is_inertial() ) 
         return *_parent; 
     else
-        throw std::runtime_error("Inertial frames have no parents");
+        throw lion_exception("Inertial frames have no parents");
     
  }
- catch( const std::runtime_error& error )
+ catch( const lion_exception& error )
  {
     throw;
  }
@@ -281,7 +281,7 @@ inline std::pair<typename Frame<T>::tVector3d,typename Frame<T>::tVector3d> Fram
         return {current_position, current_velocity};
     }
  }
- catch (const std::runtime_error& error)
+ catch (const lion_exception& error)
  {
     throw;
  }
@@ -393,7 +393,7 @@ inline typename Frame<T>::tMatrix3x3 Frame<T>::get_rotation_matrix(const Frame<T
         return transpose(Qtarget)*Qbody;
     }
  }
- catch( const std::runtime_error& error )
+ catch( const lion_exception& error )
  {
     throw;
  }
@@ -468,7 +468,7 @@ inline typename Frame<T>::tVector3d Frame<T>::get_omega_in_body(const Frame<T>& 
         return Qbody_currentparent*omega_target + omega_body;
     }
  }
- catch( const std::runtime_error& error )
+ catch( const lion_exception& error )
  {
     throw;
  }
@@ -482,7 +482,7 @@ inline typename Frame<T>::tVector3d Frame<T>::get_omega_in_parent(const Frame<T>
  {
     return _Qpc*get_omega_in_body(target);
  }
- catch(const std::runtime_error& error)
+ catch(const lion_exception& error)
  { 
     throw;
  }
@@ -557,7 +557,7 @@ inline typename Frame<T>::tVector3d Frame<T>::get_omega_in_target(const Frame<T>
         return omega_target + Qcp*omega_body;
     }
  }
- catch( const std::runtime_error& error )
+ catch( const lion_exception& error )
  {
     throw;
  }
@@ -604,9 +604,9 @@ inline size_t Frame<T>::get_crossing_generation(const Frame<T>& f1, const Frame<
     }
 
     // If the code reaches here, means that the inertial frames are not the same. Throw an exception
-    throw std::runtime_error("The two frames do not share an ancestor"); 
+    throw lion_exception("The two frames do not share an ancestor"); 
  }
- catch(const std::runtime_error& error)
+ catch(const lion_exception& error)
  {
     throw;
  }

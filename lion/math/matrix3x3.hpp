@@ -39,7 +39,7 @@ inline Matrix3x3<T>::Matrix3x3(const std::vector<T> &m_colmaj) noexcept(false)
             m_colmaj[2], m_colmaj[5], m_colmaj[8] };
     }
     else {
-        std::runtime_error excp("tr7::Matrix3x3::Matrix3x3: invalid argument, the input std::vector is not of size 9.");
+        lion_exception excp("tr7::Matrix3x3::Matrix3x3: invalid argument, the input std::vector is not of size 9.");
         std::cerr << excp.what() << std::endl;
         throw excp;
     }
@@ -60,7 +60,7 @@ inline Matrix3x3<T>::Matrix3x3(std::initializer_list<std::initializer_list<T>> i
                 }
             }
             else {
-                std::runtime_error excp("tr7::Matrix3x3::Matrix3x3: row dimensions of the input std::initializer_list must agree.");
+                lion_exception excp("tr7::Matrix3x3::Matrix3x3: row dimensions of the input std::initializer_list must agree.");
                 std::cerr << excp.what() << std::endl;
                 throw excp;
             }
@@ -70,7 +70,7 @@ inline Matrix3x3<T>::Matrix3x3(std::initializer_list<std::initializer_list<T>> i
 
     }
     else {
-        std::runtime_error excp("tr7::Matrix3x3::Matrix3x3: column dimensions of the input std::initializer_list must agree.");
+        lion_exception excp("tr7::Matrix3x3::Matrix3x3: column dimensions of the input std::initializer_list must agree.");
         std::cerr << excp.what() << std::endl;
         throw excp;
     }
@@ -174,7 +174,7 @@ constexpr const T& Matrix3x3<T>::operator()(std::size_t i, std::size_t j) const 
     return (*this)[i + 3u * j];
     //}
     //else {
-    //    std::runtime_error excp("naiveDG::Matrix3x3::operator(): out of bounds.");
+    //    lion_exception excp("naiveDG::Matrix3x3::operator(): out of bounds.");
     //    std::cerr << excp.what() << std::endl;
     //    throw excp;
     //}

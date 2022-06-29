@@ -27,7 +27,7 @@ inline Vector3d<T>::Vector3d(const std::vector<T> &v) noexcept(false)
         *this = Vector3d<T>{ v[0], v[1], v[2] };
     }
     else {
-        std::runtime_error excp("tr7::Vector3d<T>::Vector3d<T>: invalid argument, the input std::vector is not of size 3.");
+        lion_exception excp("tr7::Vector3d<T>::Vector3d<T>: invalid argument, the input std::vector is not of size 3.");
         std::cerr << excp.what() << std::endl;
         throw excp;
     }
