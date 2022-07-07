@@ -18,7 +18,7 @@ class Xml_document
 
     //! Load an XML document from file
     //! @return true if OK, false if NOT OK
-    bool load() { return _doc.LoadFile(_name.c_str()) == tinyxml2::XML_SUCCESS; }
+    void load();
 
     //! Save an XML document to file
     //! @return true if OK, false if NOT OK
@@ -123,6 +123,93 @@ inline Xml_element Xml_document::add_element(const std::string& full_path)
 }
 
 
+inline void Xml_document::load() 
+{ 
+    switch (_doc.LoadFile(_name.c_str()))
+    {
+      case(tinyxml2::XML_SUCCESS):
+        break;
+
+      case(tinyxml2::XML_NO_ATTRIBUTE):
+        throw lion_exception("[ERROR] Xml_document::load() -> Tinyxml2 error: XML_NO_ATTRIBUTE");
+        break;
+
+      case(tinyxml2::XML_WRONG_ATTRIBUTE_TYPE):
+        throw lion_exception("[ERROR] Xml_document::load() -> Tinyxml2 error: XML_WRONG_ATTRIBUTE_TYPE");
+        break;
+
+      case(tinyxml2::XML_ERROR_FILE_NOT_FOUND):
+        throw lion_exception("[ERROR] Xml_document::load() -> Tinyxml2 error: XML_ERROR_FILE_NOT_FOUND");
+        break;
+
+      case(tinyxml2::XML_ERROR_FILE_COULD_NOT_BE_OPENED):
+        throw lion_exception("[ERROR] Xml_document::load() -> Tinyxml2 error: XML_ERROR_FILE_COULD_NOT_BE_OPENED");
+        break;
+
+      case(tinyxml2::XML_ERROR_FILE_READ_ERROR):
+        throw lion_exception("[ERROR] Xml_document::load() -> Tinyxml2 error: XML_ERROR_FILE_READ_ERROR");
+        break;
+
+      case(tinyxml2::XML_ERROR_PARSING_ELEMENT):
+        throw lion_exception("[ERROR] Xml_document::load() -> Tinyxml2 error: XML_ERROR_PARSING_ELEMENT");
+        break;
+
+      case(tinyxml2::XML_ERROR_PARSING_ATTRIBUTE):
+        throw lion_exception("[ERROR] Xml_document::load() -> Tinyxml2 error: XML_ERROR_PARSING_ATTRIBUTE");
+        break;
+
+      case(tinyxml2::XML_ERROR_PARSING_TEXT):
+        throw lion_exception("[ERROR] Xml_document::load() -> Tinyxml2 error: XML_ERROR_PARSING_TEXT");
+        break;
+
+      case(tinyxml2::XML_ERROR_PARSING_CDATA):
+        throw lion_exception("[ERROR] Xml_document::load() -> Tinyxml2 error: XML_ERROR_PARSING_CDATA");
+        break;
+
+      case(tinyxml2::XML_ERROR_PARSING_COMMENT):
+        throw lion_exception("[ERROR] Xml_document::load() -> Tinyxml2 error: XML_ERROR_PARSING_COMMENT");
+        break;
+
+      case(tinyxml2::XML_ERROR_PARSING_DECLARATION):
+        throw lion_exception("[ERROR] Xml_document::load() -> Tinyxml2 error: XML_ERROR_PARSING_DECLARATION");
+        break;
+
+      case(tinyxml2::XML_ERROR_PARSING_UNKNOWN):
+        throw lion_exception("[ERROR] Xml_document::load() -> Tinyxml2 error: XML_ERROR_PARSING_UNKNOWN");
+        break;
+
+      case(tinyxml2::XML_ERROR_EMPTY_DOCUMENT):
+        throw lion_exception("[ERROR] Xml_document::load() -> Tinyxml2 error: XML_ERROR_EMPTY_DOCUMENT");
+        break;
+
+      case(tinyxml2::XML_ERROR_MISMATCHED_ELEMENT):
+        throw lion_exception("[ERROR] Xml_document::load() -> Tinyxml2 error: XML_ERROR_MISMATCHED_ELEMENT");
+        break;
+
+      case(tinyxml2::XML_ERROR_PARSING):
+        throw lion_exception("[ERROR] Xml_document::load() -> Tinyxml2 error: XML_ERROR_PARSING");
+        break;
+
+      case(tinyxml2::XML_CAN_NOT_CONVERT_TEXT):
+        throw lion_exception("[ERROR] Xml_document::load() -> Tinyxml2 error: XML_CAN_NOT_CONVERT_TEXT");
+        break;
+
+      case(tinyxml2::XML_NO_TEXT_NODE):
+        throw lion_exception("[ERROR] Xml_document::load() -> Tinyxml2 error: XML_NO_TEXT_NODE");
+        break;
+
+	  case(tinyxml2::XML_ELEMENT_DEPTH_EXCEEDED):
+	    throw lion_exception("[ERROR] Xml_document::load() -> Tinyxml2 error: XML_ELEMENT_DEPTH_EXCEEDED");
+        break;
+
+	  case(tinyxml2::XML_ERROR_COUNT):
+	    throw lion_exception("[ERROR] Xml_document::load() -> Tinyxml2 error: XML_ERROR_COUNT");
+        break;
+
+      default:
+        throw lion_exception("[ERROR] Xml_document::load() -> Tinyxml2 error: error code was not recognized");
+    }
+}
 
 inline bool Xml_document::has_element(const std::string& name)
 {

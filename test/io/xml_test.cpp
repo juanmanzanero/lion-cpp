@@ -10,7 +10,15 @@ class Xml_test : public ::testing::Test
 
 TEST_F(Xml_test, open_document)
 {
-    EXPECT_EQ(doc.load(), true); 
+    try
+    {
+        doc.load();
+        SUCCEED();
+    }
+    catch(...)
+    {
+        FAIL();
+    }
 }
 
 
