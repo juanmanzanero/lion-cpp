@@ -145,6 +145,7 @@ TEST_F(Xml_test, print_doc)
     sOutRef << "    <!-- Parameters for the parameters test -->"                  << std::endl;
     sOutRef << "    <parameters>"                                                 << std::endl;
     sOutRef << "        <double_parameter>3.14</double_parameter>"                << std::endl;
+    sOutRef << "        <double_parameter_2>6.28</double_parameter_2>"            << std::endl;
     sOutRef << "        <int_parameter>100</int_parameter>"                       << std::endl;
     sOutRef << "        <vector_parameter>1.0 3.0 5.0 "                           << std::endl;
     sOutRef << "                          5.0 6.0 -6 </vector_parameter>"         << std::endl;

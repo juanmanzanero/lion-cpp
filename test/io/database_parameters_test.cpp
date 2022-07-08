@@ -11,65 +11,112 @@ class Database_parameter_test : public ::testing::Test
 
 TEST_F(Database_parameter_test, double_parameter)
 {
-    double d;
-    Database_parameter_mutable p = { "double_parameter", d };
+    class Sample_class
+    {
+     public:
+        double d1;
+        double d2;
+        DECLARE_PARAMS({"double_parameter",d1},{"double_parameter_2",d2});
+    } s;
 
-    read_parameters(doc, "xml_doc/parameters/", {p} );
+    EXPECT_EQ(s.__used_parameters.size(), 2);
+    EXPECT_FALSE(s.__used_parameters[0]);
+    EXPECT_FALSE(s.__used_parameters[1]);
 
-    EXPECT_DOUBLE_EQ(d, 3.14);
+    read_parameters(doc, "xml_doc/parameters/", s.get_parameters(), s.__used_parameters);
+
+    EXPECT_TRUE(s.__used_parameters[0]);
+    EXPECT_TRUE(s.__used_parameters[1]);
+
+    EXPECT_DOUBLE_EQ(s.d1, 3.14);
+    EXPECT_DOUBLE_EQ(s.d2, 6.28);
 }
 
 
 TEST_F(Database_parameter_test, int_parameter)
 {
-    int i;
-    Database_parameter_mutable p = { "int_parameter", i };
 
-    read_parameters(doc, "xml_doc/parameters/", {p} );
+    class Sample_class
+    {
+     public:
+        int i;
+        DECLARE_PARAMS({"int_parameter",i});
+    } s;
 
-    EXPECT_DOUBLE_EQ(i, 100.0);
+    EXPECT_EQ(s.__used_parameters.size(), 1);
+    EXPECT_FALSE(s.__used_parameters[0]);
+
+    read_parameters(doc, "xml_doc/parameters/", s.get_parameters(), s.__used_parameters );
+
+    EXPECT_TRUE(s.__used_parameters[0]);
+    EXPECT_DOUBLE_EQ(s.i, 100.0);
 }
 
 TEST_F(Database_parameter_test, vector_parameter)
 {
-    std::vector<double> v;
+    class Sample_class
+    {
+     public:
+        std::vector<double> v;
+        DECLARE_PARAMS({"vector_parameter",v});
+    } s;
+
     std::vector<double> v_expected = { 1.0, 3.0, 5.0, 5.0, 6.0, -6 };
-    Database_parameter_mutable p = { "vector_parameter", v };
 
-    read_parameters(doc, "xml_doc/parameters/", {p} );
+    EXPECT_EQ(s.__used_parameters.size(), 1);
+    EXPECT_FALSE(s.__used_parameters[0]);
 
-    EXPECT_EQ(v.size(), v_expected.size());
+    read_parameters(doc, "xml_doc/parameters/", s.get_parameters(), s.__used_parameters );
 
-    for (size_t i = 0; i < v.size(); ++i)
-        EXPECT_DOUBLE_EQ(v[i], v_expected[i]);
+    EXPECT_TRUE(s.__used_parameters[0]);
+    EXPECT_EQ(s.v.size(), v_expected.size());
+
+    for (size_t i = 0; i < s.v.size(); ++i)
+        EXPECT_DOUBLE_EQ(s.v[i], v_expected[i]);
 }
 
 
 TEST_F(Database_parameter_test, vector3_parameter)
 {
-    sVector3d v;
-    sVector3d v_expected = { 0.6,0.8,-1.0 };
-    Database_parameter_mutable p = { "vector3_parameter", v };
+    class Sample_class
+    {
+     public:
+        sVector3d v;
+        DECLARE_PARAMS({ "vector3_parameter", v });
+    } s;
 
-    read_parameters(doc, "xml_doc/parameters/", {p} );
+    sVector3d v_expected = { 0.6,0.8,-1.0 };
+
+    EXPECT_EQ(s.__used_parameters.size(), 1);
+    EXPECT_FALSE(s.__used_parameters[0]);
+
+    read_parameters(doc, "xml_doc/parameters/", s.get_parameters(), s.__used_parameters);
+
+    EXPECT_TRUE(s.__used_parameters[0]);
 
     for (size_t i = 0; i < 3; ++i)
-        EXPECT_DOUBLE_EQ(v[i], v_expected[i]);
+        EXPECT_DOUBLE_EQ(s.v[i], v_expected[i]);
 }
-
 
 
 TEST_F(Database_parameter_test, matrix3x3_parameter)
 {
-    sMatrix3x3 m;
+    class Sample_class
+    {
+     public:
+        sMatrix3x3 m;
+        DECLARE_PARAMS({ "matrix3_parameter", m });
+    } s;
+
+
     sMatrix3x3 m_expected = { 1,2,3,4,5,6,7,8,9 };
-    Database_parameter_mutable p = { "matrix3_parameter", m };
+    EXPECT_EQ(s.__used_parameters.size(), 1);
+    EXPECT_FALSE(s.__used_parameters[0]);
 
-    read_parameters(doc, "xml_doc/parameters/", {p} );
+    read_parameters(doc, "xml_doc/parameters/", s.get_parameters(), s.__used_parameters);
 
+    EXPECT_TRUE(s.__used_parameters[0]);
     for (size_t i = 0; i < 3; ++i)
         for (size_t j = 0; j < 3; ++j)
-            EXPECT_DOUBLE_EQ(m(i,j), m_expected(i,j));
+            EXPECT_DOUBLE_EQ(s.m(i,j), m_expected(i,j));
 }
-
-

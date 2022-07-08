@@ -37,67 +37,77 @@ struct Database_parameter
 using Database_parameter_mutable = Database_parameter<void>;
 using Database_parameter_const   = Database_parameter<const void>;
 
+template<size_t N>
+constexpr std::size_t va_count(const std::array<Database_parameter_mutable,N>& ) { return N; }
+
 
 #define DECLARE_PARAMS(...) \
     std::vector<Database_parameter_mutable> get_parameters() { return { __VA_ARGS__ }; } \
-    std::vector<Database_parameter_const> get_parameters() const { return { __VA_ARGS__ }; }
+    std::vector<Database_parameter_const> get_parameters() const { return { __VA_ARGS__ }; } \
+    std::vector<bool> __used_parameters = std::vector<bool>(get_parameters().size(),false);
 
-inline void read_parameters(Xml_document& doc, const std::string& path, const std::vector<Database_parameter_mutable>& p)
+inline void read_parameters(Xml_document& doc, const std::string& path, const std::vector<Database_parameter_mutable>& p, std::vector<bool>& used_parameters)
 {
-    for (auto ip = p.cbegin(); ip != p.cend(); ++ip)
+    assert(p.size() == used_parameters.size());
+
+    for (size_t i = 0; i < p.size(); ++i)
     {
-        switch (ip->type)
+        switch (p[i].type)
         {
          case(Database_parameter_mutable::DOUBLE): 
-            *static_cast<scalar*>(ip->address) = doc.get_element(path + ip->name).get_value(scalar());
+            *static_cast<scalar*>(p[i].address) = doc.get_element(path + p[i].name).get_value(scalar());
             break;
 
          case(Database_parameter_mutable::INT): 
-            *static_cast<int*>(ip->address) = doc.get_element(path + ip->name).get_value(int());
+            *static_cast<int*>(p[i].address) = doc.get_element(path + p[i].name).get_value(int());
             break;
 
          case(Database_parameter_mutable::STD_VECTOR_DOUBLE): 
-            *static_cast<std::vector<scalar>*>(ip->address) = doc.get_element(path + ip->name).get_value(std::vector<scalar>());
+            *static_cast<std::vector<scalar>*>(p[i].address) = doc.get_element(path + p[i].name).get_value(std::vector<scalar>());
             break;
 
          case(Database_parameter_mutable::VECTOR3): 
-            *static_cast<sVector3d*>(ip->address) = doc.get_element(path + ip->name).get_value(sVector3d());
+            *static_cast<sVector3d*>(p[i].address) = doc.get_element(path + p[i].name).get_value(sVector3d());
             break;
 
          case(Database_parameter_mutable::MATRIX3X3): 
-            *static_cast<sMatrix3x3*>(ip->address) = doc.get_element(path + ip->name).get_value(sMatrix3x3());
+            *static_cast<sMatrix3x3*>(p[i].address) = doc.get_element(path + p[i].name).get_value(sMatrix3x3());
             break;
 
          case(Database_parameter_mutable::AD): 
-            *static_cast<CppAD::AD<scalar>*>(ip->address) = doc.get_element(path + ip->name).get_value(scalar());
+            *static_cast<CppAD::AD<scalar>*>(p[i].address) = doc.get_element(path + p[i].name).get_value(scalar());
             break;
 
          default:
+            throw lion_exception("[ERROR] read_parameters -> parameter type was not recognized");
             break;
         }
+        used_parameters[i] = true;
     }
 }
 
 
 template<typename T>
-inline bool set_parameter(const std::vector<Database_parameter_mutable>& p, const std::string& parameter, const std::string& path, const T value)
+inline bool set_parameter(const std::vector<Database_parameter_mutable>& p, std::vector<bool>& used_parameters, const std::string& parameter, const std::string& path, const T value)
 {
-    for (auto ip = p.cbegin(); ip != p.cend(); ++ip)
+    assert(p.size() == used_parameters.size());
+    for (size_t i = 0; i < p.size(); ++i)
     {
-        if ( (path+ip->name) != parameter)
+        if ( (path+p[i].name) != parameter)
             continue;
 
-        switch (ip->type)
+        used_parameters[i] = true;
+        switch (p[i].type)
         {
          case(Database_parameter_mutable::DOUBLE): 
             if constexpr (std::is_same<scalar,T>::value)
             {
-                *static_cast<scalar*>(ip->address) = value;
+                *static_cast<scalar*>(p[i].address) = value;
                 return true;
             }
             else if constexpr (std::is_same<CppAD::AD<scalar>,T>::value)
             {
-                *static_cast<scalar*>(ip->address) = Value(CppAD::Var2Par(value));
+                *static_cast<scalar*>(p[i].address) = Value(CppAD::Var2Par(value));
                 return true;
             }
             else
@@ -109,7 +119,7 @@ inline bool set_parameter(const std::vector<Database_parameter_mutable>& p, cons
          case(Database_parameter_mutable::INT): 
             if constexpr (std::is_same<int,T>::value)
             {
-                *static_cast<int*>(ip->address) = value;
+                *static_cast<int*>(p[i].address) = value;
                 return true;
             }
             else
@@ -121,7 +131,7 @@ inline bool set_parameter(const std::vector<Database_parameter_mutable>& p, cons
          case(Database_parameter_mutable::STD_VECTOR_DOUBLE): 
             if constexpr (std::is_same<std::vector<scalar>,T>::value)
             {
-                *static_cast<std::vector<scalar>*>(ip->address) = value;
+                *static_cast<std::vector<scalar>*>(p[i].address) = value;
                 return true;
             }
             else
@@ -133,7 +143,7 @@ inline bool set_parameter(const std::vector<Database_parameter_mutable>& p, cons
          case(Database_parameter_mutable::VECTOR3): 
             if constexpr (std::is_same<sVector3d,T>::value)
             {
-                *static_cast<sVector3d*>(ip->address) = value;
+                *static_cast<sVector3d*>(p[i].address) = value;
                 return true;
             }
             else
@@ -145,7 +155,7 @@ inline bool set_parameter(const std::vector<Database_parameter_mutable>& p, cons
          case(Database_parameter_mutable::MATRIX3X3): 
             if constexpr (std::is_same<sMatrix3x3,T>::value)
             {
-                *static_cast<sMatrix3x3*>(ip->address) = value;
+                *static_cast<sMatrix3x3*>(p[i].address) = value;
                 return true;
             }
             else
@@ -157,7 +167,7 @@ inline bool set_parameter(const std::vector<Database_parameter_mutable>& p, cons
          case(Database_parameter_mutable::AD): 
             if constexpr (std::is_same<scalar,T>::value || std::is_same<CppAD::AD<scalar>,T>::value)
             {
-                *static_cast<CppAD::AD<scalar>*>(ip->address) = value;
+                *static_cast<CppAD::AD<scalar>*>(p[i].address) = value;
                 return true;
             }
             else
@@ -167,6 +177,7 @@ inline bool set_parameter(const std::vector<Database_parameter_mutable>& p, cons
             break;
 
          default:
+            throw lion_exception("[ERROR] set_parameter -> type not recognized");
             break;
         }
     }
