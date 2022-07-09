@@ -4,8 +4,13 @@
 class Database_parameter_test : public ::testing::Test
 {
  protected:
-    Database_parameter_test() { doc.load(); }
+    Database_parameter_test()
+    {
+        doc.load();
+        doc2.load();
+    }
     Xml_document doc = {"data/example.xml"};
+    Xml_document doc2 = {"data/example2.xml"};
 };
 
 
@@ -119,4 +124,89 @@ TEST_F(Database_parameter_test, matrix3x3_parameter)
     for (size_t i = 0; i < 3; ++i)
         for (size_t j = 0; j < 3; ++j)
             EXPECT_DOUBLE_EQ(s.m(i,j), m_expected(i,j));
+}
+
+TEST_F(Database_parameter_test, unused_parameter)
+{
+    class Sample_class
+    {
+     public:
+        double d1;
+        double d2;
+        DECLARE_PARAMS({"double_parameter",d1},{"double_parameter_2",d2});
+    } s;
+
+    read_parameters(doc, "xml_doc/parameters/", s.get_parameters(), s.__used_parameters);
+
+    Xml_element element = doc.get_element("xml_doc/parameters");
+    std::string attribute, expected("false");
+
+    for (size_t i = 0; i < s.get_parameters().size(); ++i)
+    {
+        element = doc.get_element("xml_doc/parameters/"+ s.get_parameters()[i].name);
+        // Check until you get
+        while(element.has_parent())
+        {
+            attribute = element.get_attribute("__unused__");
+            EXPECT_EQ(attribute, expected);
+            element = element.get_parent();
+        }
+    }
+}
+
+TEST_F(Database_parameter_test, unusued_parameter_2)
+{
+    class Sample_class
+    {
+     public:
+        double d1;
+        double d2;
+        DECLARE_PARAMS({"double_parameter",d1});
+    } s;
+
+    read_parameters(doc, "xml_doc/parameters/", s.get_parameters(), s.__used_parameters);
+
+    Xml_element element = doc.get_element("xml_doc/parameters/double_parameter_2");
+    bool attribute_existance = element.has_attribute("__unused__");
+    EXPECT_FALSE(attribute_existance);
+
+    element = doc.get_element("xml_doc/parameters/double_parameter");
+    attribute_existance = element.has_attribute("__unused__");
+    EXPECT_TRUE(attribute_existance);
+}
+
+TEST_F(Database_parameter_test, parameters_all_used_check)
+{
+    class Sample_class
+    {
+     public:
+        double d1, d2, d3, d4;
+        int i, i1;
+        std::vector<double> v;
+        sVector3d v2;
+        sMatrix3x3 m, m1;
+        DECLARE_PARAMS({"double_parameter",d1}, {"double_parameter_2",d2}, {"int_parameter",i},
+            {"vector_parameter",v}, {"vector3_parameter",v2}, {"matrix3_parameter",m},
+            {"child1/double_parameter", d3}, {"child1/child2/double_parameter", d4},
+            {"child1/child2/child3/matrix3_parameter", m1}, {"child1/child2/child3/child4/int_parameter", i1}
+        );
+    } s;
+
+    read_parameters(doc2, "xml_doc/", s.get_parameters(), s.__used_parameters);
+    bool parameters_all_used = database_parameters_all_used(doc2.get_root_element());
+    EXPECT_TRUE(parameters_all_used);
+}
+
+TEST_F(Database_parameter_test, parameters_all_used_check_2)
+{
+    class Sample_class
+    {
+     public:
+        double d1;
+        DECLARE_PARAMS({"double_parameter",d1});
+    } s;
+
+    read_parameters(doc2, "xml_doc/", s.get_parameters(), s.__used_parameters);
+    bool parameters_all_used = database_parameters_all_used(doc2.get_root_element());
+    EXPECT_FALSE(parameters_all_used);
 }
