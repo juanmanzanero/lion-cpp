@@ -52,30 +52,32 @@ inline void read_parameters(Xml_document& doc, const std::string& path, const st
 
     for (size_t i = 0; i < p.size(); ++i)
     {
+        Xml_element element = doc.get_element(path + p[i].name);
+
         switch (p[i].type)
         {
          case(Database_parameter_mutable::DOUBLE): 
-            *static_cast<scalar*>(p[i].address) = doc.get_element(path + p[i].name).get_value(scalar());
+            *static_cast<scalar*>(p[i].address) = element.get_value(scalar());
             break;
 
          case(Database_parameter_mutable::INT): 
-            *static_cast<int*>(p[i].address) = doc.get_element(path + p[i].name).get_value(int());
+            *static_cast<int*>(p[i].address) = element.get_value(int());
             break;
 
          case(Database_parameter_mutable::STD_VECTOR_DOUBLE): 
-            *static_cast<std::vector<scalar>*>(p[i].address) = doc.get_element(path + p[i].name).get_value(std::vector<scalar>());
+            *static_cast<std::vector<scalar>*>(p[i].address) = element.get_value(std::vector<scalar>());
             break;
 
          case(Database_parameter_mutable::VECTOR3): 
-            *static_cast<sVector3d*>(p[i].address) = doc.get_element(path + p[i].name).get_value(sVector3d());
+            *static_cast<sVector3d*>(p[i].address) = element.get_value(sVector3d());
             break;
 
          case(Database_parameter_mutable::MATRIX3X3): 
-            *static_cast<sMatrix3x3*>(p[i].address) = doc.get_element(path + p[i].name).get_value(sMatrix3x3());
+            *static_cast<sMatrix3x3*>(p[i].address) = element.get_value(sMatrix3x3());
             break;
 
          case(Database_parameter_mutable::AD): 
-            *static_cast<CppAD::AD<scalar>*>(p[i].address) = doc.get_element(path + p[i].name).get_value(scalar());
+            *static_cast<CppAD::AD<scalar>*>(p[i].address) = element.get_value(scalar());
             break;
 
          default:
@@ -83,6 +85,17 @@ inline void read_parameters(Xml_document& doc, const std::string& path, const st
             break;
         }
         used_parameters[i] = true;
+        element.set_attribute<bool>("__unused__", false);
+
+        while(element.has_parent())
+        {
+            element = element.get_parent();
+
+            if(element.has_attribute("__unused__"))
+                break;
+            else
+                element.set_attribute<bool>("__unused__", false);
+        }
     }
 }
 
@@ -242,6 +255,21 @@ inline void write_parameters(Xml_document& doc, const std::string& path, const s
             break;
         }
     }
+}
+
+bool database_parameters_all_used(const Xml_element& element)
+{
+    if( !element.has_attribute("__unused__") )
+        return false;
+
+    if ( !element.has_children() )
+        return true;
+
+    for (auto child : element.get_children() )
+        if ( !database_parameters_all_used(child) )
+            return false;
+
+    return true;
 }
 
 #endif

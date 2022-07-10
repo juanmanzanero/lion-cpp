@@ -181,4 +181,5 @@ inline bool Xml_element::has_child(const std::string& name) const
         return child.has_child(the_rest);
 }
 
+
 #endif

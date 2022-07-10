@@ -62,14 +62,33 @@ class Xml_element
     //! Add comment
     void add_comment(const std::string& text) { _e->InsertNewComment(text.c_str()); }
 
+    //! See if the element has children
+    bool has_children() const {return (_e->FirstChildElement() ? true : false);}
+
+    //! Get the first child
+    Xml_element get_first_child() const {return _e->FirstChildElement();}
+
     //! Get child by name
     Xml_element get_child(const std::string& name) const;
 
     //! See if a child exists
     bool has_child(const std::string& name) const;
 
+    //! See if parent exists
+    bool has_parent() const { return (_e->Parent()->ToElement() ? true : false); }
+
     //! Get parent
     Xml_element get_parent() const { return _e->Parent()->ToElement(); }
+
+    //! See if sibling exists
+    bool has_sibling() const { return (_e->NextSiblingElement() ? true : false); }
+
+    //! Get Next Sibling
+    Xml_element get_sibling() const { return _e->NextSiblingElement()->ToElement(); }
+
+    //! See if an attribute exists
+    //! @param[in] attribute: name of the attribute
+    bool has_attribute(const std::string& attribute) const {return (_e->FindAttribute(attribute.c_str()) ? true : false);}
 
     //! Get attribute by name
     //! @param[in] attribute: name of the attribute
@@ -80,11 +99,11 @@ class Xml_element
     //! @param[in] simply pass double() to overload this version
     double get_attribute(const std::string& attribute, double&&) const { return std::stod(_e->Attribute(attribute.c_str())); }
 
-    //! Set attribute
-    void add_attribute(const std::string& attrib_name, const std::string& attrib_value) { _e->SetAttribute(attrib_name.c_str(), attrib_value.c_str()); }
+    //! Sets a new attribute or modifies the value of an existing one
+    void set_attribute(const std::string& attrib_name, const std::string& attrib_value) { _e->SetAttribute(attrib_name.c_str(), attrib_value.c_str()); }
 
     template<typename T>
-    void add_attribute(const std::string& attrib_name, const T& attrib_value) { _e->SetAttribute(attrib_name.c_str(), attrib_value); }
+    void set_attribute(const std::string& attrib_name, const T& attrib_value) { _e->SetAttribute(attrib_name.c_str(), attrib_value); }
 
     //! Print
     void print(std::ostream& os) const;
