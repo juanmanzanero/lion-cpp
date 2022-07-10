@@ -257,7 +257,8 @@ inline void write_parameters(Xml_document& doc, const std::string& path, const s
     }
 }
 
-bool database_parameters_all_used(const Xml_element& element)
+
+inline bool database_parameters_all_used(const Xml_element& element)
 {
     if( !element.has_attribute("__unused__") )
         return false;
