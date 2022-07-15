@@ -26,8 +26,6 @@ inline std::vector<Xml_element> Xml_element::get_children() const
 
 inline Xml_element Xml_element::get_child(const std::string& name) const
 {
- try
- {
     // Divide the string in child_name/the_rest
     std::string::size_type pos = name.find('/');
     std::string child_name;
@@ -55,25 +53,29 @@ inline Xml_element Xml_element::get_child(const std::string& name) const
     else
     {
         if ( _e->FirstChildElement(child_name.c_str()) == nullptr )
-            throw lion_exception("No child found with name \"" + child_name + "\"");
+        {
+            std::ostringstream s_out;
+            s_out << "[ERROR] Xml_element::get_child -> No child found with name \"" + child_name + "\"" << std::endl;
+            print(s_out);
+            throw lion_exception(s_out.str());
+        }
 
         child = _e->FirstChildElement(child_name.c_str());
     }
 
     if (child._e->NextSiblingElement(child_name.c_str()) != nullptr ) 
+    {
+        std::ostringstream s_out;
+        s_out << "[ERROR] Xml_element::get_child -> There are several children with name \"" + child_name + "\"" << std::endl;
+        print(s_out);
         throw lion_exception("There are several children with name \"" + child_name + "\"");
+    }
 
     if ( the_rest.size() == 0 )
         return child;
 
     else
         return child.get_child(the_rest);
- }
- catch (lion_exception& err)
- {
-    out(2) << "Full name: " << name << std::endl;
-    throw;
- }
 }
 
 
@@ -121,7 +123,12 @@ inline Xml_element Xml_element::add_child(const std::string& name)
         
                 // Check uniqueness
                 if (child._e->NextSiblingElement(child_name.c_str()) != nullptr ) 
-                    throw lion_exception("There are several children with name \"" + child_name + "\"");
+                {
+                    std::ostringstream s_out;
+                    s_out << "[ERROR] Xml_element::add_child -> There are several children with name \"" + child_name + "\"" << std::endl;
+                    print(s_out);
+                    throw lion_exception(s_out.str());
+                }
             }
         }
 
@@ -132,7 +139,12 @@ inline Xml_element Xml_element::add_child(const std::string& name)
     {
         // Make sure that the node does not already exist
         if ( _e->FirstChildElement(child_name.c_str()) != nullptr )
+        {
+            std::ostringstream s_out;
+            s_out << "[ERROR] Xml_element::add_child -> Node \"" + child_name + "\" already exists" << std::endl;
+            print(s_out);
             throw lion_exception("Node \"" + child_name + "\" already exists");
+        }
 
         return {_e->InsertNewChildElement(name.c_str())};
     }
@@ -172,7 +184,12 @@ inline bool Xml_element::has_child(const std::string& name) const
             child = _e->FirstChildElement(child_name.c_str());
 
     if (_e->NextSiblingElement(child_name.c_str()) != nullptr ) 
-        throw lion_exception("There are several children with name \"" + child_name + "\"");
+    {
+        std::ostringstream s_out;
+        s_out << "[ERROR] Xml_element::has_child -> There are several children with name \"" + child_name + "\"" << std::endl;
+        print(s_out);
+        throw lion_exception(s_out.str());
+    }
 
     if ( the_rest.size() == 0 )
         return true;

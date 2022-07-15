@@ -84,7 +84,12 @@ inline Xml_element Xml_document::get_element(const std::string& name)
     // Look for root_name, and make sure it is the only occurrence
     // Check that the root name coincides 
     if ( root_name != get_root_element().get_name() )
-        throw lion_exception("Root name does not match");
+    {
+        std::ostringstream s_out;
+        s_out << "[ERROR] Xml_document::get_element -> Root name does not match" << std::endl;
+        print(s_out);
+        throw lion_exception(s_out.str());
+    }
 
     if ( the_rest.size() == 0 )
         return get_root_element();
@@ -113,11 +118,20 @@ inline Xml_element Xml_document::add_element(const std::string& full_path)
     // Look for root_name, and make sure it is the only occurrence
     // Check that the root full_path coincides 
     if ( root_name != get_root_element().get_name() )
-        throw lion_exception("Root full_path does not match");
+    {
+        std::ostringstream s_out;
+        s_out << "[ERROR] Xml_document::add_element -> Root full_path \"" + full_path + "\" does not match" << std::endl;
+        print(s_out);
+        throw lion_exception(s_out.str());
+    }
 
     if ( the_rest.size() == 0 )
-        throw lion_exception("Element already exists");
-
+    {
+        std::ostringstream s_out;
+        s_out << "[ERROR] Xml_document::add_element -> Element \"" + full_path + "\" already exists" << std::endl;
+        print(s_out);
+        throw lion_exception(s_out.str());
+    }
     else
         return get_root_element().add_child(the_rest);
 }
