@@ -11,7 +11,7 @@ if (${BUILD_IPOPT})
     include (ExternalProject)
     ExternalProject_Add(mumps
       GIT_REPOSITORY https://github.com/coin-or-tools/ThirdParty-Mumps.git
-      GIT_TAG 1063386179a14b34bf762cdefca051606bd09fc4
+      GIT_TAG stable/3.0
       PREFIX "${THIRD_PARTY_DIR}/mumps"
       SOURCE_DIR ${THIRD_PARTY_DIR}/mumps/source
       BINARY_DIR ${THIRD_PARTY_DIR}/mumps/build 
@@ -26,7 +26,7 @@ if (${BUILD_IPOPT})
     if (NOT MSYS)
 	    ExternalProject_Add(ipopt
 	      GIT_REPOSITORY https://github.com/coin-or/Ipopt.git
-	      GIT_TAG releases/3.14.3 
+	      GIT_TAG stable/3.14
 	      PREFIX "${THIRD_PARTY_DIR}/ipopt"
 	      SOURCE_DIR ${THIRD_PARTY_DIR}/ipopt/source
 	      BINARY_DIR ${THIRD_PARTY_DIR}/ipopt/build 
@@ -42,7 +42,7 @@ if (${BUILD_IPOPT})
     else()
 	    ExternalProject_Add(ipopt
 	      GIT_REPOSITORY https://github.com/coin-or/Ipopt.git
-	      GIT_TAG releases/3.14.3 
+	      GIT_TAG stable/3.14
 	      PREFIX "${THIRD_PARTY_DIR}/ipopt"
 	      SOURCE_DIR ${THIRD_PARTY_DIR}/ipopt/source
 	      BINARY_DIR ${THIRD_PARTY_DIR}/ipopt/build 
