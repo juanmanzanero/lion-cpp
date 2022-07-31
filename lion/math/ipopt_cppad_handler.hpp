@@ -1231,10 +1231,13 @@ public:
         solution_.s = Dvector(s_values, s_values + ip_data->curr()->s()->Dim());
 
         const Ipopt::Number* vl_values = dynamic_cast<const Ipopt::DenseVector*>(GetRawPtr(ip_data->curr()->v_L()))->Values();
-        solution_.vl = Dvector(vl_values, vl_values + ip_data->curr()->v_L()->Dim());
+        if ( vl_values != nullptr )
+            solution_.vl = Dvector(vl_values, vl_values + ip_data->curr()->v_L()->Dim());
 
         const Ipopt::Number* vu_values = dynamic_cast<const Ipopt::DenseVector*>(GetRawPtr(ip_data->curr()->v_U()))->Values();
-        solution_.vu = Dvector(vu_values, vu_values + ip_data->curr()->v_U()->Dim());
+
+        if ( vu_values != nullptr )
+            solution_.vu = Dvector(vu_values, vu_values + ip_data->curr()->v_U()->Dim());
             
         return;
     }
