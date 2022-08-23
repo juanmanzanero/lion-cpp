@@ -486,7 +486,7 @@ typename Sensitivity_analysis<FG>::Sparsity_pattern Sensitivity_analysis<FG>::co
     CppAD::vector<size_t>  col_order_jac(col_jac.size());
     index_sort( col_jac, col_order_jac );
 
-    return (Sparsity_pattern)
+    return Sparsity_pattern
     {
         .nnz_jac = row_jac.size(),
         .row_jac = row_jac,        
