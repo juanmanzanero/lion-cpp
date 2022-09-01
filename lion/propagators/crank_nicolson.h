@@ -8,7 +8,7 @@
 #include "lion/math/matrix_extensions.h"
 #include <cppad/cppad.hpp>
 
-template<typename F, size_t NSTATE, size_t NALGEBRAIC, size_t NCONTROL>
+template<typename F>
 class Crank_nicolson
 {
  public:
@@ -22,56 +22,77 @@ class Crank_nicolson
     };
 
     //! Perform a Crank-Nicolson step for a differential-algebraic equations system
-    //! @param[inout] f: ODE functor, [dqdt,dqa] = f(q,qa,u,t)
-    //! @param[inout] u_ini: initial control vector
-    //! @param[inout] u_fin: final control vector
-    //! @param[inout] q: state vector values before and after of the step
-    //! @param[inout] qa: algebraic state vector values before and after of the step
-    //! @param[inout] t: time before and after of the step
-    //! @param[inout] dt: time step before and after of the step
-    static void take_step(F& f, const std::array<scalar,NCONTROL> u_ini, const std::array<scalar,NCONTROL>& u_fin, std::array<scalar,NSTATE>& q, std::array<scalar,NALGEBRAIC>& qa, scalar& t, scalar dt, Options opts)
+    //! @param[inout] f: ODE functor, [states,dstates_dt,algebraic_equations] = f(input_states,algebraic_states,controls,time)
+    //! @param[inout] controls_ini: initial control vector
+    //! @param[inout] controls_fin: final control vector
+    //! @param[inout] input_states: state vector values before and after of the step
+    //! @param[inout] algebraic_states: algebraic state vector values before and after of the step
+    //! @param[inout] time: time before and after of the step
+    //! @param[inout] delta_time: time step before and after of the step
+    static void take_step(F& f, const std::array<scalar,F::NCONTROL>& controls_ini, const std::array<scalar,F::NCONTROL>& controls_fin, std::array<scalar,F::NSTATE>& input_states, 
+        std::array<scalar,F::NALGEBRAIC>& algebraic_states, scalar& time, scalar delta_time, Options opts)
     {
-        // (1) Evaluate f at the initial point: CppAD variables are needed
-        std::array<CppAD::AD<scalar>,NSTATE> q0_cppad;          std::copy(q.cbegin(), q.cend(), q0_cppad.begin());
-        std::array<CppAD::AD<scalar>,NALGEBRAIC> qa0_cppad;     std::copy(qa.cbegin(), qa.cend(), qa0_cppad.begin());
-        std::array<CppAD::AD<scalar>,NCONTROL> u0_cppad;        std::copy(u_ini.cbegin(), u_ini.cend(), u0_cppad.begin());
-        
-        const auto [dqdt0_cppad,dqa0_cppad] = f(q0_cppad,qa0_cppad,u0_cppad,t);
+        constexpr const auto NSTATE     = F::NSTATE;
+        constexpr const auto NALGEBRAIC = F::NALGEBRAIC;
+        constexpr const auto NCONTROL   = F::NCONTROL;
 
-        std::array<scalar,NSTATE> dqdt0;    std::transform(dqdt0_cppad.cbegin(), dqdt0_cppad.cend(), dqdt0.begin(), [](const auto& q) -> auto { return Value(q); });
-        std::array<scalar,NALGEBRAIC> dqa0;  std::transform(dqa0_cppad.cbegin(), dqa0_cppad.cend(), dqa0.begin(), [](const auto& q) -> auto { return Value(q); });
+        // (1) Evaluate f at the initial point: CppAD variables are needed since operator() takes CppAD arrays
+
+        // (1.1) Transform inputs to CppAD
+        std::array<CppAD::AD<scalar>, NSTATE>     input_states_ini_cppad;
+        std::array<CppAD::AD<scalar>, NALGEBRAIC> algebraic_states_ini_cppad;
+        std::array<CppAD::AD<scalar>, NCONTROL>   controls_ini_cppad;
+
+        std::copy(input_states.cbegin(), input_states.cend(), input_states_ini_cppad.begin());
+        std::copy(algebraic_states.cbegin(), algebraic_states.cend(), algebraic_states_ini_cppad.begin());
+        std::copy(controls_ini.cbegin(), controls_ini.cend(), controls_ini_cppad.begin());
+        
+        // (1.2) Evaluate functor
+        const auto [states_ini_cppad, dstates_dt_ini_cppad, algebraic_equations_ini_cppad] 
+            = f(input_states_ini_cppad,algebraic_states_ini_cppad, controls_ini_cppad, time);
+
+        // (1.3) Return CppAD outputs back to scalar
+        std::array<scalar, NSTATE> states_ini;
+        std::array<scalar, NSTATE> dstates_dt_ini;
+        std::array<scalar, NALGEBRAIC> algebraic_equations_ini;
+
+        std::transform(states_ini_cppad.cbegin(), states_ini_cppad.cend(), states_ini.begin(), [](const auto& q) -> auto { return Value(q); });
+        std::transform(dstates_dt_ini_cppad.cbegin(), dstates_dt_ini_cppad.cend(), dstates_dt_ini.begin(), [](const auto& q) -> auto { return Value(q); });
+        std::transform(algebraic_equations_ini_cppad.cbegin(), algebraic_equations_ini_cppad.cend(), algebraic_equations_ini.begin(), [](const auto& q) -> auto { return Value(q); });
 
         // (2) Start from the initial point 
-        std::array<scalar,NSTATE> q_new;
-        std::array<scalar,NALGEBRAIC> qa_new;
-
-        std::copy(q.cbegin(), q.cend(), q_new.begin());
-        std::copy(qa.cbegin(), qa.cend(), qa_new.begin());
+        auto input_states_fin     = input_states;
+        auto algebraic_states_fin = algebraic_states;
 
         // (3) Iterate
         bool success = false;
         for (size_t iter = 0; iter < opts.max_iter; ++iter)
         {
             // (3.1) Evaluate the ODE, and compute its Jacobian at the new point
-            const auto f_and_jac = evaluate_f_and_jac(f, u_fin, q_new, qa_new, t+dt); 
+            const auto f_and_jac = evaluate_f_and_jac(f, controls_fin, input_states_fin, algebraic_states_fin, time + delta_time); 
 
-            const auto& dqdt_new        = f_and_jac.dqdt;
-            const auto& dqa_new         = f_and_jac.dqa;
-            const auto& jac_dqdt_q_new  = f_and_jac.jac_dqdt_q;
-            const auto& jac_dqdt_qa_new = f_and_jac.jac_dqdt_qa;
-            const auto& jac_dqa_q_new   = f_and_jac.jac_dqa_q;
-            const auto& jac_dqa_qa_new  = f_and_jac.jac_dqa_qa;
+            // (3.2) Aliases to values
+            const auto& states_fin = f_and_jac.states;
+            const auto& dstates_dt_fin = f_and_jac.dstates_dt;
+            const auto& algebraic_equations_fin = f_and_jac.algebraic_equations;
+
+            // (3.3) Aliases to Jacobians
+            const auto& jac_states_wrt_input_states_fin                  = f_and_jac.jac_states_wrt_input_states;
+            const auto& jac_dstates_dt_wrt_input_states_fin              = f_and_jac.jac_dstates_dt_wrt_input_states;
+            const auto& jac_dstates_dt_wrt_algebraic_states_fin          = f_and_jac.jac_dstates_dt_wrt_algebraic_states;
+            const auto& jac_algebraic_equations_wrt_input_states_fin     = f_and_jac.jac_algebraic_equations_wrt_input_states;
+            const auto& jac_algebraic_equations_wrt_algebraic_states_fin = f_and_jac.jac_algebraic_equations_wrt_algebraic_states;
 
             // (3.1.1) Check errors
             scalar max_error = 0.0;
             for (size_t i = 0; i < NSTATE; ++i)
             {
-                max_error = max(max_error, std::abs(q_new[i] - q[i] - dt*((1.0-opts.sigma)*dqdt0[i] + opts.sigma*dqdt_new[i])));
+                max_error = max(max_error, std::abs(states_fin[i] - states_ini[i] - delta_time*((1.0-opts.sigma)*dstates_dt_ini[i] + opts.sigma*dstates_dt_fin[i])));
             }
 
             for (size_t i = 0; i < NALGEBRAIC; ++i)
             {
-                max_error = max(max_error, std::abs(dqa_new[i]));
+                max_error = max(max_error, std::abs(algebraic_equations_fin[i]));
             }
 
             if ( max_error < opts.error_tolerance )
@@ -86,7 +107,7 @@ class Crank_nicolson
             // (3.2.1) For ODEs, rhs = q + 0.5.dt.dqdt0 + 0.5.dt.dqdt_new - 0.5.dt.jac_dqdt_q_new.q_new - 0.5.dt.jac_dqdt_qa_new.qa_new
             for (size_t i = 0; i < NSTATE; ++i)
             {
-                rhs[i] = -q_new[i] + q[i] + dt*((1.0-opts.sigma)*dqdt0[i] + opts.sigma*dqdt_new[i]);
+                rhs[i] = -states_fin[i] + states_ini[i] + delta_time*((1.0-opts.sigma)*dstates_dt_ini[i] + opts.sigma*dstates_dt_fin[i]);
             }
 
             // (3.2.2) For AEs, rhs = dqa_new
@@ -94,50 +115,51 @@ class Crank_nicolson
             {
                 for (size_t i = 0; i < NALGEBRAIC; ++i)
                 {
-                    rhs[i + NSTATE] = dqa_new[i];
+                    rhs[i + NSTATE] = algebraic_equations_fin[i];
                 }
             }
 
             // (3.3) Assemble A
             //
-            //               |  I - 0.5.dt.jac_dqdt_q       - 0.5.dt.jac_dqdt_qa |
-            //          A =  |                                                   |
-            //               |    - jac_dqa_q               - jac_dqa_qa         |
+            //               |  jac_states_wrt_input_states - 0.5.dt.jac_dqdt_q       - 0.5.dt.jac_dqdt_qa |
+            //          A =  |                                                                             |
+            //               |    - jac_dqa_q                                         - jac_dqa_qa         |
             //               
             std::array<scalar,(NSTATE+NALGEBRAIC)*(NSTATE+NALGEBRAIC)> A;
 
             // (3.3.1) Block A_qq
             for (size_t j = 0; j < NSTATE; ++j)
                 for (size_t i = 0; i < NSTATE; ++i)
-                    A[i + (NSTATE+NALGEBRAIC)*j] = (i == j ? 1.0 : 0.0) - opts.sigma*dt*jac_dqdt_q_new[i + NSTATE*j]; 
+                    A[i + (NSTATE+NALGEBRAIC)*j] = jac_states_wrt_input_states_fin[i+ NSTATE * j] 
+                        - opts.sigma * delta_time * jac_dstates_dt_wrt_input_states_fin[i + NSTATE * j];
 
             // (3.3.2) Block A_qqa
             for (size_t j = 0; j < NALGEBRAIC; ++j)
                 for (size_t i = 0; i < NSTATE; ++i)
-                    A[i + (NSTATE+NALGEBRAIC)*(j + NSTATE)] = -opts.sigma*dt*jac_dqdt_qa_new[i + NSTATE*j]; 
+                    A[i + (NSTATE+NALGEBRAIC)*(j + NSTATE)] = -opts.sigma*delta_time*jac_dstates_dt_wrt_algebraic_states_fin[i + NSTATE*j]; 
 
             // (3.3.3) Block A_qaq
             for (size_t j = 0; j < NSTATE; ++j)
                 for (size_t i = 0; i < NALGEBRAIC; ++i)
-                    A[i + NSTATE + (NSTATE+NALGEBRAIC)*j] = - jac_dqa_q_new[i + NALGEBRAIC*j];
+                    A[i + NSTATE + (NSTATE+NALGEBRAIC)*j] = - jac_algebraic_equations_wrt_input_states_fin[i + NALGEBRAIC*j];
 
             // (3.3.3) Block A_qaqa
             for (size_t j = 0; j < NALGEBRAIC; ++j)
                 for (size_t i = 0; i < NALGEBRAIC; ++i)
-                    A[i + NSTATE + (NSTATE+NALGEBRAIC)*(j + NSTATE)] = - jac_dqa_qa_new[i + NALGEBRAIC*j];
+                    A[i + NSTATE + (NSTATE+NALGEBRAIC)*(j + NSTATE)] = - jac_algebraic_equations_wrt_algebraic_states_fin[i + NALGEBRAIC*j];
 
     
             // (3.4) Solve the linear system
             lusolve(rhs.data(), A.data(), NSTATE+NALGEBRAIC, 1);
 
             // (3.5) Update q_new and qa_new
-            std::array<scalar,NSTATE> dq;
-            std::array<scalar,NALGEBRAIC> dqa;
-            std::copy(rhs.cbegin(), rhs.cbegin() + NSTATE, dq.begin());
-            std::copy(rhs.cbegin() + NSTATE, rhs.cend(), dqa.begin());
+            std::array<scalar,NSTATE> delta_input_states;
+            std::array<scalar,NALGEBRAIC> delta_algebraic_states;
+            std::copy(rhs.cbegin(), rhs.cbegin() + NSTATE, delta_input_states.begin());
+            std::copy(rhs.cbegin() + NSTATE, rhs.cend(), delta_algebraic_states.begin());
 
-            q_new = q_new + opts.relaxation_factor*(dq);
-            qa_new = qa_new + opts.relaxation_factor*(dqa);
+            input_states_fin = input_states_fin + opts.relaxation_factor*(delta_input_states);
+            algebraic_states_fin = algebraic_states_fin + opts.relaxation_factor*(delta_algebraic_states);
         }
 
         // (4) Check status
@@ -145,19 +167,20 @@ class Crank_nicolson
             throw lion_exception("[ERROR] Crank-Nicolson::take_step -> maximum number of iterations exceeded");
 
         // (5) Copy solution
-        std::copy(q_new.begin(), q_new.end(), q.begin());
-        std::copy(qa_new.begin(), qa_new.end(), qa.begin());
+        std::copy(input_states_fin.begin(), input_states_fin.end(), input_states.begin());
+        std::copy(algebraic_states_fin.begin(), algebraic_states_fin.end(), algebraic_states.begin());
 
         // (6) Update t
-        t += dt;
+        time += delta_time;
 
         return;
     }
 
 
-    static void take_step_ipopt(F& f, const std::array<scalar,NCONTROL> u_ini, const std::array<scalar,NCONTROL>& u_fin, std::array<scalar,NSTATE>& q, std::array<scalar,NALGEBRAIC>& qa, scalar& t, scalar dt, Options opts)
+    /*  
+    static void take_step_ipopt(F& f, const std::array<scalar,F::NCONTROL> controls_ini, const std::array<scalar,F::NCONTROL>& controls_fin, 
+        std::array<scalar,F::NSTATE>& input_states, std::array<scalar,F::NALGEBRAIC>& algebraic_states, scalar& time, scalar delta_time, Options opts)
     {
-
         const size_t n_total = NSTATE + NALGEBRAIC;
 
         std::vector<scalar> x_lb(n_total,-1.0e3);
@@ -166,8 +189,8 @@ class Crank_nicolson
         std::vector<scalar> c_ub(n_total,0.0);
 
         std::vector<scalar> x0(n_total);
-        std::copy(q.cbegin(), q.cend(), x0.begin());
-        std::copy(qa.cbegin(), qa.cend(), x0.begin() + NSTATE);
+        std::copy(input_states.cbegin(), input_states.cend(), x0.begin());
+        std::copy(algebraic_states.cbegin(), algebraic_states.cend(), x0.begin() + NSTATE);
 
         std::string ipoptoptions;
         // turn off any printing
@@ -186,7 +209,7 @@ class Crank_nicolson
         // place to return solution
         CppAD::ipopt_cppad_result<std::vector<scalar>> result;
 
-        Crank_nicolson_fitness fg(f, q, qa, u_ini, t, dt, u_fin, opts.sigma);
+        Crank_nicolson_fitness fg(f, input_states, algebraic_states, controls_ini, time, delta_time, controls_fin, opts.sigma);
     
         // solve the problem
         CppAD::ipopt_cppad_solve<std::vector<scalar>, Crank_nicolson_fitness>(ipoptoptions, x0, x_lb, x_ub, c_lb, c_ub, fg, result);
@@ -199,52 +222,62 @@ class Crank_nicolson
         }
 
         // Return the new solution
-        std::copy(result.x.begin(), result.x.begin() + NSTATE, q.begin());
-        std::copy(result.x.begin() + NSTATE, result.x.end(), qa.begin());
+        std::copy(result.x.begin(), result.x.begin() + NSTATE, input_states.begin());
+        std::copy(result.x.begin() + NSTATE, result.x.end(), algebraic_states.begin());
     }
+    */
 
  private:
 
     struct Evaluate_f_and_jac
     {
-        std::array<scalar,NSTATE> dqdt;
-        std::array<scalar,NALGEBRAIC> dqa;
+        std::array<scalar,F::NSTATE> states;
+        std::array<scalar,F::NSTATE> dstates_dt;
+        std::array<scalar,F::NALGEBRAIC> algebraic_equations;
         
-        std::array<scalar,NSTATE*NSTATE> jac_dqdt_q;
-        std::array<scalar,NSTATE*NALGEBRAIC> jac_dqdt_qa;
-    
-        std::array<scalar,NALGEBRAIC*NSTATE> jac_dqa_q;
-        std::array<scalar,NALGEBRAIC*NALGEBRAIC> jac_dqa_qa;
+        std::array<scalar,F::NSTATE*F::NSTATE> jac_states_wrt_input_states;
+        std::array<scalar,F::NSTATE*F::NSTATE> jac_dstates_dt_wrt_input_states;
+        std::array<scalar,F::NSTATE*F::NALGEBRAIC> jac_algebraic_equations_wrt_input_states;
+
+        std::array<scalar,F::NSTATE*F::NSTATE> jac_states_wrt_algebraic_states;
+        std::array<scalar,F::NSTATE*F::NSTATE> jac_dstates_dt_wrt_algebraic_states;
+        std::array<scalar,F::NSTATE*F::NALGEBRAIC> jac_algebraic_equations_wrt_algebraic_states;
     };
 
-    static Evaluate_f_and_jac evaluate_f_and_jac(F& f, const std::array<scalar,NCONTROL>& u, const std::array<scalar,NSTATE>& q, const std::array<scalar,NALGEBRAIC>& qa, scalar t)
+    static Evaluate_f_and_jac evaluate_f_and_jac(F& f, const std::array<scalar,F::NCONTROL>& controls, const std::array<scalar, F::NSTATE>& input_states, 
+        const std::array<scalar, F::NALGEBRAIC>& algebraic_states, scalar time)
     {
+        constexpr const auto NSTATE = F::NSTATE;
+        constexpr const auto NALGEBRAIC = F::NALGEBRAIC;
+        constexpr const auto NCONTROL = F::NCONTROL;
+
         // (1) Put the states into a single vector, which will be declared as independent variables
         constexpr const size_t n_total = NSTATE + NALGEBRAIC;
         std::vector<CppAD::AD<scalar>> x0(n_total);
-        std::copy(q.cbegin(), q.cend(), x0.begin());
-        std::copy(qa.cbegin(), qa.cend(), x0.begin() + NSTATE);
+        std::copy(input_states.cbegin(), input_states.cend(), x0.begin());
+        std::copy(algebraic_states.cbegin(), algebraic_states.cend(), x0.begin() + NSTATE);
     
         // (2) Declare the contents of x0 as the independent variables
         CppAD::Independent(x0);
     
         // (3) Create new inputs to the operator() of the vehicle 
-        std::array<CppAD::AD<scalar>,NSTATE>     q0;
-        std::array<CppAD::AD<scalar>,NALGEBRAIC> qa0;
-        std::array<CppAD::AD<scalar>,NCONTROL>    u0;
+        std::array<CppAD::AD<scalar>,NSTATE>     input_states_cppad;
+        std::array<CppAD::AD<scalar>,NALGEBRAIC> algebraic_states_cppad;
+        std::array<CppAD::AD<scalar>,NCONTROL>    controls_cppad;
 
-        std::copy(x0.cbegin()         , x0.cbegin() + NSTATE, q0.begin());
-        std::copy(x0.cbegin() + NSTATE, x0.cend()           , qa0.begin());
-        std::copy(u.cbegin()          , u.cend()            , u0.begin());
+        std::copy(x0.cbegin()         , x0.cbegin() + NSTATE, input_states_cppad.begin());
+        std::copy(x0.cbegin() + NSTATE, x0.cend()           , algebraic_states_cppad.begin());
+        std::copy(controls.cbegin()   , controls.cend()            , controls_cppad.begin());
     
         // (4) Call operator(), transform arrays to vectors
-        auto [dqdt_out,dqa_out] = f(q0,qa0,u0,t);
-        std::vector<CppAD::AD<scalar>> out_vector(dqdt_out.cbegin(), dqdt_out.cend());
-        out_vector.insert(out_vector.end(), dqa_out.cbegin(), dqa_out.cend());
+        auto [states_cppad, dstates_dt_cppad,algebraic_equations_cppad] = f(input_states_cppad, algebraic_states_cppad, controls_cppad, time);
+        std::vector<CppAD::AD<scalar>> all_outputs_cppad(states_cppad.cbegin(), states_cppad.cend());
+        all_outputs_cppad.insert(all_outputs_cppad.end(), dstates_dt_cppad.cbegin(), dstates_dt_cppad.cend());
+        all_outputs_cppad.insert(all_outputs_cppad.end(), algebraic_equations_cppad.cbegin(), algebraic_equations_cppad.cend());
     
         // (5) Create the AD functions and stop the recording
         CppAD::ADFun<scalar> f_cppad;
-        f_cppad.Dependent(x0,out_vector);
+        f_cppad.Dependent(x0,all_outputs_cppad);
     
         // (6) Transform x0 to scalar, to evaluate the functions
         std::vector<scalar> x0_scalar(x0.size());
@@ -253,37 +286,48 @@ class Crank_nicolson
             x0_scalar[i] = Value(x0[i]);
     
         // (7) Evaluate y = f(q0,u0,0)
-        auto out0 = f_cppad.Forward(0, x0_scalar);
-        auto out0_jacobian = f_cppad.Jacobian(x0_scalar);
+        auto all_outputs = f_cppad.Forward(0, x0_scalar);
+        auto all_jacobians = f_cppad.Jacobian(x0_scalar);
         
         // (8) Fill the solution struct
         Evaluate_f_and_jac solution;
 
         // (8.1) Solution
-        std::copy(out0.cbegin(), out0.cbegin() + NSTATE, solution.dqdt.begin());
-        std::copy(out0.cbegin() + NSTATE, out0.cend(),   solution.dqa.begin());
+        std::copy(all_outputs.cbegin()           , all_outputs.cbegin() + NSTATE  , solution.states.begin());
+        std::copy(all_outputs.cbegin() + NSTATE  , all_outputs.cbegin() + 2*NSTATE, solution.dstates_dt.begin());
+        std::copy(all_outputs.cbegin() + 2*NSTATE, all_outputs.cend()             , solution.algebraic_equations.begin());
     
         // (8.2) Jacobians
         //          - The CppAD jacobian is sorted as [dy1/dx1, ..., dy1/dxn, dy2/dx1, ..., dy2/dxn, ...]
+        // (row major, we use col major, its what MATLAB uses)
         for (size_t i = 0; i < NSTATE; ++i)
             for (size_t j = 0; j < NSTATE; ++j)
-                solution.jac_dqdt_q[i + NSTATE*j] = out0_jacobian[j + n_total*i];
+                solution.jac_states_wrt_input_states[i + NSTATE*j] = all_jacobians[j + n_total*i];
 
         for (size_t i = 0; i < NSTATE; ++i)
             for (size_t j = 0; j < NALGEBRAIC; ++j)
-                solution.jac_dqdt_qa[i + NSTATE*j] = out0_jacobian[j + NSTATE + n_total*i];
+                solution.jac_states_wrt_algebraic_states[i + NSTATE*j] = all_jacobians[j + NSTATE + n_total*i];
+
+        for (size_t i = 0; i < NSTATE; ++i)
+            for (size_t j = 0; j < NSTATE; ++j)
+                solution.jac_dstates_dt_wrt_input_states[i + NSTATE*j] = all_jacobians[j + n_total*(i+NSTATE)];
+
+        for (size_t i = 0; i < NSTATE; ++i)
+            for (size_t j = 0; j < NALGEBRAIC; ++j)
+                solution.jac_dstates_dt_wrt_algebraic_states[i + NSTATE*j] = all_jacobians[j + NSTATE + n_total*(i+NSTATE)];
 
         for (size_t i = 0; i < NALGEBRAIC; ++i)
             for (size_t j = 0; j < NSTATE; ++j)
-                solution.jac_dqa_q[i + NALGEBRAIC*j] = out0_jacobian[j + n_total*(i + NSTATE)];
+                solution.jac_algebraic_equations_wrt_algebraic_states[i + NALGEBRAIC*j] = all_jacobians[j + n_total*(i + 2*NSTATE)];
 
         for (size_t i = 0; i < NALGEBRAIC; ++i)
             for (size_t j = 0; j < NALGEBRAIC; ++j)
-                solution.jac_dqa_qa[i + NALGEBRAIC*j] = out0_jacobian[j + NSTATE + n_total*(i + NSTATE)];
+                solution.jac_algebraic_equations_wrt_algebraic_states[i + NALGEBRAIC*j] = all_jacobians[j + NSTATE + n_total*(i + 2*NSTATE)];
 
         return solution;
     }
 
+    /*
     class Crank_nicolson_fitness
     {
      public:
@@ -350,6 +394,7 @@ class Crank_nicolson
         std::array<CppAD::AD<scalar>,NCONTROL> _u_fin;
 
     };
+    */
 
  private:
 };

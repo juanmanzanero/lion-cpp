@@ -6,10 +6,14 @@
 class Armonic_oscillator_DAE
 {
  public:
+    constexpr const static size_t NSTATE = 2;
+    constexpr const static size_t NALGEBRAIC = 0;
+    constexpr const static size_t NCONTROL = 0;
+
     template<typename T>
-    std::tuple<std::array<T,2>,std::array<T,0>> operator()
+    std::tuple<std::array<T,2>,std::array<T,2>,std::array<T,0>> operator()
         (const std::array<T,2>& q, const std::array<T,0>& qa, const std::array<T,0>& u, const scalar t) 
-    { return { { q[1], -w0*w0*q[0] }, {}}; }
+    { return { q, { q[1], -w0*w0*q[0] }, {}}; }
 
     inline static scalar w0 = 0.5;
 };
@@ -17,14 +21,18 @@ class Armonic_oscillator_DAE
 class Robertson_equation
 {
  public:
+    constexpr const static size_t NSTATE = 2;
+    constexpr const static size_t NALGEBRAIC = 1;
+    constexpr const static size_t NCONTROL = 0;
+
     template<typename T>
-    std::tuple<std::array<T,2>,std::array<T,1>> operator()
+    std::tuple<std::array<T,2>,std::array<T,2>,std::array<T,1>> operator()
         (const std::array<T,2>& q, const std::array<T,1>& qa, const std::array<T,0>& u, const scalar t)
     {
         std::array<T,2> dqdt = {-0.04*q[0] + 1.0e4*q[1]*qa[0], 0.04*q[0] - 3.0e7*q[1]*q[1] - 1.0e4*q[1]*qa[0]}; 
         std::array<T,1> dqa  = {q[0] + q[1] + qa[0] - 1.0};
         
-        return {dqdt, dqa};
+        return {q,dqdt, dqa};
     }
 };
 
@@ -41,7 +49,7 @@ TEST(Crank_nicolson_test, ode_armonic_oscillator)
     Armonic_oscillator_DAE armonic_oscillator;
 
     for (size_t i = 0; i < n_timesteps; ++i)
-        Crank_nicolson<Armonic_oscillator_DAE,2,0,0>::take_step(armonic_oscillator, {}, {}, q, qa, t, dt, {});
+        Crank_nicolson<Armonic_oscillator_DAE>::take_step(armonic_oscillator, {}, {}, q, qa, t, dt, {});
 
     EXPECT_NEAR(tf, t, 2.0e-14);
 
@@ -70,7 +78,7 @@ TEST(Crank_nicolson_test, robertson_equation)
     {
         scalar dt = t[i+1] - t[i];
         scalar t_val = t[i];
-        Crank_nicolson<Robertson_equation,2,1,0>::take_step(robertson_equation, {}, {}, q, qa, t_val, dt, {});
+        Crank_nicolson<Robertson_equation>::take_step(robertson_equation, {}, {}, q, qa, t_val, dt, {});
 
         q_values.push_back(q);
         qa_values.push_back(qa);
