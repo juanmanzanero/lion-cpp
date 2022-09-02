@@ -318,7 +318,7 @@ class Crank_nicolson
 
         for (size_t i = 0; i < NALGEBRAIC; ++i)
             for (size_t j = 0; j < NSTATE; ++j)
-                solution.jac_algebraic_equations_wrt_algebraic_states[i + NALGEBRAIC*j] = all_jacobians[j + n_total*(i + 2*NSTATE)];
+                solution.jac_algebraic_equations_wrt_input_states[i + NALGEBRAIC*j] = all_jacobians[j + n_total*(i + 2*NSTATE)];
 
         for (size_t i = 0; i < NALGEBRAIC; ++i)
             for (size_t j = 0; j < NALGEBRAIC; ++j)
