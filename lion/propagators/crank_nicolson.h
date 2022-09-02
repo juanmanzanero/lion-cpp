@@ -237,11 +237,11 @@ class Crank_nicolson
         
         std::array<scalar,F::NSTATE*F::NSTATE> jac_states_wrt_input_states;
         std::array<scalar,F::NSTATE*F::NSTATE> jac_dstates_dt_wrt_input_states;
-        std::array<scalar,F::NSTATE*F::NALGEBRAIC> jac_algebraic_equations_wrt_input_states;
+        std::array<scalar,F::NALGEBRAIC*F::NSTATE> jac_algebraic_equations_wrt_input_states;
 
-        std::array<scalar,F::NSTATE*F::NSTATE> jac_states_wrt_algebraic_states;
-        std::array<scalar,F::NSTATE*F::NSTATE> jac_dstates_dt_wrt_algebraic_states;
-        std::array<scalar,F::NSTATE*F::NALGEBRAIC> jac_algebraic_equations_wrt_algebraic_states;
+        std::array<scalar,F::NSTATE*F::NALGEBRAIC> jac_states_wrt_algebraic_states;
+        std::array<scalar,F::NSTATE*F::NALGEBRAIC> jac_dstates_dt_wrt_algebraic_states;
+        std::array<scalar,F::NALGEBRAIC*F::NALGEBRAIC> jac_algebraic_equations_wrt_algebraic_states;
     };
 
     static Evaluate_f_and_jac evaluate_f_and_jac(F& f, const std::array<scalar,F::NCONTROL>& controls, const std::array<scalar, F::NSTATE>& input_states, 
