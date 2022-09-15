@@ -1,6 +1,8 @@
 #ifndef __ARMONIC_OSCILLATOR_H__
 #define __ARMONIC_OSCILLATOR_H__
 
+#include<array>
+
 class Armonic_oscillator
 {
  public:

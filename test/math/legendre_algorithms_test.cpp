@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include "lion/math/legendre_algorithms.h"
-
+#include <array>
 
 TEST(Legendre_algorithms_test, Nodes_and_weights_P4)
 {
