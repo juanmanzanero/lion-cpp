@@ -10,12 +10,9 @@
 #include <iostream>
 #include <time.h>
 #include "constants.h"
-#include "lion/thirdparty/include/logger.hpp"
 #include "types.h"
 #include "lion/math/vector3d.h"
 #include "lion/foundation/lion_exception.h"
-
-#define PRINTVARIABLE(MSG,VAR) out(2) << "[" << #MSG << "] " << #VAR << ": " << VAR << std::endl
 
 constexpr double& Value(double& val);
 constexpr const double& Value(const double& val);

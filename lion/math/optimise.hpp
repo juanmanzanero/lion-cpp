@@ -83,11 +83,11 @@ inline typename Optimise<F,C>::Optimisation_result Optimise<F,C>::optimise(const
         out(2) << std::setprecision(16);
         for (size_t i = 0; i < n; ++i)
         {
-            PRINTVARIABLE(JMT,x[i]);
+            std::cout << "x[" << i << "]: " << x[i] << std::endl;
         }
         for (size_t i = 0; i < nc; ++i)
         {
-            PRINTVARIABLE(JMT,constraints[i]);
+            std::cout << "constraints[" << i << "]: " << constraints[i] << std::endl;
         }
 
         throw lion_exception("Even though Ipopt succeeded, the constraints are not satisfied to the desired tolerance");

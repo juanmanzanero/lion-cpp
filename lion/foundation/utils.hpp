@@ -5,7 +5,6 @@
 #include "constants.h"
 #include <regex>
 #include<iostream>
-#include "lion/thirdparty/include/logger.hpp"
 #include "types.h"
 #include "lion/math/vector3d.hpp"
 
