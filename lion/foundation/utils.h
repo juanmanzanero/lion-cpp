@@ -6,9 +6,10 @@
 #include <iomanip>
 #include <algorithm>
 #include <cctype>
-#include "constants.h"
 #include <regex>
 #include <iostream>
+#include <time.h>
+#include "constants.h"
 #include "lion/thirdparty/include/logger.hpp"
 #include "types.h"
 #include "lion/math/vector3d.h"
@@ -26,6 +27,18 @@ inline bool to_bool(std::string str)
     bool b;
     is >> std::boolalpha >> b;
     return b;
+}
+
+
+inline std::string get_current_date_and_time()
+{   
+    time_t     now = time(0);
+    struct tm  tstruct;
+    char       buf[80];
+    tstruct = *localtime(&now);
+    strftime(buf, sizeof(buf), "%Y-%m-%dT%X", &tstruct);
+    
+    return buf;
 }
 
 template <typename T> 
