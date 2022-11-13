@@ -37,10 +37,6 @@ struct Database_parameter
 using Database_parameter_mutable = Database_parameter<void>;
 using Database_parameter_const   = Database_parameter<const void>;
 
-template<size_t N>
-constexpr std::size_t va_count(const std::array<Database_parameter_mutable,N>& ) { return N; }
-
-
 #define DECLARE_PARAMS(...) \
     std::vector<Database_parameter_mutable> get_parameters() { return { __VA_ARGS__ }; } \
     std::vector<Database_parameter_const> get_parameters() const { return { __VA_ARGS__ }; } \

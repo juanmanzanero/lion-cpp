@@ -81,4 +81,40 @@ inline std::tuple<Vector3d<T>,T,std::array<size_t,2>> find_intersection(const st
 template<typename T>
 inline std::tuple<T,T> find_intersection(const Vector3d<T>& r0, const Vector3d<T>& p0, const sVector3d& r1, const sVector3d& p1);
 
+template<typename T>
+constexpr std::array<T, 3u> rotmat2ea(const std::array<T, 9u> &M)
+{
+    // Author: Diego Lodares Gomez
+    //
+    // Returns an std::array holding the Euler angles in 'ZYX' sequence
+    // "[yaw, pitch, roll]", in rad, from the input rotation matrix,
+    // given as an std::array in column-major format.
+    //
+
+    // gymbal lock tolerance, calculated with
+    // "gymbal_lock_pitch_tol_deg = 0.001;
+    //  gymbal_lock_pitch_zone = cos(deg2rad(gymbal_lock_pitch_tol_deg));"
+    constexpr auto gymbal_lock_pitch_zone = T{ 0.999999999847691 };
+    const auto sinp = -M[2];
+
+
+    T pitch_rad;
+    if (std::fabs(sinp) <= gymbal_lock_pitch_zone) {
+        pitch_rad = std::asin(sinp);
+    }
+    else if (sinp >= T{ 0 }) {
+        pitch_rad = T{ 0.5 } * pi_T<T>;
+    }
+    else {
+        pitch_rad = -T{ 0.5 } * pi_T<T>;
+    }
+
+    const auto yaw_rad = std::atan2(M[1], M[0]);
+    const auto roll_rad = std::atan2(M[5], M[8]);
+
+    return std::array<T, 3u>{ wrap_to_pi(yaw_rad),
+                              wrap_to_pi(pitch_rad),
+                              wrap_to_pi(roll_rad) };
+}
+
 #endif
