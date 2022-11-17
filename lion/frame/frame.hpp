@@ -1,8 +1,58 @@
+#ifndef FRAME_HPP
+#define FRAME_HPP
+
 #include <tuple>
 
-template<typename T>
-inline Frame<T>::Frame(const typename Frame<T>::tVector3d& x, const typename Frame<T>::tVector3d& dx, const std::vector<T> angles, 
-                    const std::vector<T> dangles, const std::vector<Axis> axis, const Frame<T>& parent) 
+template<typename Input_frame_1, typename Input_frame_2>
+constexpr size_t lioncpp::detail::get_crossing_generation(const Input_frame_1& f1, const Input_frame_2& f2)
+{
+    constexpr const size_t first_common_generation = std::min(f1.generation, f2.generation);  
+    
+    if constexpr (f1.generation == 0 && f2.generation == 0)
+    {
+        if constexpr (std::is_same_v<Input_frame_1, Input_frame_2>)
+        {
+            if (&f1 == &f2)
+            {
+                return 0;
+            }
+            else
+            {
+                throw lion_exception("[ERROR] get_crossing_generation -> f1 and f2 do not share a common ancestor");  
+            }
+        }
+        else
+        {
+            throw lion_exception("[ERROR] get_crossing_generation -> f1 and f2 do not share a common ancestor");  
+        }
+    }
+    else if constexpr (f1.generation > first_common_generation)
+    {
+        return get_crossing_generation(f1.get_parent(), f2);
+    }
+    else if constexpr (f2.generation > first_common_generation)
+    {
+        return get_crossing_generation(f1, f2.get_parent());
+    }
+    else
+    {
+        if constexpr (std::is_same_v<Input_frame_1,Input_frame_2>)
+        {
+            if (&f1 == &f2)
+                return first_common_generation;
+            else
+                return get_crossing_generation(f1.get_parent(), f2.get_parent());
+        }
+        else
+            return get_crossing_generation(f1.get_parent(), f2.get_parent());
+    }
+}
+
+template<typename T, typename Parent_frame_type, size_t Number_of_rotations>
+inline Frame<T,Parent_frame_type,Number_of_rotations>::Frame(const Vector3d<T>& x, 
+    const Vector3d<T>& dx, const std::array<T,Number_of_rotations>& angles, 
+    const std::array<T,Number_of_rotations>& dangles, const std::array<Axis,Number_of_rotations>& axis, 
+    const Parent_frame_type& parent) 
 : _parent(&parent),
   _x(x), 
   _dx(dx), 
@@ -11,17 +61,6 @@ inline Frame<T>::Frame(const typename Frame<T>::tVector3d& x, const typename Fra
   _axis(axis),
   _updated(false)
 {
- try
- { 
-    if ( _angles.size() != _dangles.size() ) 
-    {
-        throw lion_exception("angles and angles derivatives vectors do not have the same size"); 
-    } 
-    if ( _angles.size() != _axis.size() ) 
-    {
-        throw lion_exception("angles and rotation axis vectors do not have the same size"); 
-    } 
-
     for (size_t i = 0; i < _axis.size(); ++i)
     {
         switch(_axis[i])
@@ -36,18 +75,13 @@ inline Frame<T>::Frame(const typename Frame<T>::tVector3d& x, const typename Fra
     }
 
     update();
- } 
- catch( const lion_exception& error )
- {
-    throw;
- }
 }
 
 
-template<typename T>
-inline void Frame<T>::update()
+template<typename T, typename Parent_frame_type, size_t Number_of_rotations>
+inline void Frame<T,Parent_frame_type,Number_of_rotations>::update()
 {
-    if ( is_inertial() )
+    if constexpr (is_inertial)
         return;
 
     if ( _angles.size() == 0 )
@@ -62,43 +96,42 @@ inline void Frame<T>::update()
     }
 
 //  Compute the rotation matrix
-    std::vector<tMatrix3x3> fwd_rot_matrices;
-    std::vector<tMatrix3x3> bwd_rot_matrices;
+    std::array<Matrix3x3<T,Number_of_rotations>> fwd_rot_matrices;
+    std::array<Matrix3x3<T,Number_of_rotations>> bwd_rot_matrices;
 
 //  Accumulated forward rotation matrices: X_parent = Q_{12}Q_{23}...Q_{j-1,j}Xj
-    std::vector<tMatrix3x3> accumulated_fwd_rot_matrices(_angles.size());
+    std::array<Matrix3x3<T,Number_of_rotations>> accumulated_fwd_rot_matrices(Number_of_rotations);
 
 //  Accumulated backward rotation matrices: X_child = Q_{N,N-1}Q_{N-1,N-2}...Q_{j+1,j}Xj
-    std::vector<tMatrix3x3> accumulated_bwd_rot_matrices(_angles.size());
+    std::array<Matrix3x3<T,Number_of_rotations>> accumulated_bwd_rot_matrices(Number_of_rotations);
 
-    for (size_t i = 0; i < _angles.size(); ++i)
+    for (size_t i = 0; i < Number_of_rotations; ++i)
     {
         switch(_axis[i])
         {
          case(X):
-            fwd_rot_matrices.push_back(rotation_matrix_x(_angles[i]));
+            fwd_rot_matrices[i] = rotation_matrix_x(_angles[i]);
             break;
 
          case(Y):
-            fwd_rot_matrices.push_back(rotation_matrix_y(_angles[i]));
+            fwd_rot_matrices[i] = rotation_matrix_y(_angles[i]);
             break;
 
          case(Z):
-            fwd_rot_matrices.push_back(rotation_matrix_z(_angles[i]));
+            fwd_rot_matrices[i] = rotation_matrix_z(_angles[i]);
             break;
         } 
 
-        bwd_rot_matrices.push_back(transpose(fwd_rot_matrices.at(i)));
+        bwd_rot_matrices[i] = transpose(fwd_rot_matrices.at(i));
     }
 
     accumulated_fwd_rot_matrices.front() = fwd_rot_matrices.front();
 
-    for (size_t i=1; i< _angles.size(); ++i)
+    for (size_t i=1; i< Number_of_rotations; ++i)
         accumulated_fwd_rot_matrices[i] = accumulated_fwd_rot_matrices[i-1]*fwd_rot_matrices[i];
 
-
     accumulated_bwd_rot_matrices.back() = bwd_rot_matrices.back();
-    for (int i = _angles.size()-2; i >= 0; --i)
+    for (int i = Number_of_rotations-2; i >= 0; --i)
         accumulated_bwd_rot_matrices[i] = accumulated_bwd_rot_matrices[i+1]*bwd_rot_matrices[i];
 
     _Qpc = accumulated_fwd_rot_matrices.back();
@@ -108,9 +141,9 @@ inline void Frame<T>::update()
     _omega_pc_self = tVector3d::zeros();
     _omega_pc_parent = tVector3d::zeros();
 
-    for (size_t i = 0; i < _angles.size(); ++i)
+    for (size_t i = 0; i < Number_of_rotations; ++i)
     {
-        tVector3d new_rot(tVector3d::zeros());
+        Vector3d<T> new_rot(Vector3d<T>::zeros());
         new_rot[_axis[i]] = _dangles[i];
         _omega_pc_self += accumulated_bwd_rot_matrices[i]*new_rot;
         _omega_pc_parent += accumulated_fwd_rot_matrices[i]*new_rot;
@@ -122,90 +155,73 @@ inline void Frame<T>::update()
 }
 
 
-template<typename T>
-inline const Frame<T>& Frame<T>::get_parent() const 
+template<typename T, typename Parent_frame_type, size_t Number_of_rotations>
+template<typename U>
+inline auto Frame<T, Parent_frame_type, Number_of_rotations>::get_absolute_position(const Vector3d<U>& x) const
+    -> Vector3d<typename combine_types<aggregated_type,U>::type>
 {
- try
- { 
-    if ( !is_inertial() ) 
-        return *_parent; 
-    else
-        throw lion_exception("Inertial frames have no parents");
-    
- }
- catch( const lion_exception& error )
- {
-    throw;
- }
-}
-
-
-template<typename T>
-constexpr inline size_t Frame<T>::generation() const
-{
-    size_t gen = 0;
-    const Frame* current = this;
-    while ( current->get_parent_ptr() != nullptr )
-    {
-        ++gen;
-        current = current->get_parent_ptr();
-    }
-
-    return gen;
-}
-
-
-template<typename T>
-inline typename Frame<T>::tVector3d Frame<T>::get_absolute_position(const typename Frame<T>::tVector3d& x) const
-{
-    if (is_inertial())
+    if constexpr (is_inertial)
         return x;
-
-    return get_parent_ptr()->get_absolute_position(_x + _Qpc*x);
+    else
+        return get_parent().get_absolute_position(_x + _Qpc * x);
 }
 
 
-template<typename T>
-inline typename Frame<T>::tVector3d Frame<T>::get_absolute_velocity_in_body(const typename Frame<T>::tVector3d& x, const typename Frame<T>::tVector3d& dx) const
+template<typename T, typename Parent_frame_type, size_t Number_of_rotations>
+template<typename U>
+inline auto Frame<T, Parent_frame_type, Number_of_rotations>::get_absolute_velocity_in_body(const Vector3d<U>& x, const Vector3d<U>& dx) const
+    -> Vector3d<typename combine_types<aggregated_type,U>::type>
 {
-    if ( is_inertial() )
+    if constexpr (is_inertial)
         return dx;
-
-    return _Qcp*get_parent_ptr()->get_absolute_velocity_in_body(_x + _Qpc*x, _dx + _Qpc*(dx+cross(_omega_pc_self,x)));
+    else
+        return _Qcp*get_parent().get_absolute_velocity_in_body(_x + _Qpc*x, _dx + _Qpc*(dx+cross(_omega_pc_self,x)));
 }
 
     
-template<typename T>
-inline typename Frame<T>::tVector3d Frame<T>::get_absolute_velocity_in_parent(const typename Frame<T>::tVector3d& x, const typename Frame<T>::tVector3d& dx) const
+template<typename T, typename Parent_frame_type, size_t Number_of_rotations>
+template<typename U>
+inline auto Frame<T, Parent_frame_type, Number_of_rotations>::get_absolute_velocity_in_parent
+    (const Vector3d<U>& x, const Vector3d<U>& dx) const
+    -> Vector3d<typename combine_types<aggregated_type, U>::type>
 {
-    if ( is_inertial() )
+    if constexpr (is_inertial)
         return dx;
-
-    return _Qpc*get_absolute_velocity_in_body(x, dx);
+    else
+        return _Qpc*get_absolute_velocity_in_body(x, dx);
 }
 
 
-template<typename T>
-inline typename Frame<T>::tVector3d Frame<T>::get_absolute_velocity_in_inertial(const typename Frame<T>::tVector3d& x, const typename Frame<T>::tVector3d& dx) const
+template<typename T, typename Parent_frame_type, size_t Number_of_rotations>
+template<typename U>
+inline auto Frame<T, Parent_frame_type, Number_of_rotations>::get_absolute_velocity_in_inertial
+    (const Vector3d<U>& x, const Vector3d<U>& dx) const
+    -> Vector3d<typename combine_types<aggregated_type, U>::type>
 {
-    if ( is_inertial() )
-        return typename Frame<T>::tVector3d(dx);
-
-    return get_parent_ptr()->get_absolute_velocity_in_inertial(_x + _Qpc*x, _dx + _Qpc*(dx+cross(_omega_pc_self,x)));
+    if constexpr (is_inertial)
+        return typename Frame<T,Parent_frame_type,Number_of_rotations>::tVector3d(dx);
+    else
+        return get_parent().get_absolute_velocity_in_inertial(_x + _Qpc*x, _dx + _Qpc*(dx+cross(_omega_pc_self,x)));
 }
  
-template<typename T>
-inline std::pair<typename Frame<T>::tVector3d,typename Frame<T>::tVector3d> Frame<T>::get_position_and_velocity_in_target(const Frame<T>& target, const typename Frame<T>::tVector3d& x, const typename Frame<T>::tVector3d& dx) const
+template<typename T, typename Parent_frame_type, size_t Number_of_rotations>
+template<typename Input_frame>
+inline auto Frame<T, Parent_frame_type, Number_of_rotations>::get_position_and_velocity_in_target
+    (const Input_frame& target, const Vector3d<T>& x, const Vector3d<T>& dx) const
+    -> std::pair<Vector3d<typename combine_types<aggregated_type, typename Input_frame::aggregated_type>::type>, 
+                 Vector3d<typename combine_types<aggregated_type, typename Input_frame::aggregated_type>::type>> 
 {
- try
- {
+    using return_type = typename std::pair<Vector3d<typename combine_types<aggregated_type, typename Input_frame::aggregated_type>::type>,
+                                           Vector3d<typename combine_types<aggregated_type, typename Input_frame::aggregated_type>::type>>;
+
     // Target is self
-    if ( this == &target ) 
-        return {x,dx};
+    if constexpr (std::is_same_v<Frame<T, Parent_frame_type, Number_of_rotations>, Input_frame>)
+        if ( this == &target ) 
+            return {x,dx};
 
     const size_t common_generation(get_crossing_generation(*this, target));
 
-    if ( generation() == common_generation ) 
+    if ( generation == common_generation ) 
     {
         // Get the list of frames from common_generation to the target frame: start=common_gen_frame+1 -> end=target
         std::vector<const Frame*> frames(target.generation() - common_generation);
@@ -217,407 +233,319 @@ inline std::pair<typename Frame<T>::tVector3d,typename Frame<T>::tVector3d> Fram
             cf = cf->get_parent_ptr();
         }
 
-        tVector3d current_velocity = dx;
-        tVector3d current_position = x;
+        Vector3d<return_type> current_velocity = dx;
+        Vector3d<return_type> current_position = x;
 
-        for (size_t f = 0; f < target.generation() - common_generation; ++f)
+        for (size_t i_generation = common_generation + 1; i_generation <= target.generation; ++i_generation)
         {
-            current_velocity = frames.at(f)->_Qcp*(-frames.at(f)->_dx-cross(frames.at(f)->_omega_pc_parent,-frames.at(f)->_x+current_position)+current_velocity);
-            current_position = frames.at(f)->_Qcp*(-frames.at(f)->_x + current_position); 
+            auto frame_kinematics = target.get_frame_kinematics_at_generation<return_type>(i_generation);
+
+            current_velocity = frame_kinematics.Qcp*(-frame_kinematics.dx-cross(frame_kinematics.omega_pc_parent,-frame_kinematics.x+current_position)+current_velocity);
+            current_position = frame_kinematics.Qcp*(-frame_kinematics.x + current_position); 
         }
 
         return {current_position, current_velocity};
     }
-    else if ( target.generation() == common_generation )
+    else if ( target.generation == common_generation )
     {
         // Only go from body to target
-        tVector3d current_position = _x + _Qpc*x;
-        tVector3d current_velocity = _dx + _Qpc*(cross(_omega_pc_self,x) + dx);
+        Vector3d<return_type> current_position = _x + _Qpc*x;
+        Vector3d<return_type> current_velocity = _dx + _Qpc*(cross(_omega_pc_self,x) + dx);
         const Frame* cf = this;
-        
-        for (size_t gen = generation()-1; gen > common_generation; --gen)
+
+        for (size_t i_generation = generation - 1; i_generation < common_generation; --gen)
         {
-            cf = cf->get_parent_ptr();
-
-            current_velocity = cf->_dx + cf->_Qpc*(cross(cf->_omega_pc_self,current_position) + current_velocity);
-            current_position = cf->_x + cf->_Qpc*current_position;
+            auto frame_kinematics = get_frame_kinematics_at_generation<return_type>(i_generation);
+            
+            current_velocity = frame_kinematics.dx + frame_kinematics.Qpc*(cross(frame_kinematics.omega_pc_self,current_position) + current_velocity);
+            current_position = frame_kinematics.x + frame_kinematics.Qpc*current_position;
         }
-
+        
         return {current_position, current_velocity};
     }
     else
     {
         // Go from body to common generation
-        tVector3d current_position = _x + _Qpc*x;
-        tVector3d current_velocity = _dx + _Qpc*(cross(_omega_pc_self,x) + dx);
-        const Frame* cf = this;
-        
-        for (size_t gen = generation()-1; gen > common_generation; --gen)
-        {
-            cf = cf->get_parent_ptr();
+        Vector3d<return_type> current_position = _x + _Qpc*x;
+        Vector3d<return_type> current_velocity = _dx + _Qpc*(cross(_omega_pc_self,x) + dx);
 
-            current_velocity = cf->_dx + cf->_Qpc*(cross(cf->_omega_pc_self,current_position) + current_velocity);
-            current_position = cf->_x + cf->_Qpc*current_position;
+        for (size_t i_generation = generation - 1; i_generation < common_generation; --gen)
+        {
+            auto frame_kinematics = get_frame_kinematics_at_generation<return_type>(i_generation);
+            
+            current_velocity = frame_kinematics.dx + frame_kinematics.Qpc*(cross(frame_kinematics.omega_pc_self,current_position) + current_velocity);
+            current_position = frame_kinematics.x + frame_kinematics.Qpc*current_position;
         }
 
         // Go from common frame to target
-
-        // Get the list of frames from common_generation to the target frame: start=common_gen_frame+1 -> end=target
-        std::vector<const Frame*> frames(target.generation() - common_generation);
-
-        cf = &target;
-        for (size_t gen = target.generation(); gen > common_generation; --gen)
+        for (size_t i_generation = common_generation + 1; i_generation <= target.generation; ++i_generation)
         {
-            frames.at(gen-common_generation-1) = cf;
-            cf = cf->get_parent_ptr();
-        }
+            auto frame_kinematics = target.get_frame_kinematics_at_generation<return_type>(i_generation);
 
-        for (size_t f = 0; f < target.generation() - common_generation; ++f)
-        {
-            current_velocity = frames.at(f)->_Qcp*(-frames.at(f)->_dx-cross(frames.at(f)->_omega_pc_parent,-frames.at(f)->_x+current_position)+current_velocity);
-            current_position = frames.at(f)->_Qcp*(-frames.at(f)->_x + current_position); 
+            current_velocity = frame_kinematics.Qcp*(-frame_kinematics.dx-cross(frame_kinematics.omega_pc_parent,-frame_kinematics.x+current_position)+current_velocity);
+            current_position = frame_kinematics.Qcp*(-frame_kinematics.x + current_position); 
         }
 
         return {current_position, current_velocity};
     }
- }
- catch (const lion_exception& error)
- {
-    throw;
- }
 }
 
-template<typename T>
-inline typename Frame<T>::tMatrix3x3 Frame<T>::get_absolute_rotation_matrix() const
+template<typename T, typename Parent_frame_type, size_t Number_of_rotations>
+inline auto Frame<T, Parent_frame_type, Number_of_rotations>::get_absolute_rotation_matrix() const -> Matrix3x3<aggregated_type>
 {
-    if ( is_inertial() ) 
-        return tMatrix3x3::eye();
+    if constexpr (is_inertial) 
+        return Matrix3x3<T>::eye();
 
-    else if ( !(get_parent_ptr()->is_inertial()) )
-        return (get_parent_ptr()->get_absolute_rotation_matrix()) * get_rotation_matrix();
+    else if constexpr (!Parent_frame_type::is_inertial)
+        return get_parent().get_absolute_rotation_matrix() * get_rotation_matrix();
 
     else
         return get_rotation_matrix();
-
 }
 
 
-template<typename T>
-inline typename Frame<T>::tVector3d Frame<T>::get_omega_absolute_in_body() const
+template<typename T, typename Parent_frame_type, size_t Number_of_rotations>
+inline auto Frame<T,Parent_frame_type,Number_of_rotations>::get_omega_absolute_in_body() const -> Vector3d<aggregated_type>
 {
-    if ( is_inertial() )
+    if constexpr (is_inertial)
         return tVector3d::zeros();
 
-    const tVector3d omega_wrt_parent(get_omega_wrt_parent_in_body());
-    const tVector3d omega_parent(get_back_rotation_matrix()*get_parent_ptr()->get_omega_absolute_in_body());
+    const auto& omega_wrt_parent = get_omega_wrt_parent_in_body();
+    const auto omega_parent      = get_back_rotation_matrix()*get_parent().get_omega_absolute_in_body();
 
     return omega_wrt_parent + omega_parent;
 }
 
 
-template<typename T>
-inline typename Frame<T>::tVector3d Frame<T>::get_omega_absolute_in_parent() const
+template<typename T, typename Parent_frame_type, size_t Number_of_rotations>
+inline auto Frame<T,Parent_frame_type,Number_of_rotations>::get_omega_absolute_in_parent() const -> Vector3d<aggregated_type>
 {
-    if ( is_inertial() )
-        return tVector3d::zeros();
+    if constexpr (is_inertial)
+        return Vector3d<aggregated_type>::zeros();
 
-    const tVector3d omega_wrt_parent = get_omega_wrt_parent_in_parent();
-    const tVector3d omega_parent = get_parent_ptr()->get_omega_absolute_in_body();
+    const auto& omega_wrt_parent = get_omega_wrt_parent_in_parent();
+    const auto  omega_parent     = get_parent().get_omega_absolute_in_body();
 
     return omega_wrt_parent + omega_parent;
 }
 
 
-template<typename T>
-inline typename Frame<T>::tMatrix3x3 Frame<T>::get_rotation_matrix(const Frame<T>& target) const
+template<typename T, typename Parent_frame_type, size_t Number_of_rotations>
+template<typename Input_frame>
+inline auto Frame<T,Parent_frame_type,Number_of_rotations>::get_rotation_matrix(const Input_frame& target) const 
+    -> Matrix3x3<typename combine_types<aggregated_type, typename Input_frame::aggregated_type>::type>
 /*
 *       frame_i.get_rotation_matrix(frame_j) = Qji
 */
 {
- try
- {
+    using return_type = typename combine_types<aggregated_type, typename Input_frame::aggregated_type>::type;
+
     // Self rotation...
-    if ( this == &target ) 
-        return tMatrix3x3::eye();
+    if constexpr (std::is_same_v<Frame<T,Parent_frame_type,Number_of_rotations>, Input_frame>)
+        if ( this == &target ) 
+            return Matrix3x3<return_type>::eye();
 
     const size_t common_generation(get_crossing_generation(*this, target));
 
-    if ( generation() == common_generation ) 
+    if ( generation == common_generation ) 
     {
         // Go through the path only for the target
-        tMatrix3x3 Qtarget = target.get_rotation_matrix();
-        const Frame* cft = &target;
+        Matrix3x3<return_type> Qtarget = target.get_rotation_matrix();
 
-        for ( size_t gen = target.generation()-1; gen > common_generation; --gen)
+        for (size_t i_generation = target.generation - 1; i_generation > common_generation; --i_generation)
         {
-            cft = cft->get_parent_ptr();
-            Qtarget = cft->get_rotation_matrix()*Qtarget;
+            Qtarget = target.get_frame_kinematics_at_generation<return_type>(i_generation).Qpc * Qtarget;
         }
 
         return transpose(Qtarget);
     }
-    else if ( target.generation() == common_generation )
+    else if ( target.generation == common_generation )
     {
         // Go through the path only for the body
-        tMatrix3x3 Qbody = get_rotation_matrix();
-        const Frame* cfb = this;
+        auto Qbody = get_rotation_matrix();
 
-        for ( size_t gen = generation()-1; gen > common_generation; --gen)
+        for ( size_t i_generation = generation-1; i_generation > common_generation; --i_generation)
         {
-            cfb = cfb->get_parent_ptr();
-            Qbody = cfb->get_rotation_matrix()*Qbody;
+            Qbody = get_frame_kinematics_at_generation<return_type>(i_generation).Qpc * Qbody;
         }
 
         return Qbody;
     }
     else
     {
-        tMatrix3x3 Qtarget = target.get_rotation_matrix();
+        Matrix3x3<return_type> Qtarget = target.get_rotation_matrix();
         const Frame* cft = &target;
 
-        for ( size_t gen = target.generation()-1; gen > common_generation; --gen)
+        for (size_t i_generation = target.generation - 1; i_generation > common_generation; --i_generation)
         {
-            cft = cft->get_parent_ptr();
-            Qtarget = cft->get_rotation_matrix()*Qtarget;
+            Qtarget = target.get_frame_kinematics_at_generation<return_type>(i_generation).Qpc * Qbody;
         }
 
-        tMatrix3x3 Qbody = get_rotation_matrix();
-        const Frame* cfb = this;
+        Matrix3x3<return_type> Qbody = get_rotation_matrix();
 
-        for ( size_t gen = generation()-1; gen > common_generation; --gen)
+        for (size_t i_generation = generation - 1; i_generation > common_generation; --i_generation)
         {
-            cfb = cfb->get_parent_ptr();
-            Qbody = cfb->get_rotation_matrix()*Qbody;
+            Qbody = get_frame_kinematics_at_generation<return_type>(i_generation).Qpc * Qbody;
         }
 
         return transpose(Qtarget)*Qbody;
     }
- }
- catch( const lion_exception& error )
- {
-    throw;
- }
 }
 
 
-template<typename T>
-inline typename Frame<T>::tVector3d Frame<T>::get_omega_in_body(const Frame<T>& target) const
+template<typename T, typename Parent_frame_type, size_t Number_of_rotations>
+template<typename Input_frame>
+inline auto Frame<T,Parent_frame_type,Number_of_rotations>::get_omega_in_body(const Input_frame& target) const 
+    -> Vector3d<typename combine_types<aggregated_type, typename Input_frame::aggregated_type>::type>
 {
- try
- {
+    using return_type = typename combine_types<aggregated_type, typename Input_frame::aggregated_type>::type;
+
     // Self rotation...
-    if ( this == &target ) 
-        return tVector3d::zeros();
+    if constexpr (std::is_same_v<Frame<T,Parent_frame_type,Number_of_rotations>, Input_frame>)
+        if ( this == &target ) 
+            return Vector3d<return_type>::zeros();
 
     const size_t common_generation(get_crossing_generation(*this, target));
 
-    if ( generation() == common_generation ) 
+    if ( generation == common_generation ) 
     {
         // Go through the path only for the target
-        tVector3d omega_target = -target.get_omega_wrt_parent_in_parent();
-        const Frame* cft = &target;
+        auto omega_target = -target.get_omega_wrt_parent_in_parent();
 
-        for ( size_t gen = target.generation()-1; gen > common_generation; --gen)
+        for (size_t i_generation = target.generation - 1; i_generation > common_generation; --i_generation)
         {
-            cft = cft->get_parent_ptr();
-            omega_target = -cft->get_omega_wrt_parent_in_parent() + cft->_Qpc*omega_target;
+            auto frame_kinematics = target.get_frame_kinematics_at_generation<return_type>(i_generation);
+            omega_target = -frame_kinematics.omega_pc_parent + frame_kinematics.Qpc * omega_target;
         }
 
         return omega_target;
     }
-    else if ( target.generation() == common_generation )
+    else if ( target.generation == common_generation )
     {
         // Go through the path only for the body
-        tVector3d omega_body = get_omega_wrt_parent_in_body();
-        const Frame* cft = this;
-        tMatrix3x3 Qbody_currentparent = _Qcp;
+        auto omega_body = get_omega_wrt_parent_in_body();
+        auto Qbody_currentparent = _Qcp;
 
-        for ( size_t gen = generation()-1; gen > common_generation; --gen)
+        for (size_t i_generation = generation - 1; i_generation > common_generation; --i_generation)
         {
-            cft = cft->get_parent_ptr();
-            omega_body = Qbody_currentparent * cft->get_omega_wrt_parent_in_body() + omega_body;
-            Qbody_currentparent = Qbody_currentparent*cft->_Qcp;
+            auto frame_kinematics = get_frame_kinematics_at_generation<return_type>(i_generation);
+            omega_body = Qbody_currentparent * frame_kinematics.omega_pc_self + omega_body;
+            Qbody_currentparent = Qbody_currentparent * frame_kinematics.Qcp;
         }
 
         return omega_body;
     }
     else
     {
-        // Go through the path for the target
-        tVector3d omega_target = -target.get_omega_wrt_parent_in_parent();
-        const Frame* cft = &target;
+        // Go through the path only for the target
+        auto omega_target = -target.get_omega_wrt_parent_in_parent();
 
-        for ( size_t gen = target.generation()-1; gen > common_generation; --gen)
+        for (size_t i_generation = target.generation - 1; i_generation > common_generation; --i_generation)
         {
-            cft = cft->get_parent_ptr();
-            omega_target = -cft->get_omega_wrt_parent_in_parent() + cft->_Qpc*omega_target;
+            auto frame_kinematics = target.get_frame_kinematics_at_generation<return_type>(i_generation);
+            omega_target = -frame_kinematics.omega_pc_parent + frame_kinematics.Qpc * omega_target;
         }
 
-        // Go through the path for the body
-        tVector3d omega_body = get_omega_wrt_parent_in_body();
-        cft = this;
-        tMatrix3x3 Qbody_currentparent = _Qcp;
+        // Go through the path only for the body
+        auto omega_body = get_omega_wrt_parent_in_body();
+        auto Qbody_currentparent = _Qcp;
 
-        for ( size_t gen = generation()-1; gen > common_generation; --gen)
+        for (size_t i_generation = generation - 1; i_generation > common_generation; --i_generation)
         {
-            cft = cft->get_parent_ptr();
-            omega_body = Qbody_currentparent * cft->get_omega_wrt_parent_in_body() + omega_body;
-            Qbody_currentparent = Qbody_currentparent*cft->_Qcp;
+            auto frame_kinematics = get_frame_kinematics_at_generation<return_type>(i_generation);
+            omega_body = Qbody_currentparent * frame_kinematics.omega_pc_self + omega_body;
+            Qbody_currentparent = Qbody_currentparent * frame_kinematics.Qcp;
         }
 
         return Qbody_currentparent*omega_target + omega_body;
     }
- }
- catch( const lion_exception& error )
- {
-    throw;
- }
 }
 
 
-template<typename T>
-inline typename Frame<T>::tVector3d Frame<T>::get_omega_in_parent(const Frame<T>& target) const
+template<typename T, typename Parent_frame_type, size_t Number_of_rotations>
+template<typename Input_frame>
+inline auto Frame<T,Parent_frame_type,Number_of_rotations>::get_omega_in_target(const Input_frame& target) const
+    -> Vector3d<typename combine_types<aggregated_type, typename Input_frame::aggregated_type>::type>
 {
- try
- {
-    return _Qpc*get_omega_in_body(target);
- }
- catch(const lion_exception& error)
- { 
-    throw;
- }
-}
+    using return_type = typename combine_types<aggregated_type, typename Input_frame::aggregated_type>::type;
 
-
-template<typename T>
-inline typename Frame<T>::tVector3d Frame<T>::get_omega_in_target(const Frame<T>& target) const
-{
- try
- {
     // Self rotation...
-    if ( this == &target ) 
-        return tVector3d::zeros();
+    if constexpr (std::is_same_v<Frame<T,Parent_frame_type,Number_of_rotations>, Input_frame>)
+        if ( this == &target ) 
+            return Vector3d<return_type>::zeros();
 
     const size_t common_generation(get_crossing_generation(*this, target));
 
-    if ( generation() == common_generation ) 
+    if ( generation == common_generation ) 
     {
         // Go through the path only for the target
-        tVector3d omega_target = -target.get_omega_wrt_parent_in_body();
-        const Frame* cft = &target;
-        tMatrix3x3 Qcp = target._Qcp;
-    
-        for ( size_t gen = target.generation()-1; gen > common_generation; --gen)
-        {
-            cft = cft->get_parent_ptr();
-            omega_target = -Qcp*cft->get_omega_wrt_parent_in_body() + omega_target;
-            Qcp *= cft->_Qcp;
-        }
+        auto omega_target = -target.get_omega_wrt_parent_in_body();
+        auto Qcp = target._Qcp;
 
+        for (size_t i_generation = target.generation - 1; i_generation > common_generation; --i_generation)
+        {
+            auto frame_kinematics = target.get_frame_kinematics_at_generation<return_type>(i_generation);
+            omega_target = -Qcp * frame_kinematics.omega_pc_self + omega_target;
+            Qcp *= frame_kinematics.Qcp;
+        }
+    
         return omega_target;
     }
-    else if ( target.generation() == common_generation )
+    else if ( target.generation == common_generation )
     {
         // Go through the path only for the body
-        tVector3d omega_body = get_omega_wrt_parent_in_parent();
-        const Frame* cft = this;
+        auto omega_body = get_omega_wrt_parent_in_parent();
 
-        for ( size_t gen = generation()-1; gen > common_generation; --gen)
+        for (size_t i_generation = generation - 1; i_generation > common_generation; --i_generation)
         {
-            cft = cft->get_parent_ptr();
-            omega_body = cft->get_omega_wrt_parent_in_parent() + cft->_Qpc*omega_body;
+            auto frame_kinematics = get_frame_kinematics_at_generation<return_type>(i_generation);
+            omega_body = frame_kinematics.omega_pc_parent + frame_kinematics.Qpc * omega_body;
         }
 
         return omega_body;
     }
     else
     {
-        // Go through the path for the target
-        tVector3d omega_target = -target.get_omega_wrt_parent_in_body();
-        const Frame* cft = &target;
-        tMatrix3x3 Qcp = target._Qcp;
-    
-        for ( size_t gen = target.generation()-1; gen > common_generation; --gen)
+        // Go through the path only for the target
+        auto omega_target = -target.get_omega_wrt_parent_in_body();
+        auto Qcp = target._Qcp;
+
+        for (size_t i_generation = target.generation - 1; i_generation > common_generation; --i_generation)
         {
-            cft = cft->get_parent_ptr();
-            omega_target = -Qcp*cft->get_omega_wrt_parent_in_body() + omega_target;
-            Qcp *= cft->_Qcp;
+            auto frame_kinematics = target.get_frame_kinematics_at_generation<return_type>(i_generation);
+            omega_target = -Qcp * frame_kinematics.omega_pc_self + omega_target;
+            Qcp *= frame_kinematics.Qcp;
         }
 
-        // Go through the path for the body
-        tVector3d omega_body = get_omega_wrt_parent_in_parent();
-        cft = this;
+        // Go through the path only for the body
+        auto omega_body = get_omega_wrt_parent_in_parent();
 
-        for ( size_t gen = generation()-1; gen > common_generation; --gen)
+        for (size_t i_generation = generation - 1; i_generation > common_generation; --i_generation)
         {
-            cft = cft->get_parent_ptr();
-            omega_body = cft->get_omega_wrt_parent_in_parent() + cft->_Qpc*omega_body;
+            auto frame_kinematics = get_frame_kinematics_at_generation<return_type>(i_generation);
+            omega_body = frame_kinematics.omega_pc_parent + frame_kinematics.Qpc * omega_body;
         }
 
         return omega_target + Qcp*omega_body;
     }
- }
- catch( const lion_exception& error )
- {
-    throw;
- }
 }
 
 
-template<typename T>
-inline typename Frame<T>::tVector3d Frame<T>::get_omega_absolute_in_inertial() const
+template<typename T, typename Parent_frame_type, size_t Number_of_rotations>
+inline auto Frame<T,Parent_frame_type,Number_of_rotations>::get_omega_absolute_in_inertial() const -> Vector3d<aggregated_type>
 {
-    if ( is_inertial() )
-        return tVector3d::zeros();
+    if constexpr (is_inertial)
+        return Vector3d<aggregated_type>::zeros();
 
     return get_absolute_rotation_matrix()*get_omega_absolute_in_body();
 }
 
 
-template<typename T>
-inline size_t Frame<T>::get_crossing_generation(const Frame<T>& f1, const Frame<T>& f2)
-{
- try
- {
-    const size_t common_generation = std::min(f1.generation(), f2.generation());
-
-    // Complete path up to generation
-    const Frame* cf1 = &f1;
-    for (size_t gen = f1.generation(); gen > common_generation; --gen)
-        cf1 = cf1->get_parent_ptr();
-
-    const Frame* cf2 = &f2;
-    for (size_t gen = f2.generation(); gen > common_generation; --gen)
-        cf2 = cf2->get_parent_ptr();
-
-    // Get all the way to the end until two frames coincide, or the inertial frame is reached
-    if ( cf1 == cf2 ) 
-        return common_generation;
-
-    for (size_t gen = common_generation; gen>0; --gen)
-    {
-        cf1 = cf1->get_parent_ptr();
-        cf2 = cf2->get_parent_ptr();
-
-        if ( cf1 == cf2 ) 
-            return gen-1;
-    }
-
-    // If the code reaches here, means that the inertial frames are not the same. Throw an exception
-    throw lion_exception("The two frames do not share an ancestor"); 
- }
- catch(const lion_exception& error)
- {
-    throw;
- }
-}
-
-
-template<typename T>
-constexpr inline void Frame<T>::set_origin(const typename Frame<T>::tVector3d& x, const bool bUpdate) 
+template<typename T, typename Parent_frame_type, size_t Number_of_rotations>
+constexpr inline void Frame<T,Parent_frame_type,Number_of_rotations>::set_origin(const Vector3d<T>& x, const bool bUpdate) 
 { 
-    if (is_inertial())
-        return;
+    if constexpr (is_inertial)
+        throw lion_exception("[ERROR] Frame::set_origin -> origin cannot be set for an inertial frame");
 
     _x = x; 
     _updated = false; 
@@ -629,11 +557,11 @@ constexpr inline void Frame<T>::set_origin(const typename Frame<T>::tVector3d& x
 } 
 
 
-template<typename T>
-constexpr inline void Frame<T>::set_origin(const typename Frame<T>::tVector3d& x, const typename Frame<T>::tVector3d& dx, const bool bUpdate) 
+template<typename T, typename Parent_frame_type, size_t Number_of_rotations>
+constexpr inline void Frame<T,Parent_frame_type,Number_of_rotations>::set_origin(const Vector3d<T>& x, const Vector3d<T>& dx, const bool bUpdate) 
 { 
-    if (is_inertial())
-        return;
+    if constexpr (is_inertial)
+        throw lion_exception("[ERROR] Frame::set_origin -> origin cannot be set for an inertial frame");
 
     _x = x;
     _dx = dx; 
@@ -646,11 +574,11 @@ constexpr inline void Frame<T>::set_origin(const typename Frame<T>::tVector3d& x
 }  
 
 
-template<typename T>
-constexpr inline void Frame<T>::set_velocity(const typename Frame<T>::tVector3d& dx, const bool bUpdate)
+template<typename T, typename Parent_frame_type, size_t Number_of_rotations>
+constexpr inline void Frame<T,Parent_frame_type,Number_of_rotations>::set_velocity(const Vector3d<T>& dx, const bool bUpdate)
 { 
-    if (is_inertial())
-        return;
+    if constexpr (is_inertial)
+        throw lion_exception("[ERROR] Frame::set_velocity -> origin cannot be set for an inertial frame");
     
     _dx = dx; 
     _updated = false; 
@@ -662,9 +590,12 @@ constexpr inline void Frame<T>::set_velocity(const typename Frame<T>::tVector3d&
 }
 
 
-template<typename T>
-inline void Frame<T>::set_rotation_angle(const size_t which, const T angle, const bool bUpdate) 
+template<typename T, typename Parent_frame_type, size_t Number_of_rotations>
+inline void Frame<T,Parent_frame_type,Number_of_rotations>::set_rotation_angle(const size_t which, const T angle, const bool bUpdate) 
 { 
+    if constexpr (is_inertial)
+        throw lion_exception("[ERROR] Frame::set_rotation_angle -> rotation angles cannot be set for an inertial frame");
+
     _angles.at(which) = angle; 
     _updated = false; 
 
@@ -675,9 +606,12 @@ inline void Frame<T>::set_rotation_angle(const size_t which, const T angle, cons
 } 
 
 
-template<typename T>
-inline void Frame<T>::set_rotation_angle(const size_t which, const T angle, const T dangle, const bool bUpdate) 
+template<typename T, typename Parent_frame_type, size_t Number_of_rotations>
+inline void Frame<T,Parent_frame_type,Number_of_rotations>::set_rotation_angle(const size_t which, const T angle, const T dangle, const bool bUpdate) 
 {
+    if constexpr (is_inertial)
+        throw lion_exception("[ERROR] Frame::set_rotation_angle -> rotation angles cannot be set for an inertial frame");
+
     _angles.at(which) = angle; 
     _dangles.at(which) = dangle; 
     _updated = false;
@@ -689,9 +623,12 @@ inline void Frame<T>::set_rotation_angle(const size_t which, const T angle, cons
 } 
 
 
-template<typename T>
-inline void Frame<T>::set_angular_speed(const size_t which, const T dangle, const bool bUpdate) 
+template<typename T, typename Parent_frame_type, size_t Number_of_rotations>
+inline void Frame<T,Parent_frame_type,Number_of_rotations>::set_angular_speed(const size_t which, const T dangle, const bool bUpdate) 
 {
+    if constexpr (is_inertial)
+        throw lion_exception("[ERROR] Frame::set_angular_speed -> angular speed cannot be set for an inertial frame");
+
     _dangles.at(which) = dangle; 
     _updated = false; 
 
@@ -702,17 +639,47 @@ inline void Frame<T>::set_angular_speed(const size_t which, const T dangle, cons
 }  
 
 
-template<typename T>
-inline void Frame<T>::add_rotation(const T angle, const T dangle, const Axis axis, const bool bUpdate) 
-{ 
-    if (is_inertial())
-        return;
+template<typename T, typename Parent_frame_type, size_t Number_of_rotations>
+template<typename return_type>
+inline auto Frame<T,Parent_frame_type,Number_of_rotations>::get_frame_kinematics_at_generation(size_t requested_generation) const -> Frame_kinematics<return_type>
+{
+    if (requested_generation > generation)
+    {
+        throw lion_exception("[ERROR] Frame::get_frame_kinematics_at_generation -> input generation was lower than actual generation");
+    }
 
-    _angles.push_back(angle) ; 
-    _dangles.push_back(dangle); 
-    _axis.push_back(axis); 
-    _updated = false;
-
-    if ( bUpdate )
-        update();
+    if constexpr (generation == 0)
+    {
+        if (requested_generation == 0)
+        {
+            return Frame_kinematics<return_type>
+            {
+                ._x = _x;
+                ._dx = _dx;
+                ._Qpc = _Qpc;
+                ._Qcp = _Qcp;
+                ._omega_pc_self = _omega_pc_self;
+                ._omega_pc_parent = _omega_pc_parent;
+            };
+        }
+    }
+    else if (requested_generation == generation)
+    {
+        return Frame_kinematics<return_type>
+        {
+            ._x = _x;
+            ._dx = _dx;
+            ._Qpc = _Qpc;
+            ._Qcp = _Qcp;
+            ._omega_pc_self = _omega_pc_self;
+            ._omega_pc_parent = _omega_pc_parent;
+        };
+    }
+    else
+    {
+        return get_parent().get_member_of_generation<return_type>(requested_generation);
+    }
 }
+
+
+#endif
