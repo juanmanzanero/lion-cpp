@@ -212,21 +212,24 @@ inline Polynomial<T>::Polynomial(const std::vector<Polynomial>& p)
 
 
 template<class T>
-inline T Polynomial<T>::operator[](scalar x) const
+template<typename U>
+inline typename combine_types<U,T>::type Polynomial<T>::operator[](const U& x) const
 {
+    using return_type = typename combine_types<U,T>::type;
+
     if ( _n_blocks == 0 )
-        return T();
+        return return_type{};
 
     size_t block = 0;
 
     while(x > _bi[block])
         ++block;
 
-    scalar xi = 2.0*(x-_ai[block])/(_bi[block]-_ai[block]) - 1.0;
+    const auto xi = 2.0*(x-_ai[block])/(_bi[block]-_ai[block]) - 1.0;
 
-    std::vector<scalar> Lk = legendre_polynomials(_n[block],xi);
+    const auto Lk = legendre_polynomials(_n[block],xi);
 
-    T result = T();
+    auto result = return_type{};
 
     for (size_t i = 0; i <= _n[block]; ++i)
         result += _coeffs[block][i]*Lk[i];
@@ -236,10 +239,13 @@ inline T Polynomial<T>::operator[](scalar x) const
 
 
 template<class T>
-inline T Polynomial<T>::operator()(scalar x) const
+template<typename U>
+inline typename combine_types<U,T>::type Polynomial<T>::operator()(const U& x) const
 {
+    using return_type = typename combine_types<U,T>::type;
+
     if ( _n_blocks == 0 )
-        return T();
+        return {};
 
     // Check bounds
     if ( (x < _a-100*eps) || (x > _b+100.0*eps) )
@@ -254,7 +260,7 @@ inline T Polynomial<T>::operator()(scalar x) const
     }
 
     // Call operator[]
-    return operator[](x);
+    return (*this)[x];
 }
 
 

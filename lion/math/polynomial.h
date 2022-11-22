@@ -29,6 +29,8 @@ template<class T>
 class Polynomial
 {
  public:
+    using value_type = T;
+
     //! Default constructor (evaluates at 0)
     Polynomial();
 
@@ -80,11 +82,13 @@ class Polynomial
 
     //! Non-safe evaluation of the polynomial at x 
     //! @param[in] x: evaluation point 
-    T operator[](scalar x) const;
+    template<typename U>
+    typename combine_types<U,T>::type operator[](const U& x) const;
 
     //! Safe evaluation of the polynomial at x (exception if x is out of bounds)
     //! @param[in] x: evaluation point 
-    T operator()(scalar x) const;
+    template<typename U>
+    typename combine_types<U,T>::type operator()(const U& x) const;
 
     //! Computes the derivative of p
     Polynomial derivative() const;
@@ -156,9 +160,11 @@ class Polynomial_vector
 
     //! Return the evaluation of the polynomials at x as a vector
     //! @param[in] x: evaluation point
-    std::vector<T> operator()(scalar x) const
+    template<typename U>
+    std::vector<typename combine_types<U,T>::type> operator()(const U& x) const
     {
-        std::vector<T> result(_p.size());
+	using result_type = typename combine_types<U,T>::type;
+        std::vector<result_type> result(_p.size());
 
         for (size_t i = 0; i < _p.size(); ++i)
             result[i] = _p[i](x);
@@ -190,9 +196,11 @@ class Polynomial_array
 
     //! Return the evaluation of the polynomials at x as a vector
     //! @param[in] x: evaluation point
-    std::array<T,N> operator()(scalar x) const
+    template<typename U>
+    std::array<typename combine_types<U,T>::type,N> operator()(const U& x) const
     {
-        std::array<T,N> result;
+	using result_type = typename combine_types<U,T>::type;
+        std::array<result_type,N> result;
 
         for (size_t i = 0; i < _p.size(); ++i)
             result[i] = _p[i](x);

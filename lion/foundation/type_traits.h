@@ -103,4 +103,5 @@ struct combine_types<T,CppAD::AD<T>>
     using type = CppAD::AD<T>;    
 };
 
+
 #endif

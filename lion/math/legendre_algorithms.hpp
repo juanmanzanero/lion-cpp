@@ -14,15 +14,16 @@
 //     Compute the Legendre Polynomial of degree k and its derivative
 //     ------------------------------------------------------------------------
 //
-inline constexpr scalar legendre_polynomial(size_t N, scalar x )
+template<typename T>
+inline constexpr T legendre_polynomial(size_t N, const T& x )
 {      
     if ( N == 0 ) return 1.0;
     else if ( N == 1 ) return x;
     else
     {
-        scalar Lnm2 = 1.0;
-        scalar Lnm1 = x;
-        scalar Ln   = 0.0;
+        T Lnm2 = 1.0;
+        T Lnm1 = x;
+        T Ln   = 0.0;
 
         for (size_t k = 2; k <= N; ++k )
         {
@@ -35,13 +36,14 @@ inline constexpr scalar legendre_polynomial(size_t N, scalar x )
     }
 }
 
-inline std::vector<scalar> legendre_polynomials(size_t N, scalar x )
+template<typename T>
+inline std::vector<T> legendre_polynomials(size_t N, const T& x )
 {      
     if ( N == 0 ) return {1.0};
     else if ( N == 1 ) return {1.0,x};
     else
     {
-        std::vector<scalar> result(N+1);
+        std::vector<T> result(N+1);
         result[0] = 1.0;
         result[1] = x;
 
@@ -55,15 +57,16 @@ inline std::vector<scalar> legendre_polynomials(size_t N, scalar x )
 }
 
 //     Compute the Legendre Polynomial of degree k and its derivative
-inline constexpr std::pair<scalar,scalar> legendre_poly_and_derivative(size_t N, scalar x)
+template<typename T>
+inline constexpr std::pair<T,T> legendre_poly_and_derivative(size_t N, const T& x)
 {
     if ( N == 0 )  return {1.0, 0.0};
     else if ( N == 1 ) return {x,1.0};
     else
     {
-        scalar Lnm2 = 1.0;   scalar dLnm2 = 0.0;
-        scalar Lnm1 = x ;    scalar dLnm1 = 1.0;
-        scalar Ln   = 0.0;   scalar dLn   = 0.0;
+        T Lnm2 = 1.0;   T dLnm2 = 0.0;
+        T Lnm1 = x ;    T dLnm1 = 1.0;
+        T Ln   = 0.0;   T dLn   = 0.0;
         for (size_t k = 2; k <= N; ++k)
         {
             Ln = ((2.0*k-1.0)*x*Lnm1 - (k-1.0)*Lnm2)/k;

@@ -12,17 +12,20 @@
 //!
 //! @param[in] N: polynomial order
 //! @param[in] x: evaluation point
-constexpr scalar legendre_polynomial(size_t N, scalar x );
+template<typename T>
+constexpr T legendre_polynomial(size_t N, const T& x );
 
 //! Get the legendre polynomials up to order N evaluated at x
 //! @param[in] N: final polynomial order
 //! @param[in] x: evaluation point
-std::vector<scalar> legendre_polynomials(size_t N, scalar x );
+template<typename T>
+std::vector<T> legendre_polynomials(size_t N, const T& x );
 
 //! Compute the Legendre Polynomial of degree N and its derivative
 //! @param[in] N: polynomial order
 //! @param[in] x: evaluation point
-constexpr std::pair<scalar,scalar> legendre_poly_and_derivative(size_t N, scalar x);
+template<typename T>
+constexpr std::pair<T,T> legendre_poly_and_derivative(size_t N, const T& x);
 
 //! Compute the Gauss-Legendre quadrature nodes and weights
 //! @param[in] N: polynomial order

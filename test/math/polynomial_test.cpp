@@ -236,3 +236,65 @@ TEST(Polynomial_test, ninety_degrees_corner_test)
     EXPECT_NEAR(cross(dp(L1+0.9*L2),d2p(L1+0.9*L2)).norm()/pow(dp(L1+0.9*L2).norm(),3), 1.0, 2.0e-10);
     EXPECT_NEAR(cross(dp(L1+1.0*L2),d2p(L1+1.0*L2)).norm()/pow(dp(L1+1.0*L2).norm(),3), 1.0, 7.0e-09);
 }
+
+
+TEST(Polynomial_test, cppad_polynomial)
+{
+    // f(x) = x^2
+    std::vector<double> x0 = { -1.0, 0.0, 1.0 };
+    std::vector<double> y0 = { +1.0, 0.0, 1.0 };    
+
+    sPolynomial p(x0, y0, 3, true); 
+
+    const size_t number_of_evaluations = 10;
+    std::vector<CppAD::AD<double>> x_to_evaluate = linspace(CppAD::AD<double>{-1.0}, CppAD::AD<double>{1.0}, number_of_evaluations);
+
+    // Declare the contents of x0 as the independent variables
+    CppAD::Independent(x_to_evaluate);
+
+    // Fill the inputs to the operator() of the vehicle 
+    std::vector<CppAD::AD<double>> y_evaluated(number_of_evaluations);
+    std::transform(x_to_evaluate.begin(), x_to_evaluate.end(), y_evaluated.begin(), [&](const auto& x) { return p[x]; });
+
+    // Create the AD function and stop the recording
+    CppAD::ADFun<double> adfun;
+    adfun.Dependent(x_to_evaluate,y_evaluated);
+
+    // Evaluate y = f(q0,u0,0)
+    auto y0_scalar = adfun.Forward(0, linspace(-1.0, 1.0, number_of_evaluations));
+    auto y0_jacobian = adfun.Jacobian(linspace(-1.0, 1.0, number_of_evaluations));
+
+    for (size_t i = 0; i < number_of_evaluations; ++i)
+        EXPECT_NEAR(y0_jacobian.at(i + number_of_evaluations*i), 2.0*Value(x_to_evaluate.at(i)), 1.0e-12);
+}
+
+
+TEST(Polynomial_test, cppad_polynomial_2)
+{
+    // f(x) = x^3
+    const size_t number_of_evaluations = 10;
+    std::vector<CppAD::AD<double>> x_to_evaluate = linspace(CppAD::AD<double>{-1.0}, CppAD::AD<double>{1.0}, number_of_evaluations);
+
+    // Declare the contents of x0 as the independent variables
+    CppAD::Independent(x_to_evaluate);
+
+    std::vector<double> x0 = { -1.0, 0.0, 1.0, 2.0 };
+    std::vector<CppAD::AD<double>> y0 = { -1.0, 0.0, 1.0, 8.0 };    
+
+    Polynomial p(x0, y0, 3, true); 
+
+    // Fill the inputs to the operator() of the vehicle 
+    std::vector<CppAD::AD<double>> y_evaluated(number_of_evaluations);
+    std::transform(x_to_evaluate.begin(), x_to_evaluate.end(), y_evaluated.begin(), [&](const auto& x) { return p[x]; });
+
+    // Create the AD function and stop the recording
+    CppAD::ADFun<double> adfun;
+    adfun.Dependent(x_to_evaluate,y_evaluated);
+
+    // Evaluate y = f(q0,u0,0)
+    auto y0_scalar = adfun.Forward(0, linspace(-1.0, 1.0, number_of_evaluations));
+    auto y0_jacobian = adfun.Jacobian(linspace(-1.0, 1.0, number_of_evaluations));
+
+    for (size_t i = 0; i < number_of_evaluations; ++i)
+        EXPECT_NEAR(y0_jacobian.at(i + number_of_evaluations*i), 3.0*Value(x_to_evaluate.at(i)*x_to_evaluate.at(i)), 1.0e-12);
+}

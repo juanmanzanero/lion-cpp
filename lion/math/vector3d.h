@@ -149,4 +149,11 @@ typename std::enable_if<!std::is_same<T,scalar>::value,Vector3d<T>>::type operat
 template<typename T>
 typename std::enable_if<!std::is_same<T,scalar>::value,Vector3d<T>>::type operator/(const Vector3d<T>& lhs, const scalar rhs) { return {lhs[0]/rhs, lhs[1]/rhs, lhs[2]/rhs}; }
 
+
+template<typename T>
+struct combine_types<T,Vector3d<T>>
+{
+    using type = Vector3d<T>; 
+};
+
 #endif
