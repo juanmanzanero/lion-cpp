@@ -86,24 +86,24 @@ inline void Frame<T,Parent_frame_type,Number_of_rotations>::update()
 
     if ( _angles.size() == 0 )
     {
-        _Qpc = tMatrix3x3::eye();
-        _Qcp = tMatrix3x3::eye();
-        _omega_pc_self = tVector3d::zeros();
-        _omega_pc_parent = tVector3d::zeros();
+        _Qpc = Matrix3x3<T>::eye();
+        _Qcp = Matrix3x3<T>::eye();
+        _omega_pc_self = Vector3d<T>::zeros();
+        _omega_pc_parent = Vector3d<T>::zeros();
 
         _updated = true;
         return;
     }
 
 //  Compute the rotation matrix
-    std::array<Matrix3x3<T,Number_of_rotations>> fwd_rot_matrices;
-    std::array<Matrix3x3<T,Number_of_rotations>> bwd_rot_matrices;
+    std::array<Matrix3x3<T>,Number_of_rotations> fwd_rot_matrices;
+    std::array<Matrix3x3<T>,Number_of_rotations> bwd_rot_matrices;
 
 //  Accumulated forward rotation matrices: X_parent = Q_{12}Q_{23}...Q_{j-1,j}Xj
-    std::array<Matrix3x3<T,Number_of_rotations>> accumulated_fwd_rot_matrices(Number_of_rotations);
+    std::array<Matrix3x3<T>,Number_of_rotations> accumulated_fwd_rot_matrices;
 
 //  Accumulated backward rotation matrices: X_child = Q_{N,N-1}Q_{N-1,N-2}...Q_{j+1,j}Xj
-    std::array<Matrix3x3<T,Number_of_rotations>> accumulated_bwd_rot_matrices(Number_of_rotations);
+    std::array<Matrix3x3<T>,Number_of_rotations> accumulated_bwd_rot_matrices;
 
     for (size_t i = 0; i < Number_of_rotations; ++i)
     {
@@ -138,8 +138,8 @@ inline void Frame<T,Parent_frame_type,Number_of_rotations>::update()
     _Qcp = accumulated_bwd_rot_matrices.front();
 
     // Compute omega
-    _omega_pc_self = tVector3d::zeros();
-    _omega_pc_parent = tVector3d::zeros();
+    _omega_pc_self = Vector3d<T>::zeros();
+    _omega_pc_parent = Vector3d<T>::zeros();
 
     for (size_t i = 0; i < Number_of_rotations; ++i)
     {
@@ -199,7 +199,7 @@ inline auto Frame<T, Parent_frame_type, Number_of_rotations>::get_absolute_veloc
     -> Vector3d<typename combine_types<aggregated_type, U>::type>
 {
     if constexpr (is_inertial)
-        return typename Frame<T,Parent_frame_type,Number_of_rotations>::tVector3d(dx);
+        return dx;
     else
         return get_parent().get_absolute_velocity_in_inertial(_x + _Qpc*x, _dx + _Qpc*(dx+cross(_omega_pc_self,x)));
 }
@@ -211,8 +211,7 @@ inline auto Frame<T, Parent_frame_type, Number_of_rotations>::get_position_and_v
     -> std::pair<Vector3d<typename combine_types<aggregated_type, typename Input_frame::aggregated_type>::type>, 
                  Vector3d<typename combine_types<aggregated_type, typename Input_frame::aggregated_type>::type>> 
 {
-    using return_type = typename std::pair<Vector3d<typename combine_types<aggregated_type, typename Input_frame::aggregated_type>::type>,
-                                           Vector3d<typename combine_types<aggregated_type, typename Input_frame::aggregated_type>::type>>;
+    using return_type = typename combine_types<aggregated_type, typename Input_frame::aggregated_type>::type;
 
     // Target is self
     if constexpr (std::is_same_v<Frame<T, Parent_frame_type, Number_of_rotations>, Input_frame>)
@@ -223,16 +222,6 @@ inline auto Frame<T, Parent_frame_type, Number_of_rotations>::get_position_and_v
 
     if ( generation == common_generation ) 
     {
-        // Get the list of frames from common_generation to the target frame: start=common_gen_frame+1 -> end=target
-        std::vector<const Frame*> frames(target.generation() - common_generation);
-
-        const Frame* cf = &target;
-        for (size_t gen = target.generation(); gen > common_generation; --gen)
-        {
-            frames.at(gen-common_generation-1) = cf;
-            cf = cf->get_parent_ptr();
-        }
-
         Vector3d<return_type> current_velocity = dx;
         Vector3d<return_type> current_position = x;
 
@@ -251,9 +240,8 @@ inline auto Frame<T, Parent_frame_type, Number_of_rotations>::get_position_and_v
         // Only go from body to target
         Vector3d<return_type> current_position = _x + _Qpc*x;
         Vector3d<return_type> current_velocity = _dx + _Qpc*(cross(_omega_pc_self,x) + dx);
-        const Frame* cf = this;
 
-        for (size_t i_generation = generation - 1; i_generation < common_generation; --gen)
+        for (size_t i_generation = generation - 1; i_generation > common_generation; --i_generation)
         {
             auto frame_kinematics = get_frame_kinematics_at_generation<return_type>(i_generation);
             
@@ -269,7 +257,7 @@ inline auto Frame<T, Parent_frame_type, Number_of_rotations>::get_position_and_v
         Vector3d<return_type> current_position = _x + _Qpc*x;
         Vector3d<return_type> current_velocity = _dx + _Qpc*(cross(_omega_pc_self,x) + dx);
 
-        for (size_t i_generation = generation - 1; i_generation < common_generation; --gen)
+        for (size_t i_generation = generation - 1; i_generation > common_generation; --i_generation)
         {
             auto frame_kinematics = get_frame_kinematics_at_generation<return_type>(i_generation);
             
@@ -308,12 +296,14 @@ template<typename T, typename Parent_frame_type, size_t Number_of_rotations>
 inline auto Frame<T,Parent_frame_type,Number_of_rotations>::get_omega_absolute_in_body() const -> Vector3d<aggregated_type>
 {
     if constexpr (is_inertial)
-        return tVector3d::zeros();
+        return Vector3d<T>::zeros();
+    else
+    {
+        const auto& omega_wrt_parent = get_omega_wrt_parent_in_body();
+        const auto omega_parent = get_back_rotation_matrix() * get_parent().get_omega_absolute_in_body();
 
-    const auto& omega_wrt_parent = get_omega_wrt_parent_in_body();
-    const auto omega_parent      = get_back_rotation_matrix()*get_parent().get_omega_absolute_in_body();
-
-    return omega_wrt_parent + omega_parent;
+        return omega_wrt_parent + omega_parent;
+    }
 }
 
 
@@ -322,11 +312,13 @@ inline auto Frame<T,Parent_frame_type,Number_of_rotations>::get_omega_absolute_i
 {
     if constexpr (is_inertial)
         return Vector3d<aggregated_type>::zeros();
+    else
+    {
+        const auto& omega_wrt_parent = get_omega_wrt_parent_in_parent();
+        const auto  omega_parent = get_parent().get_omega_absolute_in_body();
 
-    const auto& omega_wrt_parent = get_omega_wrt_parent_in_parent();
-    const auto  omega_parent     = get_parent().get_omega_absolute_in_body();
-
-    return omega_wrt_parent + omega_parent;
+        return omega_wrt_parent + omega_parent;
+    }
 }
 
 
@@ -374,11 +366,10 @@ inline auto Frame<T,Parent_frame_type,Number_of_rotations>::get_rotation_matrix(
     else
     {
         Matrix3x3<return_type> Qtarget = target.get_rotation_matrix();
-        const Frame* cft = &target;
 
         for (size_t i_generation = target.generation - 1; i_generation > common_generation; --i_generation)
         {
-            Qtarget = target.get_frame_kinematics_at_generation<return_type>(i_generation).Qpc * Qbody;
+            Qtarget = target.get_frame_kinematics_at_generation<return_type>(i_generation).Qpc * Qtarget;
         }
 
         Matrix3x3<return_type> Qbody = get_rotation_matrix();
@@ -480,7 +471,7 @@ inline auto Frame<T,Parent_frame_type,Number_of_rotations>::get_omega_in_target(
     {
         // Go through the path only for the target
         auto omega_target = -target.get_omega_wrt_parent_in_body();
-        auto Qcp = target._Qcp;
+        auto Qcp = target.get_back_rotation_matrix();
 
         for (size_t i_generation = target.generation - 1; i_generation > common_generation; --i_generation)
         {
@@ -508,7 +499,7 @@ inline auto Frame<T,Parent_frame_type,Number_of_rotations>::get_omega_in_target(
     {
         // Go through the path only for the target
         auto omega_target = -target.get_omega_wrt_parent_in_body();
-        auto Qcp = target._Qcp;
+        auto Qcp = target.get_back_rotation_matrix();
 
         for (size_t i_generation = target.generation - 1; i_generation > common_generation; --i_generation)
         {
@@ -641,7 +632,7 @@ inline void Frame<T,Parent_frame_type,Number_of_rotations>::set_angular_speed(co
 
 template<typename T, typename Parent_frame_type, size_t Number_of_rotations>
 template<typename return_type>
-inline auto Frame<T,Parent_frame_type,Number_of_rotations>::get_frame_kinematics_at_generation(size_t requested_generation) const -> Frame_kinematics<return_type>
+inline auto Frame<T, Parent_frame_type, Number_of_rotations>::get_frame_kinematics_at_generation(size_t requested_generation) const -> lioncpp::detail::Frame_kinematics<return_type>
 {
     if (requested_generation > generation)
     {
@@ -652,34 +643,36 @@ inline auto Frame<T,Parent_frame_type,Number_of_rotations>::get_frame_kinematics
     {
         if (requested_generation == 0)
         {
-            return Frame_kinematics<return_type>
+            return lioncpp::detail::Frame_kinematics<return_type>
             {
-                ._x = _x;
-                ._dx = _dx;
-                ._Qpc = _Qpc;
-                ._Qcp = _Qcp;
-                ._omega_pc_self = _omega_pc_self;
-                ._omega_pc_parent = _omega_pc_parent;
+                .x = _x,
+                .dx = _dx,
+                .Qpc = _Qpc,
+                .Qcp = _Qcp,
+                .omega_pc_self = _omega_pc_self,
+                .omega_pc_parent = _omega_pc_parent
             };
         }
     }
-    else if (requested_generation == generation)
-    {
-        return Frame_kinematics<return_type>
-        {
-            ._x = _x;
-            ._dx = _dx;
-            ._Qpc = _Qpc;
-            ._Qcp = _Qcp;
-            ._omega_pc_self = _omega_pc_self;
-            ._omega_pc_parent = _omega_pc_parent;
-        };
-    }
     else
     {
-        return get_parent().get_member_of_generation<return_type>(requested_generation);
+        if (requested_generation == generation)
+        {
+            return lioncpp::detail::Frame_kinematics<return_type>
+            {
+                .x = _x,
+                .dx = _dx,
+                .Qpc = _Qpc,
+                .Qcp = _Qcp,
+                .omega_pc_self = _omega_pc_self,
+                .omega_pc_parent = _omega_pc_parent
+            };
+        }
+        else
+        {
+            return get_parent().get_frame_kinematics_at_generation<return_type>(requested_generation);
+        }
     }
 }
-
 
 #endif

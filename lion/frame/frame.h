@@ -10,16 +10,28 @@ namespace lioncpp {
 namespace detail {
 
     template<typename T>
-    class Inertial_parent_frame 
+    struct Inertial_parent_frame 
     {
         using basic_type = T;
         using aggregated_type = T;
     };
 
+     template<typename U>
+     struct Frame_kinematics
+     {
+         Vector3d<U>  x;
+         Vector3d<U>  dx;
+         Matrix3x3<U> Qpc;
+         Matrix3x3<U> Qcp;
+         Vector3d<U>  omega_pc_self;
+         Vector3d<U>  omega_pc_parent;
+     };
+
+
     template<typename P>
     constexpr const size_t get_frame_generation()
     {
-     if constexpr (!std::is_same_v<P,Inertial_parent_frame>)
+     if constexpr (!std::is_same_v<P,Inertial_parent_frame<typename P::basic_type>>)
      {
          return P::generation+1;
      }
@@ -62,9 +74,9 @@ class Frame
  public:
     using basic_type                         = T;
     using parent_frame_type                  = Parent_frame_type;
-    using number_of_rotations                = Number_of_rotations;
+    constexpr const static size_t number_of_rotations = Number_of_rotations;
     constexpr const static size_t generation = lioncpp::detail::get_frame_generation<Parent_frame_type>();
-    using aggregated_type                    = combine_types<T, Parent_frame_type::aggregated_type>::type;
+    using aggregated_type                    = typename combine_types<T, typename Parent_frame_type::aggregated_type>::type;
     constexpr const static bool is_inertial  = (generation == 0);
 
     //!  Default constructor. Returns an inertial frame
@@ -92,7 +104,8 @@ class Frame
     // Getters
     
     //!  Returns a const reference to the parent Frame
-    std::enable_if_t<!is_inertial, const Parent_frame_type&> get_parent() const { return *_parent; }
+    template<typename U = Parent_frame_type>
+    std::enable_if_t<!is_inertial, const U&> get_parent() const { return *_parent; }
 
     //!  Returns a const pointer to the parent Frame
     constexpr const Parent_frame_type* get_parent_ptr() const { return _parent; }
@@ -125,8 +138,8 @@ class Frame
     //! Applies x = xO + Qpc*x' over all the chain of parent frames until the inertial frame
     //! is reached
     //! @param[in] x: the vector of this frame to be computed. Defaults to the origin (0,0,0)
-    template<typename U>
-    auto get_absolute_position(const Vector3d<U>& x = Vector3d<U>(0.0)) const
+    template<typename U = T>
+    auto get_absolute_position(const Vector3d<U>& x = Vector3d<T>(0.0)) const
         -> Vector3d<typename combine_types<aggregated_type,U>::type>;
 
     //!  Returns the absolute velocity of a point \p x with velocity \p dx of this frame
@@ -136,9 +149,9 @@ class Frame
     //! xBody = Q(Body|Inertial)xInertial
     //! @param[in] x: position of the point of this frame. Defaults to the origin (0,0,0)
     //! @param[in] dx: local velocity of the point of this frame. Defaults to fixed point (0,0,0)
-    template<typename U>
-    auto get_absolute_velocity_in_body(const Vector3d<U>& x = Vector3d<U>(0.0),
-                                       const Vector3d<U>& dx = Vector3d<U>(0.0)
+    template<typename U = T>
+    auto get_absolute_velocity_in_body(const Vector3d<U>& x = Vector3d<T>(0.0),
+                                       const Vector3d<U>& dx = Vector3d<T>(0.0)
                                       ) const
         -> Vector3d<typename combine_types<aggregated_type, U>::type>;
 
@@ -149,9 +162,9 @@ class Frame
     //! xParent = Q(Parent|Inertial)xInertial
     //! @param[in] x: position of the point of this frame. Defaults to the origin (0,0,0)
     //! @param[in] dx: local velocity of the point of this frame. Defaults to fixed point (0,0,0)
-    template<typename U>
-    auto get_absolute_velocity_in_parent(const Vector3d<U>& x = Vector3d<U>(0.0),
-                                         const Vector3d<U>& dx = Vector3d<U>(0.0)
+    template<typename U = T>
+    auto get_absolute_velocity_in_parent(const Vector3d<U>& x = Vector3d<T>(0.0),
+                                         const Vector3d<U>& dx = Vector3d<T>(0.0)
                                         ) const
         -> Vector3d<typename combine_types<aggregated_type, U>::type>;
     
@@ -161,9 +174,9 @@ class Frame
     //! inertial frame is reached.
     //! @param[in] x: position of the point of this frame. Defaults to the origin (0,0,0)
     //! @param[in] dx: local velocity of the point of this frame. Defaults to fixed point (0,0,0)
-    template<typename U>
-    auto get_absolute_velocity_in_inertial(const Vector3d<U>& x = Vector3d<U>(0.0),
-                                      const Vector3d<U>& dx = Vector3d<U>(0.0)
+    template<typename U = T>
+    auto get_absolute_velocity_in_inertial(const Vector3d<U>& x = Vector3d<T>(0.0),
+                                      const Vector3d<U>& dx = Vector3d<T>(0.0)
                                      ) const
         -> Vector3d<typename combine_types<aggregated_type, U>::type>;
 
@@ -281,23 +294,12 @@ class Frame
     //! @param[in] bUpdate: if true, will call update()
     void set_angular_speed(const size_t which, const T dangle, const bool bUpdate = true);
 
- private:
-
-     template<typename U>
-     struct Frame_kinematics
-     {
-         Vector3d<U>  x;
-         Vector3d<U>  dx;
-         Matrix3x3<U> Qpc;
-         Matrix3x3<U> Qcp;
-         Vector3d<U>  omega_pc_self;
-         Vector3d<U>  omega_pc_parent;
-     };
-
 
     template<typename return_type = aggregated_type>
-    auto get_frame_kinematics_at_generation(size_t requested_generation) const->Frame_kinematics<return_type>;
-   
+    auto get_frame_kinematics_at_generation(size_t requested_generation) const-> lioncpp::detail::Frame_kinematics<return_type>;
+
+ private:
+
     //! Settable parameters
     const Parent_frame_type* _parent = nullptr; //! Parent frame
     Vector3d<T> _x;                   //! Origin coordinates in parent frame

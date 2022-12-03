@@ -6,7 +6,7 @@
 #include "lion/thirdparty/include/logger.hpp"
 
   
-void generic_inertial_frame_tests(sFrame& inertial_frame);
+void generic_inertial_frame_tests(Frame<scalar>& inertial_frame);
 
 class Rotated_frames_test : public ::testing::Test
 {
@@ -39,15 +39,15 @@ class Rotated_frames_test : public ::testing::Test
     const scalar dpsi = 2.0*pi;
 
 
-    sFrame inertial_frame;
-    const sFrame frame_rot_x;
-    const sFrame frame_rot_y;
-    const sFrame frame_rot_z;
-    const sFrame frame_rot_xy;
-    const sFrame frame_rot_yz;
-    const sFrame frame_rot_zx;
-    const sFrame frame_rot_xyz;
-    const sFrame euler_frame;
+    Frame<scalar> inertial_frame;
+    const Frame<scalar,decltype(inertial_frame),1> frame_rot_x;
+    const Frame<scalar,decltype(inertial_frame),1> frame_rot_y;
+    const Frame<scalar,decltype(inertial_frame),1> frame_rot_z;
+    const Frame<scalar,decltype(inertial_frame),2> frame_rot_xy;
+    const Frame<scalar,decltype(inertial_frame),2> frame_rot_yz;
+    const Frame<scalar,decltype(inertial_frame),2> frame_rot_zx;
+    const Frame<scalar,decltype(inertial_frame),3> frame_rot_xyz;
+    const Frame<scalar,decltype(inertial_frame),3> euler_frame;
 };
 
 class Rotation_wrt_target_test : public :: testing::Test
@@ -74,18 +74,18 @@ class Rotation_wrt_target_test : public :: testing::Test
     const std::array<scalar,9> dtheta = {0.1, -0.25, pi/12.0, -pi/12.0, pi, -pi/4.0, pi/8.0, -pi/8.0, 0.668};
     const std::array<Axis,9> axis = {X,Y,Z,Z,Y,X,X,Z,X};
 
-    const sFrame frame1;
-    const sFrame frame2 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[0]}, {dtheta[0]}, {axis[0]}, frame1);
-    const sFrame frame3 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[1]}, {dtheta[1]}, {axis[1]}, frame2);
-    const sFrame frame4 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[2]}, {dtheta[2]}, {axis[2]}, frame2);
-    const sFrame frame5 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[3]}, {dtheta[3]}, {axis[3]}, frame3);
-    const sFrame frame6 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[4]}, {dtheta[4]}, {axis[4]}, frame4);
-    const sFrame frame7 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[5]}, {dtheta[5]}, {axis[5]}, frame5);
-    const sFrame frame8 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[6]}, {dtheta[6]}, {axis[6]}, frame5);
-    const sFrame frame9 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[7]}, {dtheta[7]}, {axis[7]}, frame6);
-    const sFrame frame10 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[8]}, {dtheta[8]}, {axis[8]}, frame6);
+    const Frame<scalar> frame1;
+    const Frame<scalar, decltype(frame1), 1> frame2 = { sVector3d(0.0), sVector3d(0.0), {theta[0]}, {dtheta[0]}, {axis[0]}, frame1};
+    const Frame<scalar, decltype(frame2), 1> frame3 = { sVector3d(0.0), sVector3d(0.0), {theta[1]}, {dtheta[1]}, {axis[1]}, frame2};
+    const Frame<scalar, decltype(frame2), 1> frame4 = { sVector3d(0.0), sVector3d(0.0), {theta[2]}, {dtheta[2]}, {axis[2]}, frame2};
+    const Frame<scalar, decltype(frame3), 1> frame5 = { sVector3d(0.0), sVector3d(0.0), {theta[3]}, {dtheta[3]}, {axis[3]}, frame3};
+    const Frame<scalar, decltype(frame4), 1> frame6 = { sVector3d(0.0), sVector3d(0.0), {theta[4]}, {dtheta[4]}, {axis[4]}, frame4};
+    const Frame<scalar, decltype(frame5), 1> frame7 = { sVector3d(0.0), sVector3d(0.0), {theta[5]}, {dtheta[5]}, {axis[5]}, frame5};
+    const Frame<scalar, decltype(frame5), 1> frame8 = { sVector3d(0.0), sVector3d(0.0), {theta[6]}, {dtheta[6]}, {axis[6]}, frame5};
+    const Frame<scalar, decltype(frame6), 1> frame9 = { sVector3d(0.0), sVector3d(0.0), {theta[7]}, {dtheta[7]}, {axis[7]}, frame6};
+    const Frame<scalar, decltype(frame6), 1> frame10 = { sVector3d(0.0), sVector3d(0.0), {theta[8]}, {dtheta[8]}, {axis[8]}, frame6};
 
-    const sFrame frame11;
+    const Frame<scalar> frame11; // A disconnected frame
 
     // Rotation matrices
     const sMatrix3x3 Q12 = rotation_matrix_x(theta[0]);
@@ -200,7 +200,8 @@ inline sMatrix3x3 Qpc_euler(const double phi, const double theta, const double p
 }
 
 
-void test_frame_1_rotation(const sFrame& frame, const sFrame& parent, Axis axis, double theta, double w)
+template<typename Frame_type, typename Parent_frame_type>
+void test_frame_1_rotation(const Frame_type& frame, const Parent_frame_type& parent, Axis axis, double theta, double w)
 {
     EXPECT_EQ(&frame.get_parent(), &parent);
     EXPECT_EQ(frame.get_parent_ptr(), &parent);
@@ -212,7 +213,7 @@ void test_frame_1_rotation(const sFrame& frame, const sFrame& parent, Axis axis,
     EXPECT_DOUBLE_EQ(frame.get_rotation_angles_derivative().at(0), w);
     EXPECT_DOUBLE_EQ(frame.get_rotation_axis().at(0), axis);
 
-    EXPECT_EQ(frame.is_inertial(), false);
+    EXPECT_EQ(frame.is_inertial, false);
     EXPECT_EQ(frame.is_updated(), true);
 
 
@@ -290,7 +291,8 @@ void test_frame_1_rotation(const sFrame& frame, const sFrame& parent, Axis axis,
 }
 
 
-void test_frame_2_rotations(const sFrame& frame, const sFrame& parent, const std::array<Axis,2>& axis, 
+template<typename Frame_type, typename Parent_frame_type>
+void test_frame_2_rotations(const Frame_type& frame, const Parent_frame_type& parent, const std::array<Axis,2>& axis, 
                               const std::array<double,2>& theta, const std::array<double,2>& w)
 {
     EXPECT_EQ(&frame.get_parent(), &parent);
@@ -306,7 +308,7 @@ void test_frame_2_rotations(const sFrame& frame, const sFrame& parent, const std
         EXPECT_DOUBLE_EQ(frame.get_rotation_axis().at(i), axis[i]);
     }
 
-    EXPECT_EQ(frame.is_inertial(), false);
+    EXPECT_EQ(frame.is_inertial, false);
     EXPECT_EQ(frame.is_updated(), true);
 
 
@@ -398,7 +400,8 @@ void test_frame_2_rotations(const sFrame& frame, const sFrame& parent, const std
 }
 
 
-void test_frame_3_rotations(const sFrame& frame, const sFrame& parent, const std::array<Axis,3>& axis, 
+template<typename Frame_type, typename Parent_frame_type>
+void test_frame_3_rotations(const Frame_type& frame, const Parent_frame_type& parent, const std::array<Axis,3>& axis, 
                               const std::array<double,3>& theta, const std::array<double,3>& w)
 {
     EXPECT_EQ(&frame.get_parent(), &parent);
@@ -414,7 +417,7 @@ void test_frame_3_rotations(const sFrame& frame, const sFrame& parent, const std
         EXPECT_DOUBLE_EQ(frame.get_rotation_axis().at(i), axis[i]);
     }
 
-    EXPECT_EQ(frame.is_inertial(), false);
+    EXPECT_EQ(frame.is_inertial, false);
     EXPECT_EQ(frame.is_updated(), true);
 
 
@@ -510,27 +513,7 @@ TEST_F(Rotated_frames_test, Bad_construction_test)
 {
     try
     {
-        sFrame error_frame(sVector3d(0.0), sVector3d(0.0), {0.0,1.0}, {0.0}, {X}, inertial_frame );
-        FAIL();
-    }
-    catch(const lion_exception& error)
-    {
-        SUCCEED();
-    }
-
-    try
-    { 
-        sFrame error_frame(sVector3d(0.0), sVector3d(0.0), {0.0,1.0}, {0.0,1.0}, {X}, inertial_frame );
-        FAIL();
-    }
-    catch(const lion_exception& error)
-    {
-        SUCCEED();
-    }
-
-    try
-    {
-        sFrame error_frame(sVector3d(0.0), sVector3d(0.0), {0.0,1.0}, {0.0,1.0}, {X,static_cast<Axis>(5)}, inertial_frame);
+        Frame<scalar,decltype(inertial_frame),2> error_frame(sVector3d(0.0), sVector3d(0.0), {0.0,1.0}, {0.0,1.0}, {X,static_cast<Axis>(5)}, inertial_frame);
         FAIL();
     }
     catch(const lion_exception& error)
@@ -540,11 +523,11 @@ TEST_F(Rotated_frames_test, Bad_construction_test)
 }
 
 
-TEST_F(Rotated_frames_test, sFrame_rotation_wrt_x) 
+TEST_F(Rotated_frames_test, Frame_rotation_wrt_x) 
 { 
     test_frame_1_rotation(frame_rot_x, inertial_frame, X, theta_x, w_x); 
 
-    sFrame local_frame(frame_rot_x);
+    auto local_frame(frame_rot_x);
 
     local_frame.set_rotation_angle(0, 60.0*DEG);
     test_frame_1_rotation(local_frame, inertial_frame, X, 60.0*DEG, w_x); 
@@ -560,11 +543,11 @@ TEST_F(Rotated_frames_test, sFrame_rotation_wrt_x)
 }
 
 
-TEST_F(Rotated_frames_test, sFrame_rotation_wrt_y) 
+TEST_F(Rotated_frames_test, Frame_rotation_wrt_y) 
 { 
     test_frame_1_rotation(frame_rot_y, inertial_frame, Y, theta_y, w_y); 
 
-    sFrame local_frame(frame_rot_y);
+    auto local_frame(frame_rot_y);
 
     local_frame.set_rotation_angle(0, 40.0*DEG);
     test_frame_1_rotation(local_frame, inertial_frame, Y, 40.0*DEG, w_y); 
@@ -577,11 +560,11 @@ TEST_F(Rotated_frames_test, sFrame_rotation_wrt_y)
 }
 
 
-TEST_F(Rotated_frames_test, sFrame_rotation_wrt_z) 
+TEST_F(Rotated_frames_test, Frame_rotation_wrt_z) 
 { 
     test_frame_1_rotation(frame_rot_z, inertial_frame, Z, theta_z, w_z); 
 
-    sFrame local_frame(frame_rot_z);
+    auto local_frame(frame_rot_z);
 
     local_frame.set_rotation_angle(0, 150.0*DEG);
     test_frame_1_rotation(local_frame, inertial_frame, Z, 150.0*DEG, w_z); 
@@ -594,11 +577,11 @@ TEST_F(Rotated_frames_test, sFrame_rotation_wrt_z)
 }
 
 
-TEST_F(Rotated_frames_test, sFrame_rotation_wrt_xy) 
+TEST_F(Rotated_frames_test, Frame_rotation_wrt_xy) 
 { 
     test_frame_2_rotations(frame_rot_xy, inertial_frame, {X,Y}, {theta_x,theta_y}, {w_x,w_y} ); 
 
-    sFrame local_frame(frame_rot_xy);
+    auto local_frame(frame_rot_xy);
 
     local_frame.set_rotation_angle(1, 36.0*DEG, 40.0, false);
     EXPECT_EQ(local_frame.is_updated(), false);
@@ -618,17 +601,11 @@ TEST_F(Rotated_frames_test, sFrame_rotation_wrt_xy)
         SUCCEED();
     }
 
-    sFrame local_frame2(frame_rot_x);
-    local_frame2.add_rotation(-62.0*DEG, 2.15,Z);
-
-    test_frame_2_rotations(local_frame2, inertial_frame, {X,Z},{theta_x,-62.0*DEG}, {w_x,2.15} ); 
-
-    // For good measure
     generic_inertial_frame_tests(inertial_frame);
 }
 
 
-TEST_F(Rotated_frames_test, sFrame_rotation_wrt_yz) 
+TEST_F(Rotated_frames_test, Frame_rotation_wrt_yz) 
 { 
     test_frame_2_rotations(frame_rot_yz, inertial_frame, {Y,Z}, {theta_y,theta_z}, {w_y,w_z} ); 
 
@@ -637,7 +614,7 @@ TEST_F(Rotated_frames_test, sFrame_rotation_wrt_yz)
 }
 
 
-TEST_F(Rotated_frames_test, sFrame_rotation_wrt_zx) 
+TEST_F(Rotated_frames_test, Frame_rotation_wrt_zx) 
 { 
     test_frame_2_rotations(frame_rot_zx, inertial_frame, {Z,X}, {theta_z,theta_x}, {w_z,w_x} ); 
 
@@ -646,7 +623,7 @@ TEST_F(Rotated_frames_test, sFrame_rotation_wrt_zx)
 }
 
 
-TEST_F(Rotated_frames_test, sFrame_rotation_wrt_xyz) 
+TEST_F(Rotated_frames_test, Frame_rotation_wrt_xyz) 
 { 
     test_frame_3_rotations(frame_rot_xyz, inertial_frame, {X,Y,Z}, {theta_x,theta_y,theta_z}, {w_x,w_y,w_z} ); 
 
@@ -678,11 +655,11 @@ TEST_F(Rotated_frames_test, Nested_rotation_frames)
 {
     using namespace std;
 
-    const sFrame euler_1st_rot(sVector3d(0.0), sVector3d(0.0), {phi}, {dphi}, {Z}, inertial_frame);
+    const Frame<scalar,decltype(inertial_frame),1> euler_1st_rot(sVector3d(0.0), sVector3d(0.0), {phi}, {dphi}, {Z}, inertial_frame);
 
-    const sFrame euler_2nd_rot(sVector3d(0.0), sVector3d(0.0), {theta}, {dtheta}, {X}, euler_1st_rot);
+    const Frame<scalar,decltype(euler_1st_rot),1> euler_2nd_rot(sVector3d(0.0), sVector3d(0.0), {theta}, {dtheta}, {X}, euler_1st_rot);
 
-    const sFrame euler_3rd_rot(sVector3d(0.0), sVector3d(0.0), {psi}, {dpsi}, {Z}, euler_2nd_rot);
+    const Frame<scalar,decltype(euler_2nd_rot),1> euler_3rd_rot(sVector3d(0.0), sVector3d(0.0), {psi}, {dpsi}, {Z}, euler_2nd_rot);
 
     // Check the three rotations
     for ( size_t i = 0; i < 3; ++i)
@@ -736,11 +713,11 @@ TEST_F(Rotation_wrt_target_test, rotation_matrix_wrt_target)
         {
             EXPECT_DOUBLE_EQ(frame7.get_rotation_matrix(frame4)(i,j), Q47(i,j));
             EXPECT_DOUBLE_EQ(frame4.get_rotation_matrix(frame7)(i,j), Q47(j,i));
-            EXPECT_EQ(sFrame::get_crossing_generation(frame7,frame4),1);
+            EXPECT_EQ(lioncpp::detail::get_crossing_generation(frame7,frame4),1);
 
             // Test the self rotation
             EXPECT_DOUBLE_EQ(frame4.get_rotation_matrix(frame4)(i,j), (double)(i==j));
-            EXPECT_EQ(sFrame::get_crossing_generation(frame4,frame4),2);
+            EXPECT_EQ(lioncpp::detail::get_crossing_generation(frame4,frame4),2);
         }
 
 
@@ -749,7 +726,7 @@ TEST_F(Rotation_wrt_target_test, rotation_matrix_wrt_target)
         {
             EXPECT_DOUBLE_EQ(frame8.get_rotation_matrix(frame7)(i,j)+1.0, Q78(i,j)+1.0);
             EXPECT_DOUBLE_EQ(frame7.get_rotation_matrix(frame8)(i,j)+1.0, Q78(j,i)+1.0);
-            EXPECT_EQ(sFrame::get_crossing_generation(frame7,frame8),3);
+            EXPECT_EQ(lioncpp::detail::get_crossing_generation(frame7,frame8),3);
         }
 
 
@@ -758,7 +735,7 @@ TEST_F(Rotation_wrt_target_test, rotation_matrix_wrt_target)
         {
             EXPECT_DOUBLE_EQ(frame10.get_rotation_matrix(frame8)(i,j)+1.0, Q810(i,j)+1.0);
             EXPECT_DOUBLE_EQ(frame8.get_rotation_matrix(frame10)(i,j)+1.0, Q810(j,i)+1.0);
-            EXPECT_EQ(sFrame::get_crossing_generation(frame8,frame10),1);
+            EXPECT_EQ(lioncpp::detail::get_crossing_generation(frame8,frame10),1);
         }
 
 
@@ -767,11 +744,11 @@ TEST_F(Rotation_wrt_target_test, rotation_matrix_wrt_target)
         {
             EXPECT_DOUBLE_EQ(frame9.get_rotation_matrix(frame2)(i,j)+1.0, Q29(i,j)+1.0);
             EXPECT_DOUBLE_EQ(frame2.get_rotation_matrix(frame9)(i,j)+1.0, Q29(j,i)+1.0);
-            EXPECT_EQ(sFrame::get_crossing_generation(frame2,frame9),1);
+            EXPECT_EQ(lioncpp::detail::get_crossing_generation(frame2,frame9),1);
 
             EXPECT_DOUBLE_EQ(frame9.get_rotation_matrix(frame1)(i,j)+1.0, Q19(i,j)+1.0);
             EXPECT_DOUBLE_EQ(frame1.get_rotation_matrix(frame9)(i,j)+1.0, Q19(j,i)+1.0);
-            EXPECT_EQ(sFrame::get_crossing_generation(frame1,frame9),0);
+            EXPECT_EQ(lioncpp::detail::get_crossing_generation(frame1,frame9),0);
 
         }
 
@@ -787,7 +764,7 @@ TEST_F(Rotation_wrt_target_test, rotation_matrix_wrt_target)
 
     try
     {
-        const size_t dummy(sFrame::get_crossing_generation(frame4, frame11));
+        const size_t dummy(lioncpp::detail::get_crossing_generation(frame4, frame11));
         out(2) << dummy << std::endl;
         FAIL();
     }

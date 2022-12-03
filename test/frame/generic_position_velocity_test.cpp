@@ -88,17 +88,19 @@ class Generic_position_velocity_test : public ::testing::Test
     const std::array<Axis,10> axis = {{ Y,Z,X,X,Y,Z,Y,Y,Z,X }};
    
     // Frames to be tested    
-    const sFrame frame0; // Inertial frame
-    const sFrame frame1 = sFrame(positions[1],velocities[1], {angles[1]}, {dangles[1]}, {axis[1]}, frame0);
-    const sFrame frame2 = sFrame(positions[2],velocities[2], {angles[2]}, {dangles[2]}, {axis[2]}, frame1);
-    const sFrame frame3 = sFrame(positions[3],velocities[3], {angles[3]}, {dangles[3]}, {axis[3]}, frame1);
-    const sFrame frame4 = sFrame(positions[4],velocities[4], {angles[4]}, {dangles[4]}, {axis[4]}, frame2);
-    const sFrame frame5 = sFrame(positions[5],velocities[5], {angles[5]}, {dangles[5]}, {axis[5]}, frame3);
-    const sFrame frame6 = sFrame(positions[6],velocities[6], {angles[6]}, {dangles[6]}, {axis[6]}, frame4);
-    const sFrame frame7 = sFrame(positions[7],velocities[7], {angles[7]}, {dangles[7]}, {axis[7]}, frame4);
-    const sFrame frame8 = sFrame(positions[8],velocities[8], {angles[8]}, {dangles[8]}, {axis[8]}, frame5);
-    const sFrame frame9 = sFrame(positions[9],velocities[9], {angles[9]}, {dangles[9]}, {axis[9]}, frame5);
-    const sFrame frame10; // Different inertial frame
+    const Frame<scalar> frame0; // Inertial frame
+    const Frame<scalar,decltype(frame0),1> frame1 = {positions[1],velocities[1], {angles[1]}, {dangles[1]}, {axis[1]}, frame0};
+    const Frame<scalar,decltype(frame1),1> frame2 = {positions[2],velocities[2], {angles[2]}, {dangles[2]}, {axis[2]}, frame1};
+    const Frame<scalar,decltype(frame1),1> frame3 = {positions[3],velocities[3], {angles[3]}, {dangles[3]}, {axis[3]}, frame1};
+    const Frame<scalar,decltype(frame2),1> frame4 = {positions[4],velocities[4], {angles[4]}, {dangles[4]}, {axis[4]}, frame2};
+    const Frame<scalar,decltype(frame3),1> frame5 = {positions[5],velocities[5], {angles[5]}, {dangles[5]}, {axis[5]}, frame3};
+    const Frame<scalar,decltype(frame4),1> frame6 = {positions[6],velocities[6], {angles[6]}, {dangles[6]}, {axis[6]}, frame4};
+    const Frame<scalar,decltype(frame4),1> frame7 = {positions[7],velocities[7], {angles[7]}, {dangles[7]}, {axis[7]}, frame4};
+    const Frame<scalar,decltype(frame5),1> frame8 = {positions[8],velocities[8], {angles[8]}, {dangles[8]}, {axis[8]}, frame5};
+    const Frame<scalar,decltype(frame5),1> frame9 = {positions[9],velocities[9], {angles[9]}, {dangles[9]}, {axis[9]}, frame5};
+
+    const Frame<scalar> frame10; // Different inertial frame
+
 
     // Rotation matrices
     const sMatrix3x3 Q01 = rotation_matrix_z(angles[1]);

@@ -11,23 +11,12 @@ class Inertial_frame_test : public ::testing::Test
                   {} ;
 
 
-    sFrame inertial_frame;
+    Frame<scalar> inertial_frame;
 };
 
 
-void generic_inertial_frame_tests(sFrame& inertial_frame)
+void generic_inertial_frame_tests(Frame<scalar>& inertial_frame)
 {
-    try
-    { 
-        const sFrame& parent(inertial_frame.get_parent());
-        out(2) << &parent << std::endl;
-        FAIL();
-    } 
-    catch( const lion_exception& error )
-    {
-        SUCCEED();
-    } 
-
     inertial_frame.update();
 
     EXPECT_EQ(inertial_frame.get_parent_ptr(), nullptr);
@@ -41,7 +30,7 @@ void generic_inertial_frame_tests(sFrame& inertial_frame)
     EXPECT_EQ(inertial_frame.get_rotation_angles().size(), 0u);
     EXPECT_EQ(inertial_frame.get_rotation_axis().size(), 0u);
 
-    EXPECT_EQ(inertial_frame.is_inertial(), true);
+    EXPECT_EQ(inertial_frame.is_inertial, true);
     EXPECT_EQ(inertial_frame.is_updated(), true);
 
     for ( size_t i = 0; i < 3; i++ ) {
@@ -71,21 +60,48 @@ TEST_F(Inertial_frame_test, Inertial_frame_test_parent)
 
 TEST_F(Inertial_frame_test, Inertial_frame_test_set_origin) 
 { 
-    inertial_frame.set_origin({ 1.0, 2.0, 3.0} );
+    try
+    {
+        inertial_frame.set_origin({ 1.0, 2.0, 3.0 });
+        FAIL();
+    }
+    catch (lion_exception& ex)
+    {
+        SUCCEED();
+    }
+
     generic_inertial_frame_tests(inertial_frame);
 }
 
 
 TEST_F(Inertial_frame_test, Inertial_frame_test_set_origin_and_velocity) 
 { 
-    inertial_frame.set_origin({1.0, 2.0, 3.0}, {4.0, 5.0, 6.0} );
+    try
+    {
+        inertial_frame.set_origin({1.0, 2.0, 3.0}, {4.0, 5.0, 6.0} );
+        FAIL();
+    }
+    catch (lion_exception& ex)
+    {
+        SUCCEED();
+    }
+
     generic_inertial_frame_tests(inertial_frame);
 }
 
 
 TEST_F(Inertial_frame_test, Inertial_frame_test_set_velocity) 
 { 
-    inertial_frame.set_velocity({9.0, 10.0, 11.0} );
+    try
+    {
+        inertial_frame.set_velocity({9.0, 10.0, 11.0} );
+        FAIL();
+    }
+    catch (lion_exception& ex)
+    {
+        SUCCEED();
+    }
+
     generic_inertial_frame_tests(inertial_frame);
 }
 
@@ -97,7 +113,7 @@ TEST_F(Inertial_frame_test, Inertial_frame_test_set_rot_angle)
         inertial_frame.set_rotation_angle(0, 40.0);
         FAIL();
     } 
-    catch( const std::out_of_range& ex)
+    catch( const lion_exception& ex)
     {
         SUCCEED();
     } 
@@ -113,7 +129,7 @@ TEST_F(Inertial_frame_test, Inertial_frame_test_set_rot_angle_and_speed)
         inertial_frame.set_rotation_angle(0, 40.0, 100.0);
         FAIL();
     } 
-    catch( const std::out_of_range& ex)
+    catch( const lion_exception& ex)
     {
         SUCCEED();
     } 
@@ -129,18 +145,10 @@ TEST_F(Inertial_frame_test, Inertial_frame_test_set_rot_angular_speed)
         inertial_frame.set_angular_speed(0, 80.0);
         FAIL();
     } 
-    catch( const std::out_of_range& ex)
+    catch( const lion_exception& ex)
     {
         SUCCEED();
     } 
-
-    generic_inertial_frame_tests(inertial_frame);
-}
-
-
-TEST_F(Inertial_frame_test, Inertial_frame_test_add_rotation) 
-{ 
-    inertial_frame.add_rotation(4.0, 5.0, X);
 
     generic_inertial_frame_tests(inertial_frame);
 }
