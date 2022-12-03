@@ -227,7 +227,7 @@ inline auto Frame<T, Parent_frame_type, Number_of_rotations>::get_position_and_v
 
         for (size_t i_generation = common_generation + 1; i_generation <= target.generation; ++i_generation)
         {
-            auto frame_kinematics = target.get_frame_kinematics_at_generation<return_type>(i_generation);
+            auto frame_kinematics = target.template get_frame_kinematics_at_generation<return_type>(i_generation);
 
             current_velocity = frame_kinematics.Qcp*(-frame_kinematics.dx-cross(frame_kinematics.omega_pc_parent,-frame_kinematics.x+current_position)+current_velocity);
             current_position = frame_kinematics.Qcp*(-frame_kinematics.x + current_position); 
@@ -268,7 +268,7 @@ inline auto Frame<T, Parent_frame_type, Number_of_rotations>::get_position_and_v
         // Go from common frame to target
         for (size_t i_generation = common_generation + 1; i_generation <= target.generation; ++i_generation)
         {
-            auto frame_kinematics = target.get_frame_kinematics_at_generation<return_type>(i_generation);
+            auto frame_kinematics = target.template get_frame_kinematics_at_generation<return_type>(i_generation);
 
             current_velocity = frame_kinematics.Qcp*(-frame_kinematics.dx-cross(frame_kinematics.omega_pc_parent,-frame_kinematics.x+current_position)+current_velocity);
             current_position = frame_kinematics.Qcp*(-frame_kinematics.x + current_position); 
@@ -346,7 +346,7 @@ inline auto Frame<T,Parent_frame_type,Number_of_rotations>::get_rotation_matrix(
 
         for (size_t i_generation = target.generation - 1; i_generation > common_generation; --i_generation)
         {
-            Qtarget = target.get_frame_kinematics_at_generation<return_type>(i_generation).Qpc * Qtarget;
+            Qtarget = target.template get_frame_kinematics_at_generation<return_type>(i_generation).Qpc * Qtarget;
         }
 
         return transpose(Qtarget);
@@ -369,7 +369,7 @@ inline auto Frame<T,Parent_frame_type,Number_of_rotations>::get_rotation_matrix(
 
         for (size_t i_generation = target.generation - 1; i_generation > common_generation; --i_generation)
         {
-            Qtarget = target.get_frame_kinematics_at_generation<return_type>(i_generation).Qpc * Qtarget;
+            Qtarget = target.template get_frame_kinematics_at_generation<return_type>(i_generation).Qpc * Qtarget;
         }
 
         Matrix3x3<return_type> Qbody = get_rotation_matrix();
@@ -405,7 +405,7 @@ inline auto Frame<T,Parent_frame_type,Number_of_rotations>::get_omega_in_body(co
 
         for (size_t i_generation = target.generation - 1; i_generation > common_generation; --i_generation)
         {
-            auto frame_kinematics = target.get_frame_kinematics_at_generation<return_type>(i_generation);
+            auto frame_kinematics = target.template get_frame_kinematics_at_generation<return_type>(i_generation);
             omega_target = -frame_kinematics.omega_pc_parent + frame_kinematics.Qpc * omega_target;
         }
 
@@ -433,7 +433,7 @@ inline auto Frame<T,Parent_frame_type,Number_of_rotations>::get_omega_in_body(co
 
         for (size_t i_generation = target.generation - 1; i_generation > common_generation; --i_generation)
         {
-            auto frame_kinematics = target.get_frame_kinematics_at_generation<return_type>(i_generation);
+            auto frame_kinematics = target.template get_frame_kinematics_at_generation<return_type>(i_generation);
             omega_target = -frame_kinematics.omega_pc_parent + frame_kinematics.Qpc * omega_target;
         }
 
@@ -475,7 +475,7 @@ inline auto Frame<T,Parent_frame_type,Number_of_rotations>::get_omega_in_target(
 
         for (size_t i_generation = target.generation - 1; i_generation > common_generation; --i_generation)
         {
-            auto frame_kinematics = target.get_frame_kinematics_at_generation<return_type>(i_generation);
+            auto frame_kinematics = target.template get_frame_kinematics_at_generation<return_type>(i_generation);
             omega_target = -Qcp * frame_kinematics.omega_pc_self + omega_target;
             Qcp *= frame_kinematics.Qcp;
         }
@@ -503,7 +503,7 @@ inline auto Frame<T,Parent_frame_type,Number_of_rotations>::get_omega_in_target(
 
         for (size_t i_generation = target.generation - 1; i_generation > common_generation; --i_generation)
         {
-            auto frame_kinematics = target.get_frame_kinematics_at_generation<return_type>(i_generation);
+            auto frame_kinematics = target.template get_frame_kinematics_at_generation<return_type>(i_generation);
             omega_target = -Qcp * frame_kinematics.omega_pc_self + omega_target;
             Qcp *= frame_kinematics.Qcp;
         }
@@ -670,7 +670,7 @@ inline auto Frame<T, Parent_frame_type, Number_of_rotations>::get_frame_kinemati
         }
         else
         {
-            return get_parent().get_frame_kinematics_at_generation<return_type>(requested_generation);
+            return get_parent().template get_frame_kinematics_at_generation<return_type>(requested_generation);
         }
     }
 }
