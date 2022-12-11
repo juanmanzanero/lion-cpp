@@ -6,14 +6,14 @@
 class Armonic_oscillator_DAE
 {
  public:
-    constexpr const static size_t NSTATE = 2;
-    constexpr const static size_t NALGEBRAIC = 0;
-    constexpr const static size_t NCONTROL = 0;
+    constexpr const static size_t number_of_states = 2;
+    constexpr const static size_t number_of_controls = 0;
+    constexpr const static size_t number_of_inputs = number_of_states;
 
     template<typename T>
-    std::tuple<std::array<T,2>,std::array<T,2>,std::array<T,0>> operator()
-        (const std::array<T,2>& q, const std::array<T,0>& qa, const std::array<T,0>& u, const scalar t) 
-    { return { q, { q[1], -w0*w0*q[0] }, {}}; }
+    std::tuple<std::array<T,2>,std::array<T,2>> operator()
+        (const std::array<T,2>& q, const std::array<T,0>& u, const scalar t) 
+    { return { q, { q[1], -w0*w0*q[0] }}; }
 
     inline static scalar w0 = 0.5;
 };
@@ -21,18 +21,18 @@ class Armonic_oscillator_DAE
 class Robertson_equation
 {
  public:
-    constexpr const static size_t NSTATE = 2;
-    constexpr const static size_t NALGEBRAIC = 1;
-    constexpr const static size_t NCONTROL = 0;
+    constexpr const static size_t number_of_states = 3;
+    constexpr const static size_t number_of_controls = 0;
+    constexpr const static size_t number_of_inputs = number_of_states;
 
     template<typename T>
-    std::tuple<std::array<T,2>,std::array<T,2>,std::array<T,1>> operator()
-        (const std::array<T,2>& q, const std::array<T,1>& qa, const std::array<T,0>& u, const scalar t)
+    std::tuple<std::array<T,3>,std::array<T,3>> operator()
+        (const std::array<T,3>& q, const std::array<T,0>& u, const scalar t)
     {
-        std::array<T,2> dqdt = {-0.04*q[0] + 1.0e4*q[1]*qa[0], 0.04*q[0] - 3.0e7*q[1]*q[1] - 1.0e4*q[1]*qa[0]}; 
-        std::array<T,1> dqa  = {q[0] + q[1] + qa[0] - 1.0};
+        std::array<T, 3> states = { q[0], q[1], 0.0 };
+        std::array<T,3> dqdt = {-0.04*q[0] + 1.0e4*q[1]*q[2], 0.04*q[0] - 3.0e7*q[1]*q[1] - 1.0e4*q[1]*q[2], q[0] + q[1] + q[2] - 1.0}; 
         
-        return {q,dqdt, dqa};
+        return {states,dqdt};
     }
 };
 
@@ -40,7 +40,6 @@ class Robertson_equation
 TEST(Crank_nicolson_test, ode_armonic_oscillator)
 {
     std::array<scalar,2> q = {1.0, 0.0};
-    std::array<scalar,0> qa = {};
     const scalar dt = 1.0e-1;
     const size_t n_timesteps = 100;
     const scalar tf = dt*n_timesteps;
@@ -49,7 +48,7 @@ TEST(Crank_nicolson_test, ode_armonic_oscillator)
     Armonic_oscillator_DAE armonic_oscillator;
 
     for (size_t i = 0; i < n_timesteps; ++i)
-        Crank_nicolson<Armonic_oscillator_DAE>::take_step(armonic_oscillator, {}, {}, q, qa, t, dt, {});
+        Crank_nicolson<Armonic_oscillator_DAE>::take_step(armonic_oscillator, {}, {}, q, t, dt, {});
 
     EXPECT_NEAR(tf, t, 2.0e-14);
 
@@ -60,11 +59,9 @@ TEST(Crank_nicolson_test, ode_armonic_oscillator)
 
 TEST(Crank_nicolson_test, robertson_equation)
 {
-    std::array<scalar,2> q = {1.0, 0.0};
-    std::array<scalar,1> qa = {0.0};
+    std::array<scalar,3> q = {1.0, 0.0, 0.0};
 
-    std::vector<std::array<scalar,2>> q_values;
-    std::vector<std::array<scalar,1>> qa_values;
+    std::vector<std::array<scalar,3>> q_values;
 
     const size_t n_timesteps = 100;
     std::vector<scalar> t = linspace(-6.0,5.0,n_timesteps+1);
@@ -73,15 +70,13 @@ TEST(Crank_nicolson_test, robertson_equation)
     Robertson_equation robertson_equation;
 
     q_values.push_back(q);
-    qa_values.push_back(qa);
     for (size_t i = 0; i < n_timesteps; ++i)
     {
         scalar dt = t[i+1] - t[i];
         scalar t_val = t[i];
-        Crank_nicolson<Robertson_equation>::take_step(robertson_equation, {}, {}, q, qa, t_val, dt, {});
+        Crank_nicolson<Robertson_equation>::take_step(robertson_equation, {}, {}, q, t_val, dt, {});
 
         q_values.push_back(q);
-        qa_values.push_back(qa);
     }
 
     Xml_document results_saved("data/crank_nicolson_test.xml",true);
@@ -96,7 +91,7 @@ TEST(Crank_nicolson_test, robertson_equation)
         EXPECT_NEAR(t[i], t_saved[i], 1.0e-6);
         EXPECT_NEAR(q_values[i][0], q0_saved[i], 1.0e-6);
         EXPECT_NEAR(q_values[i][1], q1_saved[i], 1.0e-6);
-        EXPECT_NEAR(qa_values[i][0], qa0_saved[i], 1.0e-6);
+        EXPECT_NEAR(q_values[i][2], qa0_saved[i], 1.0e-6);
     }
 }
 

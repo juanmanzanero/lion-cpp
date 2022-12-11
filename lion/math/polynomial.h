@@ -1,5 +1,5 @@
-#ifndef __POLYNOMIAL_H__
-#define __POLYNOMIAL_H__
+#ifndef POLYNOMIAL_H
+#define POLYNOMIAL_H
 
 #include "lion/foundation/types.h"
 #include "legendre_algorithms.h"
@@ -25,7 +25,7 @@
 //!                                first the block that contains this point is found, and then
 //!                                this polynomial is evaluated at x
 //!                                 
-template<class T>
+template<typename T>
 class Polynomial
 {
  public:
@@ -78,6 +78,9 @@ class Polynomial
     //! @param[in] p: vector of polynomials
     Polynomial(const std::vector<Polynomial>& p);
 
+    //! Returns a block as polynomial
+    Polynomial get_block(const size_t block_id) const;
+
     //! Non-safe evaluation of the polynomial at x 
     //! @param[in] x: evaluation point 
     T operator[](scalar x) const;
@@ -105,6 +108,13 @@ class Polynomial
 
     //! Get the polynomial right bound (b)
     constexpr const scalar& get_right_bound() const { return _b; }
+
+    //! Check if the polynomial is zero
+    constexpr bool is_zero() const;
+
+    //! Check if the polynomial is zero, comparison functor provided by user
+    template<typename UnaryOperation>
+    constexpr bool is_zero(UnaryOperation unary_op) const;
     
  private:
     //! Compute the Legendre polynomial coefficients of the polynomial that contains the 
@@ -142,7 +152,7 @@ class Polynomial
 
 
 //! An auxiliary class to handle a vector of polynomials. p_vector(x) = [p1(x),p2(x),p3(x),...]
-template<class T>
+template<typename T>
 class Polynomial_vector
 {
  public: 
@@ -177,7 +187,7 @@ class Polynomial_vector
 };
 
 //! An auxiliary class to handle an array of polynomials. p_array(x) = [p1(x),p2(x),p3(x),...]
-template<class T,size_t N>
+template<typename T,size_t N>
 class Polynomial_array
 {
  public: 

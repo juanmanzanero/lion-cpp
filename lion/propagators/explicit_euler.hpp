@@ -6,7 +6,7 @@ inline void Explicit_euler<F,U,N>::take_step(F& f, U& u, std::array<scalar,N>& q
 {
     const auto u_t = u(q,t);
 
-    auto dqdt = f(q,u_t,t);
+    auto dqdt = f.ode(q,u_t,t);
     
     for ( auto [iq,idq] = std::tuple{ q.begin(), dqdt.begin()} ; iq != q.end(); iq++, idq++)
         *iq += ( (*idq) *= dt );
