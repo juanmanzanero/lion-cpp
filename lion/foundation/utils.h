@@ -71,6 +71,8 @@ constexpr T smooth_sign(T a, scalar eps2);
 template <typename T>
 inline std::vector<T> linspace(T a, T b, size_t N);  
 
+template<typename T>
+inline T trapz(const std::vector<T>& x, const std::vector<T>& y);
 
 template<typename T>
 inline std::tuple<Vector3d<T>,T,std::array<size_t,2>> find_closest_point(const std::vector<sVector3d>& xy_polygon, const Vector3d<T>& x0, bool closed, const size_t i_start, const scalar maximum_distance);
