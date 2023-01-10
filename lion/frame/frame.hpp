@@ -1,11 +1,11 @@
 #include <tuple>
 
 template<typename T>
-inline Frame<T>::Frame(const typename Frame<T>::tVector3d& x, const typename Frame<T>::tVector3d& dx, const std::vector<T> angles, 
-                    const std::vector<T> dangles, const std::vector<Axis> axis, const Frame<T>& parent) 
+inline Frame<T>::Frame(const typename Frame<T>::tVector3d& x, const typename Frame<T>::tVector3d& frame_velocity, const std::vector<T> angles, 
+                    const std::vector<T> dangles, const std::vector<Axis> axis, const Frame<T>& parent, const Frame_velocity_types& frame_velocity_type) 
 : _parent(&parent),
   _x(x), 
-  _dx(dx), 
+  _frame_velocity(), 
   _angles(angles), 
   _dangles(dangles), 
   _axis(axis),
@@ -36,6 +36,18 @@ inline Frame<T>::Frame(const typename Frame<T>::tVector3d& x, const typename Fra
     }
 
     update();
+
+    switch (frame_velocity_type)
+    {
+    case(Frame_velocity_types::parent_frame):
+        _frame_velocity = _Qcp * frame_velocity;
+        break;
+    case(Frame_velocity_types::this_frame):
+        _frame_velocity = frame_velocity;
+        break;
+    default:
+        throw lion_exception("[ERROR] Frame() -> frame_velocity_type is not recognized");
+    }
  } 
  catch( const lion_exception& error )
  {
@@ -171,7 +183,11 @@ inline typename Frame<T>::tVector3d Frame<T>::get_absolute_velocity_in_body(cons
     if ( is_inertial() )
         return dx;
 
-    return _Qcp*get_parent_ptr()->get_absolute_velocity_in_body(_x + _Qpc*x, _dx + _Qpc*(dx+cross(_omega_pc_self,x)));
+    else if ( get_parent_ptr()->is_inertial() )
+        return _frame_velocity + dx + cross(_omega_pc_self, x);
+
+    else
+        return _Qcp*get_parent_ptr()->get_absolute_velocity_in_body(_x + _Qpc*x, _Qpc*(_frame_velocity + dx + cross(_omega_pc_self,x)));
 }
 
     
@@ -189,9 +205,9 @@ template<typename T>
 inline typename Frame<T>::tVector3d Frame<T>::get_absolute_velocity_in_inertial(const typename Frame<T>::tVector3d& x, const typename Frame<T>::tVector3d& dx) const
 {
     if ( is_inertial() )
-        return typename Frame<T>::tVector3d(dx);
-
-    return get_parent_ptr()->get_absolute_velocity_in_inertial(_x + _Qpc*x, _dx + _Qpc*(dx+cross(_omega_pc_self,x)));
+        return dx;
+    else
+        return get_parent_ptr()->get_absolute_velocity_in_inertial(_x + _Qpc*x, _Qpc*(_frame_velocity + dx + cross(_omega_pc_self,x)));
 }
  
 template<typename T>
@@ -222,7 +238,7 @@ inline std::pair<typename Frame<T>::tVector3d,typename Frame<T>::tVector3d> Fram
 
         for (size_t f = 0; f < target.generation() - common_generation; ++f)
         {
-            current_velocity = frames.at(f)->_Qcp*(-frames.at(f)->_dx-cross(frames.at(f)->_omega_pc_parent,-frames.at(f)->_x+current_position)+current_velocity);
+            current_velocity = -frames.at(f)->_frame_velocity + frames.at(f)->_Qcp*(-cross(frames.at(f)->_omega_pc_parent,-frames.at(f)->_x+current_position)+current_velocity);
             current_position = frames.at(f)->_Qcp*(-frames.at(f)->_x + current_position); 
         }
 
@@ -232,14 +248,14 @@ inline std::pair<typename Frame<T>::tVector3d,typename Frame<T>::tVector3d> Fram
     {
         // Only go from body to target
         tVector3d current_position = _x + _Qpc*x;
-        tVector3d current_velocity = _dx + _Qpc*(cross(_omega_pc_self,x) + dx);
+        tVector3d current_velocity = _Qpc*(_frame_velocity + cross(_omega_pc_self,x) + dx);
         const Frame* cf = this;
         
         for (size_t gen = generation()-1; gen > common_generation; --gen)
         {
             cf = cf->get_parent_ptr();
 
-            current_velocity = cf->_dx + cf->_Qpc*(cross(cf->_omega_pc_self,current_position) + current_velocity);
+            current_velocity = cf->_Qpc*(cf->_frame_velocity + cross(cf->_omega_pc_self,current_position) + current_velocity);
             current_position = cf->_x + cf->_Qpc*current_position;
         }
 
@@ -249,14 +265,14 @@ inline std::pair<typename Frame<T>::tVector3d,typename Frame<T>::tVector3d> Fram
     {
         // Go from body to common generation
         tVector3d current_position = _x + _Qpc*x;
-        tVector3d current_velocity = _dx + _Qpc*(cross(_omega_pc_self,x) + dx);
+        tVector3d current_velocity = _Qpc*(_frame_velocity + cross(_omega_pc_self,x) + dx);
         const Frame* cf = this;
         
         for (size_t gen = generation()-1; gen > common_generation; --gen)
         {
             cf = cf->get_parent_ptr();
 
-            current_velocity = cf->_dx + cf->_Qpc*(cross(cf->_omega_pc_self,current_position) + current_velocity);
+            current_velocity = cf->_Qpc*(cf->_frame_velocity + cross(cf->_omega_pc_self,current_position) + current_velocity);
             current_position = cf->_x + cf->_Qpc*current_position;
         }
 
@@ -274,7 +290,7 @@ inline std::pair<typename Frame<T>::tVector3d,typename Frame<T>::tVector3d> Fram
 
         for (size_t f = 0; f < target.generation() - common_generation; ++f)
         {
-            current_velocity = frames.at(f)->_Qcp*(-frames.at(f)->_dx-cross(frames.at(f)->_omega_pc_parent,-frames.at(f)->_x+current_position)+current_velocity);
+            current_velocity = -frames.at(f)->_frame_velocity + frames.at(f)->_Qcp*(-cross(frames.at(f)->_omega_pc_parent,-frames.at(f)->_x+current_position)+current_velocity);
             current_position = frames.at(f)->_Qcp*(-frames.at(f)->_x + current_position); 
         }
 
@@ -614,49 +630,59 @@ inline size_t Frame<T>::get_crossing_generation(const Frame<T>& f1, const Frame<
 
 
 template<typename T>
-constexpr inline void Frame<T>::set_origin(const typename Frame<T>::tVector3d& x, const bool bUpdate) 
+constexpr inline void Frame<T>::set_origin(const typename Frame<T>::tVector3d& x) 
 { 
     if (is_inertial())
         return;
 
     _x = x; 
-    _updated = false; 
-
-    if ( bUpdate ) 
-        update(); 
 
     return;
 } 
 
 
 template<typename T>
-constexpr inline void Frame<T>::set_origin(const typename Frame<T>::tVector3d& x, const typename Frame<T>::tVector3d& dx, const bool bUpdate) 
+constexpr inline void Frame<T>::set_origin(const typename Frame<T>::tVector3d& x, const typename Frame<T>::tVector3d& frame_velocity, const Frame_velocity_types& frame_velocity_type) 
 { 
     if (is_inertial())
         return;
 
     _x = x;
-    _dx = dx; 
-    _updated = false; 
 
-    if ( bUpdate )
-        update(); 
+    switch (frame_velocity_type)
+    {
+    case(Frame_velocity_types::parent_frame):
+        _frame_velocity = _Qcp * frame_velocity;
+        break;
+    case(Frame_velocity_types::this_frame):
+        _frame_velocity = frame_velocity;
+        break;
+    default:
+        throw lion_exception("[ERROR] Frame() -> frame_velocity_type is not recognized");
+    }
+
 
     return;
 }  
 
 
 template<typename T>
-constexpr inline void Frame<T>::set_velocity(const typename Frame<T>::tVector3d& dx, const bool bUpdate)
+constexpr inline void Frame<T>::set_velocity(const typename Frame<T>::tVector3d& frame_velocity, const Frame_velocity_types& frame_velocity_type)
 { 
     if (is_inertial())
         return;
-    
-    _dx = dx; 
-    _updated = false; 
-        
-    if ( bUpdate )
-        update();
+
+    switch (frame_velocity_type)
+    {
+    case(Frame_velocity_types::parent_frame):
+        _frame_velocity = _Qcp * frame_velocity;
+        break;
+    case(Frame_velocity_types::this_frame):
+        _frame_velocity = frame_velocity;
+        break;
+    default:
+        throw lion_exception("[ERROR] Frame() -> frame_velocity_type is not recognized");
+    }
 
     return;
 }

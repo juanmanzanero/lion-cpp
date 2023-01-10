@@ -13,23 +13,27 @@ class Frame
     using tVector3d = Vector3d<T>;
     using tMatrix3x3 = Matrix3x3<T>;
 
+    enum Frame_velocity_types { parent_frame, this_frame };
+
     //!  Default constructor. Returns an inertial frame
     Frame() = default;
 
     //!  Constructor for non-inertial frames
     //!
     //! @param[in] x: Origin coordinates in \p parent Frame [m]
-    //! @param[in] dx: Origin velocity in \p parent Frame [m/s]
+    //! @param[in] dx: Origin velocity in \p parent or this Frame [m/s]
     //! @param[in] angles: Vector of rotation angles [rad]
     //! @param[in] dangles: Vector of rotation angles derivatives [rad/s]
     //! @param[in] axis: Vector of axis of rotations: X, Y, or Z
     //! @param[in] parent: Frame for which all the quantities above are referred to
+    //! @param[in] velocity_frame: specify frame in which the velocity refers to
     Frame(const tVector3d& x, 
-          const tVector3d& dx, 
+          const tVector3d& frame_velocity, 
           const std::vector<T> angles, 
           const std::vector<T> dangles,
           const std::vector<Axis> axis, 
-          const Frame& parent
+          const Frame& parent,
+          const Frame_velocity_types& frame_velocity_type
          );
 
     //!  Updates all internal data members: rotation matrices and angular velocity vectors
@@ -54,7 +58,7 @@ class Frame
     constexpr const tVector3d& get_origin() const { return _x; }
 
     //!  Returns a const reference to the origin velocity (in \p parent Frame)
-    constexpr const tVector3d& get_relative_velocity() const { return _dx; } 
+    constexpr tVector3d get_relative_velocity_in_parent() const { return _Qpc*_frame_velocity; } 
 
     //!  Returns a const reference to the rotation angles vector
     constexpr const std::vector<T>& get_rotation_angles() const { return _angles; } 
@@ -205,19 +209,18 @@ class Frame
 
     //! Set the origin of the frame
     //! @param[in] x: new origin [m]
-    //! @param[in] bUpdate: if true, will call update()
-    constexpr void set_origin(const tVector3d& x, const bool bUpdate = true);
+    constexpr void set_origin(const tVector3d& x);
 
     //! Set the origin and velocity of the frame
     //! @param[in] x: new origin [m]
     //! @param[in] dx: new velocity [m/s]
     //! @param[in] bUpdate: if true, will call update()
-    constexpr void set_origin(const tVector3d& x, const tVector3d& dx, const bool bUpdate = true);
+    constexpr void set_origin(const tVector3d& x, const tVector3d& frame_velocity, const Frame_velocity_types& frame_velocity_type);
 
     //! Set the velocity of the frame
     //! @param[in] dx: new velocity [m/s]
     //! @param[in] bUpdate: if true, will call update()
-    constexpr void set_velocity(const tVector3d& dx, const bool bUpdate = true);
+    constexpr void set_velocity(const tVector3d& frame_velocity, const Frame_velocity_types& frame_velocity_type);
   
     //! Set a rotation angle
     //! @param[in] which: index of the angle
@@ -250,7 +253,7 @@ class Frame
     //! Settable parameters
     const Frame* _parent = nullptr; //! Parent frame
     tVector3d _x;                   //! Origin coordinates in parent frame
-    tVector3d _dx;                  //! Origin velocity in parent frame
+    tVector3d _frame_velocity;      //! Origin velocity in this frame
 
     std::vector<T>    _angles;  //! Rotation angles
     std::vector<T>    _dangles; //! Rotation angles derivatives

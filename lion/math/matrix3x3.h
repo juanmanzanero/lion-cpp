@@ -90,7 +90,7 @@ struct Matrix3x3 : std::array<T, 9>
 
     constexpr Matrix3x3& operator=(const base_type &arr);
 
-
+    std::pair<Vector3d<T>, std::array<Vector3d<T>, 3>> eig() const;
 };
 
 template <typename T>

@@ -93,7 +93,7 @@ class Xml_element
 
     //! Get attribute by name
     //! @param[in] attribute: name of the attribute
-    std::string get_attribute(const std::string& attribute) const { return _e->Attribute(attribute.c_str()); }
+    std::string get_attribute(const std::string& attribute) const;
 
     //! Get attribute as double
     //! @param[in] attribute: name of the attribute

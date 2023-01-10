@@ -35,7 +35,7 @@ void generic_inertial_frame_tests(sFrame& inertial_frame)
     for ( size_t i = 0; i < 3; i++ )
     {
         EXPECT_EQ(inertial_frame.get_origin().at(i), 0.0 );
-        EXPECT_EQ(inertial_frame.get_relative_velocity().at(i), 0.0);
+        EXPECT_EQ(inertial_frame.get_relative_velocity_in_parent().at(i), 0.0);
     } 
 
     EXPECT_EQ(inertial_frame.get_rotation_angles().size(), 0u);
@@ -78,14 +78,14 @@ TEST_F(Inertial_frame_test, Inertial_frame_test_set_origin)
 
 TEST_F(Inertial_frame_test, Inertial_frame_test_set_origin_and_velocity) 
 { 
-    inertial_frame.set_origin({1.0, 2.0, 3.0}, {4.0, 5.0, 6.0} );
+    inertial_frame.set_origin({1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, sFrame::Frame_velocity_types::parent_frame );
     generic_inertial_frame_tests(inertial_frame);
 }
 
 
 TEST_F(Inertial_frame_test, Inertial_frame_test_set_velocity) 
 { 
-    inertial_frame.set_velocity({9.0, 10.0, 11.0} );
+    inertial_frame.set_velocity({9.0, 10.0, 11.0}, sFrame::Frame_velocity_types::parent_frame);
     generic_inertial_frame_tests(inertial_frame);
 }
 

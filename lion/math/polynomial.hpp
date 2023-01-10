@@ -1,9 +1,9 @@
-#ifndef __POLYNOMIAL_HPP__
-#define __POLYNOMIAL_HPP__
+#ifndef POLYNOMIAL_HPP
+#define POLYNOMIAL_HPP
 
 #include <numeric>
 
-template<class T>
+template<typename T>
 inline Polynomial<T>::Polynomial()
 : _n_blocks(0),
   _n(0),
@@ -15,7 +15,7 @@ inline Polynomial<T>::Polynomial()
 {}
 
 
-template<class T>
+template<typename T>
 inline Polynomial<T>::Polynomial(const std::vector<scalar>& x0, const std::vector<T>& y0, const size_t N, bool smooth)
 : _n_blocks(smooth ? 1 : (x0.size()-1)/(N) + ( ((x0.size()-1 % (N))!=0) ? 1.0 : 0.0 )),
   _n(_n_blocks,N),
@@ -91,7 +91,7 @@ inline Polynomial<T>::Polynomial(const std::vector<scalar>& x0, const std::vecto
 }
 
 
-template<class T>
+template<typename T>
 inline Polynomial<T>::Polynomial(const std::vector<size_t>& N, const std::vector<scalar>& ai, const std::vector<scalar>& bi, 
     const std::vector<std::vector<T>>& coeffs)
 : _n_blocks(coeffs.size()),
@@ -110,7 +110,7 @@ inline Polynomial<T>::Polynomial(const std::vector<size_t>& N, const std::vector
 }
 
 
-template<class T>
+template<typename T>
 inline Polynomial<T>::Polynomial(const double x0, const std::vector<scalar>& L, const std::vector<std::vector<T>>& y0)
 : _n_blocks(L.size()),
   _n(_n_blocks),
@@ -148,7 +148,7 @@ inline Polynomial<T>::Polynomial(const double x0, const std::vector<scalar>& L, 
 }
 
 
-template<class T>
+template<typename T>
 inline Polynomial<T>::Polynomial(const std::vector<std::vector<scalar>>& x0, const std::vector<std::vector<T>>& y0, 
         bool continuous, bool smooth)
 : _n_blocks(x0.size()),
@@ -190,7 +190,7 @@ inline Polynomial<T>::Polynomial(const std::vector<std::vector<scalar>>& x0, con
 }
 
 
-template<class T>
+template<typename T>
 inline Polynomial<T>::Polynomial(const std::vector<Polynomial>& p)
 : _n_blocks(0)
 {
@@ -208,6 +208,16 @@ inline Polynomial<T>::Polynomial(const std::vector<Polynomial>& p)
     }
     _a = _ai.front();
     _b = _bi.back();
+}
+
+
+template<typename T>
+inline Polynomial<T> Polynomial<T>::get_block(const size_t block_id) const
+{
+    if (block_id >= _n_blocks)
+        throw lion_exception("[ERROR] Polynomial::get_block -> block_id is out of bounds");
+
+    return { {_n[block_id]},{_ai[block_id]},{_bi[block_id]},{_coeffs[block_id]} };
 }
 
 
@@ -264,7 +274,7 @@ inline typename combine_types<U,T>::type Polynomial<T>::operator()(const U& x) c
 }
 
 
-template<class T>
+template<typename T>
 inline Polynomial<T> Polynomial<T>::derivative() const
 {
     std::vector<std::vector<T>> coeffs(_n_blocks);
@@ -289,7 +299,7 @@ inline Polynomial<T> Polynomial<T>::derivative() const
 }
 
 
-template<class T>
+template<typename T>
 inline Polynomial<T> Polynomial<T>::integral() const
 {
     std::vector<std::vector<T>> coeffs(_n_blocks);
@@ -338,7 +348,29 @@ inline Polynomial<T> Polynomial<T>::integral() const
 }
 
 
-template<class T>
+template<typename T>
+constexpr bool Polynomial<T>::is_zero() const
+{
+    return is_zero([](const auto& coeff_i) { return std::abs(coeff_i) < 1.0e-12; });
+}
+
+template<typename T>
+template<typename UnaryOperation>
+constexpr bool Polynomial<T>::is_zero(UnaryOperation unary_op) const
+{
+    for (const auto& coeff : _coeffs)
+    {
+        if (!std::accumulate(coeff.cbegin(), coeff.cend(), true,
+            [&](const bool& is_zero, const auto& coeff_i) { return is_zero && unary_op(coeff_i); }))
+            return false;
+    }
+
+    return true;
+}
+
+
+
+template<typename T>
 inline std::vector<T> Polynomial<T>::compute_coefficients(const typename std::vector<scalar>::const_iterator& ix0, 
         const typename std::vector<T>::const_iterator& iy0, const size_t N)
 {
@@ -385,7 +417,7 @@ inline std::vector<T> Polynomial<T>::compute_coefficients(const typename std::ve
 }
 
 
-template<class T>
+template<typename T>
 inline std::vector<T> Polynomial<T>::compute_coefficients(const std::vector<T>& y0, const size_t N)
 {
     std::vector<T> coeffs(N+1,T());
@@ -418,7 +450,7 @@ inline std::vector<T> Polynomial<T>::compute_coefficients(const std::vector<T>& 
 }
 
 
-template<class T>
+template<typename T>
 inline std::vector<T> Polynomial<T>::compute_coefficients(const Polynomial& p, const size_t N)
 {
     // Get quadrature nodes and weights

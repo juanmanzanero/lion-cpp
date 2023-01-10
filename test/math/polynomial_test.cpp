@@ -37,6 +37,8 @@ TEST(Polynomial_test, empty_polynomial)
     sPolynomial p(0.0,L,y0);
 
     EXPECT_DOUBLE_EQ(p(3.14), 0.0);
+
+    EXPECT_TRUE(p.is_zero());
 }
 
 TEST(Polynomial_test, second_order_polynomial)
@@ -51,6 +53,8 @@ TEST(Polynomial_test, second_order_polynomial)
     EXPECT_NEAR(p.get_coeffs().at(0),1.0,2.0e-15);
     EXPECT_NEAR(p.get_coeffs().at(1),1.0,2.0e-15);
     EXPECT_NEAR(p.get_coeffs().at(2),0.0,2.0e-15);
+
+    EXPECT_FALSE(p.is_zero());
 }
 
 
@@ -63,6 +67,7 @@ TEST(Polynomial_test, fifth_order_polynomial)
     for (size_t i = 0; i < 6; ++i)
         EXPECT_NEAR(p(x0.at(i)),y0.at(i),5.0e-15);
 
+    EXPECT_FALSE(p.is_zero());
 }
 
 
@@ -75,6 +80,7 @@ TEST(Polynomial_test, tenth_order_polynomial)
     for (size_t i = 0; i < 6; ++i)
         EXPECT_NEAR(p(x0.at(i)),y0.at(i),6.0e-15);
 
+    EXPECT_FALSE(p.is_zero());
 }
 
 
@@ -90,6 +96,8 @@ TEST(Polynomial_test, derivative)
     for (size_t i = 0; i < 5; ++i)
         EXPECT_NEAR(dp(x0.at(i)), df(x0.at(i)),2.0e-14);
 
+    EXPECT_FALSE(p.is_zero());
+    EXPECT_FALSE(dp.is_zero());
 }
 
 TEST(Polynomial_test, integral)
@@ -128,6 +136,8 @@ TEST(Polynomial_test, smooth_polynomial)
 
     for (size_t i = 0; i < x0.size(); ++i)
         EXPECT_NEAR(p(x0[i])-y0[i], saved_error[i],1.0e-6);
+
+    EXPECT_FALSE(p.is_zero());
 }
 
 
@@ -145,6 +155,8 @@ TEST(Polynomial_test, piecewise_polynomial)
 
     for (size_t i = 0; i < x0.size(); ++i)
         EXPECT_NEAR(p(x0[i]),y0[i],3.0e-14);
+
+    EXPECT_FALSE(p.is_zero());
 }
 
 
@@ -297,4 +309,11 @@ TEST(Polynomial_test, cppad_polynomial_2)
 
     for (size_t i = 0; i < number_of_evaluations; ++i)
         EXPECT_NEAR(y0_jacobian.at(i + number_of_evaluations*i), 3.0*Value(x_to_evaluate.at(i)*x_to_evaluate.at(i)), 1.0e-12);
+}
+
+TEST(Polynomial_test, is_zero)
+{
+    sPolynomial p({ 0.0, 1.0 }, { 0.0, 0.0 }, 1, false);
+
+    EXPECT_TRUE(p.is_zero());
 }

@@ -1,5 +1,5 @@
-#ifndef __XML_ELEMENT_HPP__
-#define __XML_ELEMENT_HPP__
+#ifndef XML_ELEMENT_HPP
+#define XML_ELEMENT_HPP
 
 
 inline Xml_element::Xml_element(tinyxml2::XMLElement* e) : _e(e) 
@@ -196,6 +196,19 @@ inline bool Xml_element::has_child(const std::string& name) const
 
     else
         return child.has_child(the_rest);
+}
+
+inline std::string Xml_element::get_attribute(const std::string& attribute) const 
+{ 
+    if ( has_attribute(attribute) )
+        return _e->Attribute(attribute.c_str()); 
+    else
+    {
+        std::ostringstream s_out;
+        s_out << "[ERROR] Xml_element::get_attribute -> Attribute \"" + attribute + "\" was not found" << std::endl;
+        print(s_out);
+        throw lion_exception(s_out.str());
+    }
 }
 
 

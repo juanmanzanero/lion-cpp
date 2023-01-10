@@ -19,10 +19,10 @@ class Rolling_disk_test : public ::testing::TestWithParam<std::tuple<double,doub
     const scalar dalpha = std::get<1>(GetParam());
 
     sFrame inertial_frame = {};
-    sFrame inclined_frame = {sVector3d(0.0), sVector3d(0.0), {alpha}, {dalpha}, {Z}, inertial_frame};
-    sFrame frame1         = {{x0,R,0.0}, {omega*R,0.0,0.0},{}, {}, {}, inclined_frame};
-    sFrame frame2         = {sVector3d(0.0),sVector3d(0.0),{theta},{-omega},{Z}, frame1};
-    sFrame frame3         = {sVector3d(0.0), sVector3d(0.0), {-theta}, {0.0}, {Z}, frame2};
+    sFrame inclined_frame = {sVector3d(0.0), sVector3d(0.0), {alpha}, {dalpha}, {Z}, inertial_frame, sFrame::Frame_velocity_types::parent_frame};
+    sFrame frame1         = {{x0,R,0.0}, {omega*R,0.0,0.0},{}, {}, {}, inclined_frame, sFrame::Frame_velocity_types::parent_frame};
+    sFrame frame2         = {sVector3d(0.0),sVector3d(0.0),{theta},{-omega},{Z}, frame1, sFrame::Frame_velocity_types::parent_frame};
+    sFrame frame3         = {sVector3d(0.0), sVector3d(0.0), {-theta}, {0.0}, {Z}, frame2, sFrame::Frame_velocity_types::parent_frame};
 };
 
 
@@ -73,17 +73,17 @@ TEST_P(Rolling_disk_test, get_absolute_position)
     EXPECT_DOUBLE_EQ(frame3.get_absolute_position({0.0,-R,0.0}).at(2),           0.0);
 }
 
-TEST_P(Rolling_disk_test, get_relative_velocity)
+TEST_P(Rolling_disk_test, get_relative_velocity_in_parent)
 {
-    EXPECT_DOUBLE_EQ(frame1.get_relative_velocity().at(0),  omega*R);
-    EXPECT_DOUBLE_EQ(frame1.get_relative_velocity().at(1),      0.0);
-    EXPECT_DOUBLE_EQ(frame1.get_relative_velocity().at(2),      0.0);
+    EXPECT_DOUBLE_EQ(frame1.get_relative_velocity_in_parent().at(0),  omega*R);
+    EXPECT_DOUBLE_EQ(frame1.get_relative_velocity_in_parent().at(1),      0.0);
+    EXPECT_DOUBLE_EQ(frame1.get_relative_velocity_in_parent().at(2),      0.0);
 
     for (size_t i = 0; i < 3; ++i)
-        EXPECT_DOUBLE_EQ(frame2.get_relative_velocity().at(i), 0.0);
+        EXPECT_DOUBLE_EQ(frame2.get_relative_velocity_in_parent().at(i), 0.0);
 
     for (size_t i = 0; i < 3; ++i)
-        EXPECT_DOUBLE_EQ(frame3.get_relative_velocity().at(i), 0.0);
+        EXPECT_DOUBLE_EQ(frame3.get_relative_velocity_in_parent().at(i), 0.0);
 }
 
 

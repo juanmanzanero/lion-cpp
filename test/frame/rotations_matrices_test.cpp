@@ -12,14 +12,14 @@ class Rotated_frames_test : public ::testing::Test
 {
  protected:
     Rotated_frames_test(): inertial_frame(),
-                           frame_rot_x(sVector3d(0.0), sVector3d(0.0),{theta_x},{w_x},{X},inertial_frame),
-                           frame_rot_y(sVector3d(0.0), sVector3d(0.0),{theta_y},{w_y},{Y},inertial_frame),
-                           frame_rot_z(sVector3d(0.0), sVector3d(0.0),{theta_z},{w_z},{Z},inertial_frame),
-                           frame_rot_xy(sVector3d(0.0), sVector3d(0.0),{theta_x,theta_y},{w_x,w_y},{X,Y},inertial_frame),
-                           frame_rot_yz(sVector3d(0.0), sVector3d(0.0),{theta_y,theta_z},{w_y,w_z},{Y,Z},inertial_frame),
-                           frame_rot_zx(sVector3d(0.0), sVector3d(0.0),{theta_z,theta_x},{w_z,w_x},{Z,X},inertial_frame),
-                           frame_rot_xyz(sVector3d(0.0), sVector3d(0.0),{theta_x,theta_y,theta_z},{w_x,w_y,w_z},{X,Y,Z},inertial_frame),
-                           euler_frame(sVector3d(0.0), sVector3d(0.0), {phi,theta,psi},{dphi,dtheta,dpsi},{Z,X,Z},inertial_frame)
+                           frame_rot_x(sVector3d(0.0), sVector3d(0.0),{theta_x},{w_x},{X},inertial_frame, sFrame::Frame_velocity_types::parent_frame),
+                           frame_rot_y(sVector3d(0.0), sVector3d(0.0),{theta_y},{w_y},{Y},inertial_frame, sFrame::Frame_velocity_types::parent_frame),
+                           frame_rot_z(sVector3d(0.0), sVector3d(0.0),{theta_z},{w_z},{Z},inertial_frame, sFrame::Frame_velocity_types::parent_frame),
+                           frame_rot_xy(sVector3d(0.0), sVector3d(0.0),{theta_x,theta_y},{w_x,w_y},{X,Y},inertial_frame, sFrame::Frame_velocity_types::parent_frame),
+                           frame_rot_yz(sVector3d(0.0), sVector3d(0.0),{theta_y,theta_z},{w_y,w_z},{Y,Z},inertial_frame, sFrame::Frame_velocity_types::parent_frame),
+                           frame_rot_zx(sVector3d(0.0), sVector3d(0.0),{theta_z,theta_x},{w_z,w_x},{Z,X},inertial_frame, sFrame::Frame_velocity_types::parent_frame),
+                           frame_rot_xyz(sVector3d(0.0), sVector3d(0.0),{theta_x,theta_y,theta_z},{w_x,w_y,w_z},{X,Y,Z},inertial_frame, sFrame::Frame_velocity_types::parent_frame),
+                           euler_frame(sVector3d(0.0), sVector3d(0.0), {phi,theta,psi},{dphi,dtheta,dpsi},{Z,X,Z},inertial_frame, sFrame::Frame_velocity_types::parent_frame)
                   {} ;
 
     // Data used
@@ -75,15 +75,15 @@ class Rotation_wrt_target_test : public :: testing::Test
     const std::array<Axis,9> axis = {X,Y,Z,Z,Y,X,X,Z,X};
 
     const sFrame frame1;
-    const sFrame frame2 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[0]}, {dtheta[0]}, {axis[0]}, frame1);
-    const sFrame frame3 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[1]}, {dtheta[1]}, {axis[1]}, frame2);
-    const sFrame frame4 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[2]}, {dtheta[2]}, {axis[2]}, frame2);
-    const sFrame frame5 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[3]}, {dtheta[3]}, {axis[3]}, frame3);
-    const sFrame frame6 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[4]}, {dtheta[4]}, {axis[4]}, frame4);
-    const sFrame frame7 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[5]}, {dtheta[5]}, {axis[5]}, frame5);
-    const sFrame frame8 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[6]}, {dtheta[6]}, {axis[6]}, frame5);
-    const sFrame frame9 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[7]}, {dtheta[7]}, {axis[7]}, frame6);
-    const sFrame frame10 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[8]}, {dtheta[8]}, {axis[8]}, frame6);
+    const sFrame frame2 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[0]}, {dtheta[0]}, {axis[0]}, frame1, sFrame::Frame_velocity_types::parent_frame);
+    const sFrame frame3 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[1]}, {dtheta[1]}, {axis[1]}, frame2, sFrame::Frame_velocity_types::parent_frame);
+    const sFrame frame4 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[2]}, {dtheta[2]}, {axis[2]}, frame2, sFrame::Frame_velocity_types::parent_frame);
+    const sFrame frame5 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[3]}, {dtheta[3]}, {axis[3]}, frame3, sFrame::Frame_velocity_types::parent_frame);
+    const sFrame frame6 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[4]}, {dtheta[4]}, {axis[4]}, frame4, sFrame::Frame_velocity_types::parent_frame);
+    const sFrame frame7 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[5]}, {dtheta[5]}, {axis[5]}, frame5, sFrame::Frame_velocity_types::parent_frame);
+    const sFrame frame8 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[6]}, {dtheta[6]}, {axis[6]}, frame5, sFrame::Frame_velocity_types::parent_frame);
+    const sFrame frame9 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[7]}, {dtheta[7]}, {axis[7]}, frame6, sFrame::Frame_velocity_types::parent_frame);
+    const sFrame frame10 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[8]}, {dtheta[8]}, {axis[8]}, frame6, sFrame::Frame_velocity_types::parent_frame);
 
     const sFrame frame11;
 
@@ -219,7 +219,7 @@ void test_frame_1_rotation(const sFrame& frame, const sFrame& parent, Axis axis,
     for (int i = 0; i < 3; i++)
     {
         EXPECT_EQ(frame.get_origin().at(i), 0.0);
-        EXPECT_EQ(frame.get_relative_velocity().at(i), 0.0);
+        EXPECT_EQ(frame.get_relative_velocity_in_parent().at(i), 0.0);
 
         // Check that omega=(w_x,0,0) in both axis
         EXPECT_DOUBLE_EQ(frame.get_omega_wrt_parent_in_body().at(i),w*(double)(i==axis));
@@ -313,7 +313,7 @@ void test_frame_2_rotations(const sFrame& frame, const sFrame& parent, const std
     for (int i = 0; i < 3; i++)
     {
         EXPECT_EQ(frame.get_origin().at(i), 0.0);
-        EXPECT_EQ(frame.get_relative_velocity().at(i), 0.0);
+        EXPECT_EQ(frame.get_relative_velocity_in_parent().at(i), 0.0);
 
     }
 
@@ -421,7 +421,7 @@ void test_frame_3_rotations(const sFrame& frame, const sFrame& parent, const std
     for (int i = 0; i < 3; i++)
     {
         EXPECT_EQ(frame.get_origin().at(i), 0.0);
-        EXPECT_EQ(frame.get_relative_velocity().at(i), 0.0);
+        EXPECT_EQ(frame.get_relative_velocity_in_parent().at(i), 0.0);
 
     }
 
@@ -510,7 +510,7 @@ TEST_F(Rotated_frames_test, Bad_construction_test)
 {
     try
     {
-        sFrame error_frame(sVector3d(0.0), sVector3d(0.0), {0.0,1.0}, {0.0}, {X}, inertial_frame );
+        sFrame error_frame(sVector3d(0.0), sVector3d(0.0), {0.0,1.0}, {0.0}, {X}, inertial_frame, sFrame::Frame_velocity_types::parent_frame );
         FAIL();
     }
     catch(const lion_exception& error)
@@ -520,7 +520,7 @@ TEST_F(Rotated_frames_test, Bad_construction_test)
 
     try
     { 
-        sFrame error_frame(sVector3d(0.0), sVector3d(0.0), {0.0,1.0}, {0.0,1.0}, {X}, inertial_frame );
+        sFrame error_frame(sVector3d(0.0), sVector3d(0.0), {0.0,1.0}, {0.0,1.0}, {X}, inertial_frame, sFrame::Frame_velocity_types::parent_frame );
         FAIL();
     }
     catch(const lion_exception& error)
@@ -530,7 +530,7 @@ TEST_F(Rotated_frames_test, Bad_construction_test)
 
     try
     {
-        sFrame error_frame(sVector3d(0.0), sVector3d(0.0), {0.0,1.0}, {0.0,1.0}, {X,static_cast<Axis>(5)}, inertial_frame);
+        sFrame error_frame(sVector3d(0.0), sVector3d(0.0), {0.0,1.0}, {0.0,1.0}, {X,static_cast<Axis>(5)}, inertial_frame, sFrame::Frame_velocity_types::parent_frame);
         FAIL();
     }
     catch(const lion_exception& error)
@@ -678,11 +678,11 @@ TEST_F(Rotated_frames_test, Nested_rotation_frames)
 {
     using namespace std;
 
-    const sFrame euler_1st_rot(sVector3d(0.0), sVector3d(0.0), {phi}, {dphi}, {Z}, inertial_frame);
+    const sFrame euler_1st_rot(sVector3d(0.0), sVector3d(0.0), {phi}, {dphi}, {Z}, inertial_frame, sFrame::Frame_velocity_types::parent_frame);
 
-    const sFrame euler_2nd_rot(sVector3d(0.0), sVector3d(0.0), {theta}, {dtheta}, {X}, euler_1st_rot);
+    const sFrame euler_2nd_rot(sVector3d(0.0), sVector3d(0.0), {theta}, {dtheta}, {X}, euler_1st_rot, sFrame::Frame_velocity_types::parent_frame);
 
-    const sFrame euler_3rd_rot(sVector3d(0.0), sVector3d(0.0), {psi}, {dpsi}, {Z}, euler_2nd_rot);
+    const sFrame euler_3rd_rot(sVector3d(0.0), sVector3d(0.0), {psi}, {dpsi}, {Z}, euler_2nd_rot, sFrame::Frame_velocity_types::parent_frame);
 
     // Check the three rotations
     for ( size_t i = 0; i < 3; ++i)
