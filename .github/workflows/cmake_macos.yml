@@ -158,7 +158,7 @@ jobs:
       shell: bash     
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: cp ./frame/frame_test . && chmod +x ./frame_test && export LD_LIBRARY_PATH=${{runner.workspace}}:${LD_LIBRARY_PATH} && ./frame_test
+      run: cp ./frame/frame_test . && chmod +x ./frame_test && export DYLD_LIBRARY_PATH=${{runner.workspace}}:${DYLD_LIBRARY_PATH} && ./frame_test
 
   frame_test_debug:
   
@@ -186,7 +186,7 @@ jobs:
       shell: bash     
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: cp ./frame/frame_test . && chmod +x ./frame_test && export LD_LIBRARY_PATH=${{runner.workspace}}:${LD_LIBRARY_PATH} && ./frame_test
+      run: cp ./frame/frame_test . && chmod +x ./frame_test && export DYLD_LIBRARY_PATH=${{runner.workspace}}:${DYLD_LIBRARY_PATH} && ./frame_test
 
   math_test_release:
   
@@ -214,7 +214,7 @@ jobs:
       shell: bash     
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: cp ./math/math_test . && chmod +x ./math_test && export LD_LIBRARY_PATH=${{runner.workspace}}:${LD_LIBRARY_PATH} && ./math_test
+      run: cp ./math/math_test . && chmod +x ./math_test && export DYLD_LIBRARY_PATH=${{runner.workspace}}:${DYLD_LIBRARY_PATH} && ./math_test
 
   math_test_debug:
   
@@ -242,7 +242,7 @@ jobs:
       shell: bash     
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: cp ./math/math_test . && chmod +x ./math_test && export LD_LIBRARY_PATH=${{runner.workspace}}:${LD_LIBRARY_PATH} && ./math_test
+      run: cp ./math/math_test . && chmod +x ./math_test && export DYLD_LIBRARY_PATH=${{runner.workspace}}:${DYLD_LIBRARY_PATH} && ./math_test
 
   propagators_test_release:
   
@@ -275,7 +275,7 @@ jobs:
       shell: bash     
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: cp propagators/propagators_test . && chmod +x ./propagators_test && export LD_LIBRARY_PATH=${{runner.workspace}}:${LD_LIBRARY_PATH} && ./propagators_test
+      run: cp propagators/propagators_test . && chmod +x ./propagators_test && export DYLD_LIBRARY_PATH=${{runner.workspace}}:${DYLD_LIBRARY_PATH} && ./propagators_test
 
   propagators_test_debug:
   
@@ -308,7 +308,7 @@ jobs:
       shell: bash     
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: cp propagators/propagators_test . && chmod +x ./propagators_test && export LD_LIBRARY_PATH=${{runner.workspace}}:${LD_LIBRARY_PATH} && ./propagators_test
+      run: cp propagators/propagators_test . && chmod +x ./propagators_test && export DYLD_LIBRARY_PATH=${{runner.workspace}}:${DYLD_LIBRARY_PATH} && ./propagators_test
 
   io_test_release:
   
@@ -341,7 +341,7 @@ jobs:
       shell: bash     
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: cp io/io_test . && chmod +x ./io_test && export LD_LIBRARY_PATH=${{runner.workspace}}:${LD_LIBRARY_PATH} && ./io_test
+      run: cp io/io_test . && chmod +x ./io_test && export DYLD_LIBRARY_PATH=${{runner.workspace}}:${DYLD_LIBRARY_PATH} && ./io_test
 
   io_test_debug:
   
@@ -374,7 +374,7 @@ jobs:
       shell: bash     
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: cp io/io_test . && chmod +x ./io_test && export LD_LIBRARY_PATH=${{runner.workspace}}:${LD_LIBRARY_PATH} && ./io_test
+      run: cp io/io_test . && chmod +x ./io_test && export DYLD_LIBRARY_PATH=${{runner.workspace}}:${DYLD_LIBRARY_PATH} && ./io_test
 
   foundation_test_release:
   
@@ -402,7 +402,7 @@ jobs:
       shell: bash     
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: cp foundation/foundation_test . && chmod +x ./foundation_test && export LD_LIBRARY_PATH=${{runner.workspace}}:${LD_LIBRARY_PATH} && ./foundation_test
+      run: cp foundation/foundation_test . && chmod +x ./foundation_test && export DYLD_LIBRARY_PATH=${{runner.workspace}}:${DYLD_LIBRARY_PATH} && ./foundation_test
 
   foundation_test_debug:
   
@@ -430,7 +430,7 @@ jobs:
       shell: bash     
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: cp foundation/foundation_test . && chmod +x ./foundation_test && export LD_LIBRARY_PATH=${{runner.workspace}}:${LD_LIBRARY_PATH} && ./foundation_test
+      run: cp foundation/foundation_test . && chmod +x ./foundation_test && export DYLD_LIBRARY_PATH=${{runner.workspace}}:${DYLD_LIBRARY_PATH} && ./foundation_test
 
   remove_artifacts_release:
   
