@@ -103,5 +103,12 @@ struct combine_types<T,CppAD::AD<T>>
     using type = CppAD::AD<T>;    
 };
 
+template<typename T, size_t N>
+struct combine_types<T, std::array<T, N>>
+{
+    using type = std::array<T, N>;
+};
+
+
 
 #endif

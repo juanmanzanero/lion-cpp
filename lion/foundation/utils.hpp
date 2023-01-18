@@ -106,20 +106,6 @@ constexpr T wrap_to_360(T ang)
 }
 
 
-inline std::vector<double> string_to_double_vector(std::string s)
-{
-    std::vector<double> result;
-    s = std::regex_replace(s, std::regex(","), " ");
-    s = std::regex_replace(s, std::regex("\n"), " ");
-    std::string::size_type sz;
-    while ( s.find_first_of("0123456789") != std::string::npos )
-    {
-        result.push_back(std::stod(s,&sz));
-        s = s.substr(sz);
-    }
-
-    return result;
-}
 
 template<typename T>
 constexpr T smooth_pos(T a, scalar eps2)

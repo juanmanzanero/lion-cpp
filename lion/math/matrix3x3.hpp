@@ -742,7 +742,7 @@ namespace lioncpp
 
                         T g = d[l];
                         T p = (d[l + 1] - g) / (2.0f * e[l]);
-                        T r = hypot2(p, 1.0);
+                        T r = hypot2(p, T{ 1.0 });
                         if (p < 0) {
                             r = -r;
                         }

@@ -36,15 +36,19 @@ class Xml_element
 
     //! Get value as double vector
     //! @param[in] simply pass std::vector<double>() to overload this version
-    std::vector<double> get_value(std::vector<double>&&) { return string_to_double_vector(get_value()); }
+    std::vector<double> get_value(std::vector<double>&&) { return string_to_double_vector<double>(get_value()); }
+
+    //! Get value as float vector
+    //! @param[in] simply pass std::vector<float>() to overload this version
+    std::vector<float> get_value(std::vector<float>&&) { return string_to_double_vector<float>(get_value()); }
 
     //! Get value as vector3d
     //! @param[in] simply pass Vector3d() to overload this function
-    sVector3d get_value(sVector3d&&) { return sVector3d(string_to_double_vector(get_value())); }
+    sVector3d get_value(sVector3d&&) { return sVector3d(string_to_double_vector<double>(get_value())); }
 
     //! Get value as matrix3x3
     //! @param[in] simply pass Matrix3x3() to overload this function
-    sMatrix3x3 get_value(sMatrix3x3&&) { return transpose(sMatrix3x3(string_to_double_vector(get_value()))); }
+    sMatrix3x3 get_value(sMatrix3x3&&) { return transpose(sMatrix3x3(string_to_double_vector<double>(get_value()))); }
 
     //! Get value as bool
     //! @param[in] simply pass bool() to overload this function

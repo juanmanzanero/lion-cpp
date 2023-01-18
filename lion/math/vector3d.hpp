@@ -312,7 +312,7 @@ constexpr Vector3d<W> operator*(U val, const Vector3d<V> &rhs)
 template<typename T>
 constexpr Vector3d<T> operator/(const Vector3d<T> &lhs, T val)
 {
-    const auto inv_val{ 1. / val };
+    const auto inv_val{ T{1.} / val };
     return Vector3d<T>{ lhs.x() * inv_val,
         lhs.y() * inv_val,
         lhs.z() * inv_val };
