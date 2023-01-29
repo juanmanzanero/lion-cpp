@@ -55,6 +55,16 @@ target_include_directories(lion SYSTEM INTERFACE
 
 target_link_libraries(lion INTERFACE ipopt blaslapack tinyxml2)
 
+# Create a lion header only
+add_library(header_only INTERFACE)
+target_include_directories(header_only SYSTEM INTERFACE
+	"$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>"
+	"$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/lion/thirdparty/include>"
+	"$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>"
+	"$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>"
+	"$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}/lion/thirdparty/include>"
+)
+
 # Install lion
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/lion" TYPE INCLUDE)
 
@@ -88,7 +98,7 @@ install(FILES ${version_file} ${config_file}
   DESTINATION ${cmake_files_install_dir})
 
 # Export the targets
-install(TARGETS lion ipopt blaslapack tinyxml2
+install(TARGETS lion ipopt blaslapack tinyxml2 header_only
   EXPORT ${targets_export_name}
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
   ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"

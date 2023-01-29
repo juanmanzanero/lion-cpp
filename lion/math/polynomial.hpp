@@ -396,7 +396,7 @@ inline std::vector<T> Polynomial<T>::compute_coefficients(const typename std::ve
     for (size_t i = 0; i < N; ++i)
     {
         for (size_t j = 0; j <= N; ++j)
-            coeffs[i] += wj[j]*legendre_polynomial(i,xj[j])*yj[j];
+            coeffs[i] += yj[j]*(wj[j]*legendre_polynomial(i,xj[j]));
  
         // |Ln|2 = 2/(2n+1) 
         coeffs[i] *= (i + 0.5);
@@ -407,7 +407,7 @@ inline std::vector<T> Polynomial<T>::compute_coefficients(const typename std::ve
     for (size_t j = 0; j <= N; ++j)
     {
         const scalar Ln = legendre_polynomial(N,xj[j]);
-        coeffs[N] += wj[j]*Ln*yj[j];
+        coeffs[N] += yj[j]*(wj[j]*Ln);
         Ln_norm += wj[j]*Ln*Ln;
     }
 
@@ -429,7 +429,7 @@ inline std::vector<T> Polynomial<T>::compute_coefficients(const std::vector<T>& 
     for (size_t i = 0; i < N; ++i)
     {
         for (size_t j = 0; j <= N; ++j)
-            coeffs[i] += wj[j]*legendre_polynomial(i,xj[j])*y0[j];
+            coeffs[i] += y0[j]*(wj[j]*legendre_polynomial(i,xj[j]));
  
         // |Ln|2 = 2/(2n+1) 
         coeffs[i] *= (i + 0.5);
@@ -440,7 +440,7 @@ inline std::vector<T> Polynomial<T>::compute_coefficients(const std::vector<T>& 
     for (size_t j = 0; j <= N; ++j)
     {
         const scalar Ln = legendre_polynomial(N,xj[j]);
-        coeffs[N] += wj[j]*Ln*y0[j];
+        coeffs[N] += y0[j]*(wj[j]*Ln);
         Ln_norm += wj[j]*Ln*Ln;
     }
 
