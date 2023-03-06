@@ -325,6 +325,16 @@ inline VEC linsolve(int N, MAT A, const VEC& b)
 }
 
 
+template<typename T>
+constexpr std::vector<T> operator+(const std::vector<T>& lhs, const T& rhs)
+{
+    auto result = lhs;
+    std::for_each(result.begin(), result.end(), [&](auto& result_i) { result_i += rhs; });
+    
+    return result;
+}
+
+
 template <typename T,size_t N>
 std::ostream& operator<<(std::ostream &os, const std::array<T,N>& v)
 {

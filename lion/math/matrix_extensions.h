@@ -12,6 +12,7 @@
 template<typename VEC1, typename VEC2, typename is_vector<VEC1>::type* = nullptr, typename is_vector<VEC2>::type* = nullptr>
 constexpr VEC1 operator+(const VEC1& lhs, const VEC2& rhs );
 
+
 //! Increment vector by vector
 //! @param[in] lhs: left hand side vector
 //! @param[in] rhs: right hand side vector
@@ -120,6 +121,10 @@ constexpr VEC operator*(const T& lhs, const VEC& rhs) { return rhs*lhs; }
 //! @param[in] rhs: divisor vector
 template<typename VEC1, typename VEC2, typename is_vector<VEC1>::type* = nullptr, typename is_vector<VEC2>::type* = nullptr>
 constexpr VEC1 operator/(const VEC1& lhs, const VEC2& rhs);
+
+//! Add a std::vector and a scalar
+template<typename T>
+constexpr std::vector<T> operator+(const std::vector<T>& lhs, const T& rhs);
 
 //! Solve a linear system of order N, with matrix A and vector b
 //! @param[in] N: order of the system
