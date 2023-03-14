@@ -110,7 +110,7 @@ struct combine_types<T, std::array<T, N>>
 };
 
 template<typename T, typename U>
-using combine_types_t = combine_types<T, U>::type;
+using combine_types_t = typename combine_types<T, U>::type;
 
 
 /// Type-trait style function to eliminate copy constructors (via std::enable_if) from a class constructor template that
