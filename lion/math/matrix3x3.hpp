@@ -391,10 +391,11 @@ constexpr Matrix3x3<T> operator-(const Matrix3x3<T> &lhs, const Matrix3x3<T> &rh
         lhs.zx() - rhs.zx(), lhs.zy() - rhs.zy(), lhs.zz() - rhs.zz() };
 }
 
-template<typename T>
-constexpr Matrix3x3<T> operator*(const Matrix3x3<T> &lhs, const Matrix3x3<T> &rhs)
+template <typename T, typename U>
+constexpr Matrix3x3<combine_types_t<T, U> > operator*(const Matrix3x3<T> &lhs, const Matrix3x3<U> &rhs)
 {
-    return Matrix3x3<T>{ lhs.xx() * rhs.xx() + lhs.xy() * rhs.yx() + lhs.xz() * rhs.zx(),
+    return Matrix3x3<combine_types_t<T, U> >{
+        lhs.xx() * rhs.xx() + lhs.xy() * rhs.yx() + lhs.xz() * rhs.zx(),
         lhs.xx() * rhs.xy() + lhs.xy() * rhs.yy() + lhs.xz() * rhs.zy(),
         lhs.xx() * rhs.xz() + lhs.xy() * rhs.yz() + lhs.xz() * rhs.zz(),
 
@@ -488,10 +489,11 @@ inline std::istream &operator>>(std::istream &is, Matrix3x3<T> &m)
 }
 
 
-template<typename T>
-constexpr Vector3d<T> operator*(const Matrix3x3<T> &m, const Vector3d<T> &v)
+template <typename T, typename U>
+inline Vector3d<combine_types_t<T, U> > operator*(const Matrix3x3<T> &m, const Vector3d<U> &v)
 {
-    return Vector3d<T>{ m.xx() * v.x() + m.xy() * v.y() + m.xz() * v.z(),
+    return Vector3d<combine_types_t<T, U> >{
+        m.xx() * v.x() + m.xy() * v.y() + m.xz() * v.z(),
         m.yx() * v.x() + m.yy() * v.y() + m.yz() * v.z(),
         m.zx() * v.x() + m.zy() * v.y() + m.zz() * v.z() };
 }

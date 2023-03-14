@@ -1,90 +1,103 @@
-#ifndef LINEAR_ALGEBRA_H
-#define LINEAR_ALGEBRA_H
+#ifndef LION_MATH_LINEAR_ALGEBRA_H
+#define LION_MATH_LINEAR_ALGEBRA_H
+
 
 #include <cmath>
 
-// matmul
+
+//
+// Defines functions that perform linear algebra
+// operations with dense matrices. They're written
+// in classic C-style, since they come from generating
+// Matlab code.
+//
+
+
 template<typename T>
-static void matmul(T *X, const T *A, const T *B, int rows_A, int cols_A_rows_B, int cols_B)
+inline void matmul(T *X, const T *A, const T *B, int rows_A, int cols_A_rows_B, int cols_B)
 {
-    // X = A * B
+    //
+    // Fills the result of multiplying two dense matrices in column-major
+    // order, i.e., "X = A * B". Solution "X" must be preallocated on
+    // entry, to size "rows_A * cols_B", and is also a column-major matrix.
+    // The number of columns of "A" must coincide with the number of rows
+    // of "B", equal to input "cols_A_rows_B".
+    //
 
     if (cols_A_rows_B != 1) {
-
-        auto k{ cols_A_rows_B };
-        auto m{ rows_A };
-        auto c{ rows_A * (cols_B - 1) };
+        const auto c{ rows_A * (cols_B - 1) };
         auto br{ 0 };
         auto cr{ 0 };
 
         while (cr <= c) {
-            auto i0{ cr + m };
-            for (auto ic = cr; ic + 1 <= i0; ic++) {
-                X[ic] = static_cast<T>(0.0);
+            const auto i0{ cr + rows_A };
+            for (auto ic = cr; ic < i0; ic++) {
+                X[ic] = T{ 0 };
             }
-            cr += m;
+            cr += rows_A;
         }
 
         cr = 0;
         while (cr <= c) {
             auto ar{ -1 };
-            auto i0{ br + k };
-            for (auto ib = br; ib + 1 <= i0; ++ib) {
-                if (B[ib] != static_cast<T>(0.0)) {
+            const auto i0{ br + cols_A_rows_B };
+            for (auto ib = br; ib < i0; ++ib) {
+                if (B[ib] != T{ 0 }) {
                     auto ia{ ar };
-                    auto i1{ cr + m };
-                    for (auto ic = cr; ic + 1 <= i1; ++ic) {
+                    const auto i1{ cr + rows_A };
+                    for (auto ic = cr; ic < i1; ++ic) {
                         ++ia;
                         X[ic] += B[ib] * A[ia];
                     }
                 }
-                ar += m;
+                ar += rows_A;
             }
-            br += k;
-            cr += m;
+            br += cols_A_rows_B;
+            cr += rows_A;
         }
     }
     else {
-        auto br{ rows_A };
-        auto ar{ cols_B };
-        auto c{ cols_A_rows_B };
-        for (auto i0 = 0; i0 < br; ++i0) {
-            for (auto i1 = 0; i1 < ar; ++i1) {
-                X[i0 + rows_A * i1] = static_cast<T>(0.0);
-                for (auto cr = 0; cr < c; ++cr) {
+        for (auto i0 = 0; i0 < rows_A; ++i0) {
+            for (auto i1 = 0; i1 < cols_B; ++i1) {
+                X[i0 + rows_A * i1] = T{ 0 };
+                for (auto cr = 0; cr < cols_A_rows_B; ++cr) {
                     X[i0 + rows_A * i1] +=
                         A[i0 + rows_A * cr] * B[cr + cols_A_rows_B * i1];
                 }
             }
         }
     }
-    return;
 }
 
-// lusolve
+
 template<typename T>
 inline int lusolve(T *B, T *A, int rows_A, int cols_B)
 {
-    // A * X = B (square problem), solved through LU with partial pivoting (A = P * L * U)
-    // ---> in this function, T *B must enter as a copy of B, and exits as X.
-    //                        T *A enters as a copy of A, and exits as the LU factors (A = P * L * U, where P 
-    //                        is a permutation matrix that could be reconstructed using the ipiv local variable, 
-    //                        since the i-th row of matrix A has been interchanged with row ipiv[i]).
-    // ---> function returns 0 upon successful exit
+    //
+    // Direct solve of the dense square problem "A * X = B", via LU with
+    // partial pivoting (i.e., applying a decomposition "A = P * L * U").
+    // All matrices are in column-major order. On entry, "B" contains the
+    // problem's RHS (which may have multiple colums), and holds solution
+    // "X" on return. Matrix "A" must hold the problem's LHS matrix on
+    // entry, and exits as the LU factors ("A = P * L * U", where P is a
+    // permutation matrix that could be reconstructed using the ipiv local
+    // variable, since the i-th row of matrix "A" is interchanged with row
+    // "ipiv[i]"). The function returns 0 upon successful exit.
+    //
 
-    auto info{ 0 }; // ret value
+    int ret{ 0 };
 
-    auto n{ rows_A };
-    auto *ipiv{ new int[n] };
+    const auto n{ rows_A };
+    auto *const ipiv{ new int[n] };
     for (auto i = 0; i < n; ++i) {
         ipiv[i] = i + 1;
     }
 
-    auto u1{ n - 1 };
     auto jA{ 0 };
-    for (auto j = 0; j + 1 <= u1; j++) {
-        auto mmj{ n - j };
-        auto c{ j * (n + 1) };
+    const auto nm1{ n - 1 };
+    for (auto j = 0; j < nm1; j++) {
+        const auto mmj{ n - j };
+        const auto c{ j * (n + 1) };
 
         if (mmj < 1) {
             jA = -1;
@@ -94,7 +107,7 @@ inline int lusolve(T *B, T *A, int rows_A, int cols_B)
             if (mmj > 1) {
                 auto iX{ c };
                 auto smax{ std::abs(A[c]) };
-                for (auto k = 1; k + 1 <= mmj; ++k) {
+                for (auto k = 1; k < mmj; ++k) {
                     ++iX;
                     auto s{ std::abs(A[iX]) };
                     if (s > smax) {
@@ -105,7 +118,7 @@ inline int lusolve(T *B, T *A, int rows_A, int cols_B)
             }
         }
 
-        if (A[c + jA] != static_cast<T>(0.0)) {
+        if (A[c + jA] != T{ 0 }) {
             if (jA != 0) {
                 ipiv[j] = j + jA + 1;
                 auto iX{ j };
@@ -118,24 +131,24 @@ inline int lusolve(T *B, T *A, int rows_A, int cols_B)
                     iy += n;
                 }
             }
-            auto i0{ c + mmj };
-            for (jA = c + 1; jA + 1 <= i0; ++jA) {
+            const auto i0{ c + mmj };
+            for (jA = c + 1; jA < i0; ++jA) {
                 A[jA] /= A[c];
             }
         }
         else {
-            info = j + 1;
+            ret = j + 1;
         }
 
-        auto kAcol{ n - j - 1 };
+        const auto kAcol{ n - j - 1 };
         jA = c + n;
         auto iy{ c + n };
         for (auto nb = 1; nb <= kAcol; ++nb) {
-            auto smax{ A[iy] };
-            if (A[iy] != static_cast<T>(0.0)) {
+            const auto smax{ A[iy] };
+            if (A[iy] != T{ 0 }) {
                 auto iX{ c + 1 };
-                auto i0{ mmj + jA };
-                for (auto k = 1 + jA; k + 1 <= i0; ++k) {
+                const auto i0{ mmj + jA };
+                for (auto k = 1 + jA; k < i0; ++k) {
                     A[k] += A[iX] * -smax;
                     ++iX;
                 }
@@ -147,52 +160,49 @@ inline int lusolve(T *B, T *A, int rows_A, int cols_B)
 
     }
 
-    auto nb{ cols_B };
-    for (auto iy = 0; iy + 1 < n; ++iy) {
+    for (auto iy = 0; iy < nm1; ++iy) {
         if (ipiv[iy] != iy + 1) {
-            auto kAcol{ ipiv[iy] - 1 };
-            for (jA = 0; jA + 1 <= nb; ++jA) {
-                auto smax{ B[iy + n * jA] };
+            const auto kAcol{ ipiv[iy] - 1 };
+            for (jA = 0; jA < cols_B; ++jA) {
+                const auto smax{ B[iy + n * jA] };
                 B[iy + n * jA] = B[kAcol + n * jA];
                 B[kAcol + n * jA] = smax;
             }
         }
     }
 
-    for (auto j = 1; j <= nb; ++j) {
-        auto iy{ n * (j - 1) };
-        for (auto k = 0; k + 1 <= n; ++k) {
-            auto kAcol{ n * k };
-            if (B[k + iy] != static_cast<T>(0.0)) {
-                for (jA = k + 1; jA + 1 <= n; ++jA) {
+    for (auto j = 1; j <= cols_B; ++j) {
+        const auto iy{ n * (j - 1) };
+        for (auto k = 0; k < n; ++k) {
+            const auto kAcol{ n * k };
+            if (B[k + iy] != T{ 0 }) {
+                for (jA = k + 1; jA < n; ++jA) {
                     B[jA + iy] -= B[k + iy] * A[jA + kAcol];
                 }
             }
         }
     }
 
-    for (auto j = 1; j <= nb; ++j) {
-        auto iy{ n * (j - 1) };
+    for (auto j = 1; j <= cols_B; ++j) {
+        const auto iy{ n * (j - 1) };
         for (auto k = n - 1; k + 1 > 0; --k) {
-            auto kAcol{ n * k };
-            if (B[k + iy] != static_cast<T>(0.0)) {
+            const auto kAcol{ n * k };
+            if (B[k + iy] != T{ 0 }) {
                 B[k + iy] /= A[k + kAcol];
-                for (jA = 0; jA + 1 <= k; ++jA) {
+                for (jA = 0; jA < k; ++jA) {
                     B[jA + iy] -= B[k + iy] * A[jA + kAcol];
                 }
             }
         }
     }
 
-    if ((info == 0) && (!(A[n * n - 1] != static_cast<T>(0.0)))) {
-        info = n;
+    if (ret == 0 && !(A[n * n - 1] != T{ 0 })) {
+        ret = n;
     }
 
-    delete[] ipiv; ipiv = nullptr;
+    delete[] ipiv;
 
-    return info;
+    return ret;
 }
-
-
 
 #endif

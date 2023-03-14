@@ -94,13 +94,13 @@ struct combine_types<T,T>
 template<typename T>
 struct combine_types<CppAD::AD<T>,T>
 {
-    using type = CppAD::AD<T>;    
+    using type = CppAD::AD<T>;
 };
 
 template<typename T>
 struct combine_types<T,CppAD::AD<T>>
 {
-    using type = CppAD::AD<T>;    
+    using type = CppAD::AD<T>;
 };
 
 template<typename T, size_t N>
@@ -109,6 +109,33 @@ struct combine_types<T, std::array<T, N>>
     using type = std::array<T, N>;
 };
 
+template<typename T, typename U>
+using combine_types_t = combine_types<T, U>::type;
 
+
+/// Type-trait style function to eliminate copy constructors (via std::enable_if) from a class constructor template that
+/// only has variadic arguments (i.e., "template<typename... Args> ClassName(Args&&...) { ... }").
+/**
+* @tparam Class The constructed class.
+* @tparam FirstArg The first parameter of the class's ctor.
+* @tparam RestOfArgs The rest of parameters of the class's ctor.
+* @tparam std::enable_if_t<...> To declare that a ctor with this signature can never be a copy ctor.
+* @return True.
+*/
+template<class Class, typename FirstArg, typename... RestOfArgs,
+    typename std::enable_if_t<sizeof...(RestOfArgs) != 0u || !std::is_same_v<Class, std::decay_t<FirstArg> > >* = nullptr>
+constexpr auto is_not_copy_ctor() { return true; }
+
+/// Type-trait style function to eliminate copy constructors (via std::enable_if) from a class constructor template that
+/// only has variadic arguments (i.e., "template<typename... Args> Class(Args&&...) { ... }").
+/**
+* @tparam Class The constructed class.
+* @tparam Arg The single parameter of the class's ctor.
+* @tparam std::enable_if_t<...> To declare that a ctor with this signature must be a copy ctor.
+* @return False.
+*/
+template<class Class, typename SingleArg,
+         typename std::enable_if_t<std::is_same_v<Class, std::decay_t<SingleArg> > >* = nullptr>
+constexpr auto is_not_copy_ctor() { return false; }
 
 #endif

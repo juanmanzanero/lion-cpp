@@ -1,5 +1,5 @@
-#ifndef _TR7_BASE_VECTOR3D_H_
-#define _TR7_BASE_VECTOR3D_H_
+#ifndef LION_VECTOR3D_H
+#define LION_VECTOR3D_H
 
 
 #include <iostream>
@@ -11,19 +11,22 @@
 #include "lion/foundation/type_traits.h"
 #include "lion/foundation/types.h"
 
+
 //
 // Defines the typical 3 x 1 array of Ts.
 //
+
+
 template <typename T>
 struct Vector3d : std::array<T, 3>
 {
     //
     // 3D Vector [x; y; z], and its algebra
     //
+
     using base_type = std::array<T, 3>;
 
     static constexpr std::size_t size = std::tuple_size<base_type>::value;
-
 
     constexpr Vector3d() : base_type{} {}
     constexpr Vector3d(T x, T y, T z);
@@ -32,7 +35,7 @@ struct Vector3d : std::array<T, 3>
     explicit Vector3d(const std::vector<T> &v) noexcept(false);
 
     template<typename U>
-    explicit constexpr Vector3d(const Vector3d<U>& other);
+    explicit constexpr Vector3d(const Vector3d<U> &other);
 
     constexpr const T& x() const { return (*this)[0]; }
     constexpr const T& y() const { return (*this)[1]; }
@@ -45,6 +48,7 @@ struct Vector3d : std::array<T, 3>
     constexpr Vector3d& normalize();
 
     constexpr T norm() const;
+    constexpr T normsqr() const;
     constexpr T safe_norm(T tol = eps) const;
 
     constexpr static Vector3d zeros();
@@ -70,6 +74,9 @@ constexpr Vector3d<T> normalize(Vector3d<T> arg);
 
 template<typename T>
 constexpr T norm(const Vector3d<T> &arg);
+
+template<typename T>
+constexpr T normsqr(const Vector3d<T> &arg);
 
 template<typename T>
 constexpr T angle(const Vector3d<T> &lhs, const Vector3d<T> &rhs);

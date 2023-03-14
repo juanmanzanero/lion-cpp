@@ -139,8 +139,8 @@ constexpr Matrix3x3<T> operator-(const Matrix3x3<T> &rhs);
 template <typename T>
 constexpr Matrix3x3<T> operator-(const Matrix3x3<T> &lhs, const Matrix3x3<T> &rhs);
 
-template <typename T>
-constexpr Matrix3x3<T> operator*(const Matrix3x3<T> &lhs, const Matrix3x3<T> &rhs);
+template <typename T, typename U>
+constexpr Matrix3x3<combine_types_t<T, U> > operator*(const Matrix3x3<T> &lhs, const Matrix3x3<U> &rhs);
 
 
 template <typename T>
@@ -172,8 +172,8 @@ std::istream& operator>>(std::istream &is, Matrix3x3<T> &m);
 
 
 // outer operations
-template <typename T>
-constexpr Vector3d<T> operator*(const Matrix3x3<T> &m, const Vector3d<T> &v);
+template <typename T, typename U>
+inline Vector3d<combine_types_t<T, U> > operator*(const Matrix3x3<T> &m, const Vector3d<U> &v);
 
 template <typename T>
 constexpr Vector3d<T> operator*(const Vector3d<T> &v, const Matrix3x3<T> &m);

@@ -47,8 +47,16 @@ constexpr Vector3d<T>& Vector3d<T>::normalize()
 template<typename T>
 constexpr T Vector3d<T>::norm() const
 {
-    return sqrt(x() * x() + y() * y() + z() * z());
+    return sqrt(normsqr());
 }
+
+
+template<typename T>
+constexpr T Vector3d<T>::normsqr() const
+{
+    return x() * x() + y() * y() + z() * z();
+}
+
 
 template<typename T>
 constexpr T Vector3d<T>::safe_norm(T tol) const
@@ -170,6 +178,12 @@ template<typename T>
 constexpr T norm(const Vector3d<T> &arg)
 {
     return arg.norm();
+}
+
+template<typename T>
+constexpr T normsqr(const Vector3d<T> &arg)
+{
+    return arg.normsqr();
 }
 
 template<typename U, typename V, typename W>
