@@ -42,7 +42,7 @@ struct fsolve_trust_region_dodleg_result
     };
 
     // possible values for solution status
-    status_type status;
+    status_type status{ not_defined };
 
     // the approximation solution
     Dvector x;
@@ -144,7 +144,6 @@ inline fsolve_trust_region_dodleg_result<Dvector>
 
     // initialize & test convergence at initial point
     fsolve_trust_region_dodleg_result<Dvector> result;
-    result.status = decltype(result)::not_defined;
     result.iter_count = 1u;
     result.x = xi;
     result.g.resize(n);
