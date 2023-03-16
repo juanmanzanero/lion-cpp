@@ -1,7 +1,7 @@
 add_compile_options(-Wfatal-errors -Werror -Wall)
 
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
-	add_compile_options(-O0)
+	add_compile_options(-O0 -gdwarf-2)
 endif()
 
 if(CHECK_BOUNDS)

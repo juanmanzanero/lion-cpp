@@ -65,7 +65,7 @@ if (${BUILD_IPOPT})
     		--prefix=${THIRD_PARTY_DIR}/lion/thirdparty 
     		--enable-static=no --enable-shared=yes ${lapack_flags} ${disable_dependency_tracking} --libdir=${THIRD_PARTY_DIR}/lion/thirdparty/lib 
     		--with-metis-cflags=-I${THIRD_PARTY_DIR}/lion/thirdparty/include
-    		"--with-metis-lflags=-L${THIRD_PARTY_DIR}/lion/thirdparty/lib -lmetis -lGKlib"
+    		"--with-metis-lflags=-L${THIRD_PARTY_DIR}/lion/thirdparty/lib -lmetis -lGKlib -lm"
           BUILD_COMMAND cd ${THIRD_PARTY_DIR}/hsl/source && make && make install
           INSTALL_COMMAND ""
           UPDATE_COMMAND ""
@@ -95,7 +95,7 @@ if (${BUILD_IPOPT})
 		--prefix=${THIRD_PARTY_DIR}/lion/thirdparty 
 		--enable-static=no --enable-shared=yes ${lapack_flags} ${disable_dependency_tracking} --libdir=${THIRD_PARTY_DIR}/lion/thirdparty/lib
 		--with-metis-cflags=-I${THIRD_PARTY_DIR}/lion/thirdparty/include
-		"--with-metis-lflags=-L${THIRD_PARTY_DIR}/lion/thirdparty/lib -lmetis -lGKlib"
+		"--with-metis-lflags=-L${THIRD_PARTY_DIR}/lion/thirdparty/lib -lmetis -lGKlib -lm"
       BUILD_COMMAND cd ${THIRD_PARTY_DIR}/mumps/source && make && make install
       INSTALL_COMMAND ""
       UPDATE_COMMAND ""

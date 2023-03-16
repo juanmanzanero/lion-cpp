@@ -8,7 +8,7 @@ endif()
 
 if ( ${ENABLE_TEST} )
     # Google tests 
-    find_package(GTest PATHS ${CMAKE_BINARY_DIR})
+    find_package(GTest PATHS ${CMAKE_BINARY_DIR} NO_DEFAULT_PATH)
     
     if ( NOT ${GTest_FOUND})
         set(BUILD_GTEST YES)
@@ -62,7 +62,7 @@ message(STATUS "Configuration of fastest-lap")
 #######################################################################
 
 if ( ${ENABLE_TEST} )
-	find_package(GTest PATHS ${CMAKE_BINARY_DIR}/thirdparty REQUIRED)
+	find_package(GTest PATHS ${CMAKE_BINARY_DIR}/thirdparty REQUIRED NO_DEFAULT_PATH)
 endif()
 
 find_package(blaslapack REQUIRED)
