@@ -33,13 +33,21 @@ struct Root2d
 
 TEST(fsolve_trust_region_dodleg_test, solve_Root2d)
 {
+    const auto max_iters = 100;
+    const auto tolf = 1e-10;
+    const auto tolx = 1e-10;
+
     const auto solution = CppAD::fsolve_trust_region_dodleg(Root2d<CppAD::AD<double> >{},
-        std::vector<double>{ 0., 0. });
+        std::vector<double>{ 0., 0. }, max_iters, tolf, tolx);
 
     EXPECT_EQ(solution.status, decltype(solution)::success);
+    EXPECT_NEAR(solution.x[0], 0.35324661960, 1e-10);
+    EXPECT_NEAR(solution.x[1], 0.60608173664, 1e-10);
     EXPECT_NEAR(solution.g[0], 0., 1e-10);
     EXPECT_NEAR(solution.g[1], 0., 1e-10);
-    EXPECT_NEAR(solution.x[0], 0.3532466195, 1e-10);
-    EXPECT_NEAR(solution.x[1], 0.6060817366, 1e-10);
+    EXPECT_NEAR(solution.dg_dx_colmaj[0], -0.16699516067, 1e-10);
+    EXPECT_NEAR(solution.dg_dx_colmaj[1], 1.3905452857, 1e-10);
+    EXPECT_NEAR(solution.dg_dx_colmaj[2], -0.86358568558, 1e-10);
+    EXPECT_NEAR(solution.dg_dx_colmaj[3], 0.14471832326, 1e-10);
     EXPECT_LE(solution.iter_count, 6);
 }

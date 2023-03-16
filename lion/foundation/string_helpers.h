@@ -3,6 +3,7 @@
 #pragma once
 
 
+#include <cctype>
 #include <string>
 
 
@@ -94,6 +95,5 @@ inline std::string strtrim(std::string str)
     strtrim_in_place(str);
     return str;
 }
-
 
 #endif

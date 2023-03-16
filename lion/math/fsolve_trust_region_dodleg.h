@@ -5,7 +5,7 @@
 
 #include <numeric>
 
-#include <cppad/cppad.hpp>
+#include "cppad/cppad.hpp"
 
 #include "lion/math/linear_algebra.h"
 
@@ -30,14 +30,14 @@ struct fsolve_trust_region_dodleg_result
 
     enum status_type
     {
-        not_defined = -100,             // (initial status, before calling the function)
-        success = 1,                    // (equation solved, first-order optimality is small)
-        stop_at_tiny_step = 2,          // (change in x smaller than the specified tolerance, or Jacobian at x is undefined)
-        stop_at_acceptable_point = 3,   // (change in residual less than the specified tolerance)
-        maxiter_exceeded = 0,           // (max. number of iterations exceeded)
-        invalid_number_detected = -1,   // (NaN or Inf detected)
-        local_infeasibility = -2,       // (equation not solved)
-        error_in_step_computation = -3, // (trust region radius became too small)
+        not_defined = -100,             // initial status, before calling the function
+        success = 1,                    // equation solved, first-order optimality is small
+        stop_at_tiny_step = 2,          // change in x smaller than the specified tolerance, or Jacobian at x is undefined
+        stop_at_acceptable_point = 3,   // change in residual less than the specified tolerance
+        maxiter_exceeded = 0,           // max. number of iterations exceeded
+        invalid_number_detected = -1,   // NaN or Inf detected
+        local_infeasibility = -2,       // equation not solved
+        error_in_step_computation = -3, // trust region radius became too small
 
     };
 
@@ -47,12 +47,16 @@ struct fsolve_trust_region_dodleg_result
     // the approximation solution
     Dvector x;
 
-    // value of g(x)
+    // value of "g(x)"
     Dvector g;
 
-    // number of iterations of the method (here, num_iters == num_fun_evals)
-    std::size_t iter_count;
+    // jacobian of "g(x)" at the solution point (stored in
+    // column-major order)
+    Dvector dg_dx_colmaj;
 
+    // number of iterations of the method (here,
+    // num_iters == num_fun_evals)
+    std::size_t iter_count;
 };
 
 
@@ -90,15 +94,14 @@ inline fsolve_trust_region_dodleg_result<Dvector>
     const auto n = xi.size();
     ADvector a_g(n);
     g_eval(a_g, a_x);
-    CppAD::ADFun<scalar_type> adfun;
-    adfun.Dependent(a_x, a_g);
+    CppAD::ADFun<scalar_type> adfun(a_x, a_g);
 
     if (!retape) {
         adfun.optimize();
     }
 
     // define helper "subroutines" to evaluate the function "g",
-    // its dense-jacobian "jac" (which is stored in col-major order),
+    // its dense-jacobian (which is stored in col-major order),
     // the method's gradient "transpose(jac) * g" and its infinity-norm
     Dvector xwork(n);
     Dvector fwork(n);
@@ -147,8 +150,8 @@ inline fsolve_trust_region_dodleg_result<Dvector>
     result.iter_count = 1u;
     result.x = xi;
     result.g.resize(n);
-    Dvector jac(n * n);
-    update_g_and_dense_jac(result.g, jac, result.x, n);
+    result.dg_dx_colmaj.resize(n * n);
+    update_g_and_dense_jac(result.g, result.dg_dx_colmaj, result.x, n);
 
     auto Delta = scalar_type{ 1 };
     auto step_accept = true;
@@ -156,7 +159,7 @@ inline fsolve_trust_region_dodleg_result<Dvector>
     auto normd = scalar_type{ 0 };
     Dvector grad(n);
     scalar_type normgradinf;
-    update_grad_and_normgradinf(grad, normgradinf, jac, result.g, n);
+    update_grad_and_normgradinf(grad, normgradinf, result.dg_dx_colmaj, result.g, n);
 
     auto objold = scalar_type{ 1 };
     auto obj = scalar_type{ 0.5 } *
@@ -232,7 +235,7 @@ inline fsolve_trust_region_dodleg_result<Dvector>
     if (!test_stop(result.status,
         normgradinf, tolf, tolx,
         step_accept, result.iter_count, max_iters, Delta, normd,
-        obj, objold, d, result.x, jac, n)) {
+        obj, objold, d, result.x, result.dg_dx_colmaj, n)) {
 
         // main iteration loop, set up the method's subroutines
         // that calculate the step
@@ -241,14 +244,16 @@ inline fsolve_trust_region_dodleg_result<Dvector>
             auto n, const auto &g, const auto &jac, auto Delta,
             const auto &scales)
         {
-            // Approximately solves trust region subproblem via a dogleg approach,
-            // i.e., finds an approximate solution d to the problem :
+            //
+            // Approximately solves the trust region subproblem via a dogleg approach,
+            // i.e., finding an approximate solution "d" to problem:
             //
             //     min_d      f + g' * d + 0.5 * d' * Bd
             //     subject to || D * d|| <= Delta
             //
-            // where g is the gradient of f, B is a Hessian approximation of f, D is a
-            // diagonal scaling matrix and Delta is a given trust region radius.
+            // where "g" is the gradient of "f", "B" is a Hessian approximation of "f",
+            // "D" is a diagonal scaling matrix and "Delta" is a given trust region radius.
+            //
 
             auto &gradscal = grad_on_entry;
             auto &gradscal2 = step;
@@ -446,34 +451,34 @@ inline fsolve_trust_region_dodleg_result<Dvector>
 
         auto x_trial = result.x;
         auto g_trial = result.g;
-        Dvector jacwork(n * n);
+        Dvector jac_trial(n * n);
         scalar_type pred;
         scalar_type normdscal;
         do {
-            // compute step "d" using dogleg approach
+            // calculate the step "d" using the dogleg approach
             dogleg(d, pred, normd, normdscal,
-                grad, g_trial, jacwork,
-                n, result.g, jac, Delta, scales);
+                grad, g_trial, jac_trial,
+                n, result.g, result.dg_dx_colmaj, Delta, scales);
 
-            // compute the trial point
+            // calculate the trial point
             for (auto j = 0u; j < n; ++j) {
                 x_trial[j] = result.x[j] + d[j];
             }
 
-            // evaluate equations and objective at trial point
-            update_g_and_dense_jac(g_trial, jac, x_trial, n);
+            // evaluate the equations and the objective at the trial point
+            update_g_and_dense_jac(g_trial, jac_trial, x_trial, n);
             ++result.iter_count;
 
             const auto obj_trial = scalar_type{ 0.5 } *
                 std::inner_product(g_trial.cbegin(), g_trial.cend(), g_trial.cbegin(),
                     scalar_type{ 0 });
 
-            // compute ratio between the actual reduction given by x_trial
-            // and pred
+            // calculate the ratio between the actual reduction given
+            // by x_trial and pred
             const auto ratio = pred >= scalar_type{ 0 } ?
                 scalar_type{ 0 } : (obj_trial - obj) / pred;
 
-            // update fault tolerance
+            // update the fault tolerance
             const auto current_trial_well_defined = std::isfinite(obj_trial);
 
             // accept or reject the current step
@@ -481,13 +486,14 @@ inline fsolve_trust_region_dodleg_result<Dvector>
             if (step_accept) {
                 std::swap(result.x, x_trial);
                 std::swap(result.g, g_trial);
+                std::swap(result.dg_dx_colmaj, jac_trial);
                 objold = obj;
                 obj = obj_trial;
-                update_grad_and_normgradinf(grad, normgradinf, jac, result.g, n);
+                update_grad_and_normgradinf(grad, normgradinf, result.dg_dx_colmaj, result.g, n);
 
             }
 
-            // update trust region radius
+            // update the trust region's radius
             update_Delta(Delta,
                 ratio, normdscal, eta1, eta2,
                 alpha1, alpha2, DeltaMax, current_trial_well_defined);
@@ -495,7 +501,7 @@ inline fsolve_trust_region_dodleg_result<Dvector>
         } while (!test_stop(result.status,
             normgradinf, tolf, tolx,
             step_accept, result.iter_count, max_iters, Delta, normd,
-            obj, objold, d, result.x, jac, n));
+            obj, objold, d, result.x, result.dg_dx_colmaj, n));
     }
 
     return result;
