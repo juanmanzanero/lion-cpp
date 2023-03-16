@@ -9,6 +9,7 @@ include(GNUInstallDirs)
 
 # Options
 option(ENABLE_TEST "Enables tests" ON)
+option(WITH_HSL "Set to the location of the HSL zip file" OFF)
 
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/thirdparty)
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/thirdparty/include)

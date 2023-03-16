@@ -45,11 +45,7 @@ if (NOT ${cppad_FOUND})
     set(BUILD_CPPAD YES)
 endif()
 
-
 #######################################################################
-
-
-
 
 ##### BUILD ALL REQUIRED THIRD PARTY LIBRARIES ##########
 message(STATUS "Compilation of the required third party libraries")

@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-
-# set the project name
-project(fastest-lap-third-party VERSION 1.0)
+project(fastest-lap-third-party VERSION 1.0 LANGUAGES C CXX Fortran)
 
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
@@ -14,6 +12,7 @@ set(BUILD_TINYXML ${BUILD_TINYXML})
 set(BUILD_IPOPT ${BUILD_IPOPT})
 set(BUILD_LOGGERCPP ${BUILD_LOGGERCPP})
 set(BUILD_CPPAD ${BUILD_CPPAD})
+set(WITH_HSL ${WITH_HSL})
 
 set(CMAKE_C_COMPILER ${CMAKE_C_COMPILER})
 set(CMAKE_CXX_COMPILER ${CMAKE_CXX_COMPILER})
