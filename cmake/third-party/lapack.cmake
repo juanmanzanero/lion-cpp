@@ -16,6 +16,7 @@ ExternalProject_Add(lapack
                 -DCMAKE_INSTALL_LIBDIR=lib
                 -DCMAKE_POSITION_INDEPENDENT_CODE=ON
         	    -DBUILD_SHARED_LIBS:BOOL=NO
+                -DCMAKE_BUILD_TYPE=Release
                 ${THIRD_PARTY_DIR}/lapack/source
 )
 
