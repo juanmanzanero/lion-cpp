@@ -111,7 +111,7 @@ inline fsolve_trust_region_dodleg_result<Dvector>
         }
 
         const bool _retape;
-        G &&_g_eval;
+        G &_g_eval;
         ADvector _a_x;
         ADvector _a_g;
     };
