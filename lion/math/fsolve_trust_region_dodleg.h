@@ -60,20 +60,10 @@ struct fsolve_trust_region_dodleg_result
 };
 
 
-template<typename G, typename Dvector,
-    typename ScalarType = typename Dvector::value_type>
+template<typename G, typename Dvector, typename... Args>
 inline fsolve_trust_region_dodleg_result<Dvector>
-    fsolve_trust_region_dodleg(G &&g_eval, const Dvector &xi,
-        std::size_t max_iters = 1000u,
-        ScalarType tolx = ScalarType{ 1e-10 },
-        ScalarType tolf = ScalarType{ 1e-10 },
-        Dvector typical_x = Dvector{},
-        bool retape = false,
-        ScalarType DeltaMax = ScalarType{ 1e10 },
-        ScalarType eta1 = ScalarType{ 0.05 },
-        ScalarType eta2 = ScalarType{ 0.9 },
-        ScalarType alpha1 = ScalarType{ 2.5 },
-        ScalarType alpha2 = ScalarType{ 0.25 })
+    fsolve_trust_region_dodleg(G &&g_eval, bool retape,
+        const Dvector &xi, Args&&... args)
 {
     //
     // "trust-region-dodleg" method to solve the dense & unbounded
@@ -85,40 +75,90 @@ inline fsolve_trust_region_dodleg_result<Dvector>
     // standard ipopt interface for cost functions.
     //
 
-    // set up the AD function calling the function once
     using scalar_type = typename Dvector::value_type;
-    using ADvector = typename std::decay_t<G>::ADvector;
 
-    ADvector a_x(xi.cbegin(), xi.cend());
-    CppAD::Independent(a_x);
-    const auto n = xi.size();
-    ADvector a_g(n);
-    g_eval(a_g, a_x);
-    CppAD::ADFun<scalar_type> adfun(a_x, a_g);
+    // declare a helper ADfun type that can retape each time
+    // we call its member function "Forward"
+    struct adfun_with_retape_capability : CppAD::ADFun<scalar_type>
+    {
+        using base_type = CppAD::ADFun<scalar_type>;
+        using ADvector = typename std::decay_t<G>::ADvector;
 
-    if (!retape) {
-        adfun.optimize();
-    }
+        adfun_with_retape_capability(bool retape, G &&g_eval, const Dvector &xi)
+        :   _retape{ retape },
+            _g_eval{ g_eval },
+            _a_x(xi.cbegin(), xi.cend()),
+            _a_g(xi.size())
+        {
+            CppAD::Independent(_a_x);
+            _g_eval(_a_g, _a_x);
+            base_type::Dependent(_a_x, _a_g);
+            if (!_retape) {
+                base_type::optimize();
+            }
+        }
+
+        auto Forward(std::size_t q, const Dvector &x)
+        {
+            if (_retape) {
+                std::copy(x.cbegin(), x.cend(), _a_x.begin());
+                CppAD::Independent(_a_x);
+                _g_eval(_a_g, _a_x);
+                base_type::Dependent(_a_x, _a_g);
+            }
+
+            return base_type::Forward(q, x);
+        }
+
+        const bool _retape;
+        G &&_g_eval;
+        ADvector _a_x;
+        ADvector _a_g;
+    };
+
+    return fsolve_trust_region_dodleg(
+        adfun_with_retape_capability(retape, std::forward<G>(g_eval), xi),
+        xi, std::forward<Args>(args)...);
+}
+
+
+template<typename ADFunType, typename Dvector,
+    typename ScalarType = typename Dvector::value_type>
+inline fsolve_trust_region_dodleg_result<Dvector>
+    fsolve_trust_region_dodleg(ADFunType &&adfun, const Dvector &xi,
+        std::size_t max_iters = 1000u,
+        ScalarType tolx = ScalarType{ 1e-10 },
+        ScalarType tolf = ScalarType{ 1e-10 },
+        Dvector typical_x = Dvector{},
+        ScalarType DeltaMax = ScalarType{ 1e10 },
+        ScalarType eta1 = ScalarType{ 0.05 },
+        ScalarType eta2 = ScalarType{ 0.9 },
+        ScalarType alpha1 = ScalarType{ 2.5 },
+        ScalarType alpha2 = ScalarType{ 0.25 })
+{
+    //
+    // "trust-region-dodleg" method to solve a dense & unbounded
+    // SQUARE system of nonlinear constraints "g(x) = 0" (in which
+    // size(g) == size(x)), with seed vector "xi". The equations
+    // are represented by input "adfun", which MUST define a member
+    // function "Forward(std::size_t q, const Dvector &x)" to evaluate
+    // the equations and their first derivatives w.r.t. "x".
+    //
+
+    using scalar_type = typename Dvector::value_type;
 
     // define helper "subroutines" to evaluate the function "g",
     // its dense-jacobian (which is stored in col-major order),
     // the method's gradient "transpose(jac) * g" and its infinity-norm
+    const auto n = xi.size();
     Dvector xwork(n);
     Dvector fwork(n);
 
-    const auto update_g_and_dense_jac = [&g_eval, &adfun, &a_x, &a_g,
-        &xwork, &fwork, retape](auto &g, auto &jac, const auto &x, auto n)
+    const auto update_g_and_dense_jac = [&adfun, &xwork,
+        &fwork](auto &g, auto &jac, const auto &x, auto n)
     {
-        if (retape) {
-            std::copy(x.cbegin(), x.cend(), a_x.begin());
-            CppAD::Independent(a_x);
-            g_eval(a_g, a_x);
-            adfun.Dependent(a_x, a_g);
-        }
-
         g = adfun.Forward(0, x);
 
-        std::fill(xwork.begin(), xwork.end(), scalar_type{ 0 });
         for (auto j = 0u; j < n; ++j) {
             xwork[j] = scalar_type{ 1 };
             fwork = adfun.Forward(1, xwork);
