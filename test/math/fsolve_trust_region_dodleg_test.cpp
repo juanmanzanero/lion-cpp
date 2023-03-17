@@ -38,7 +38,7 @@ TEST(fsolve_trust_region_dodleg_test, solve_Root2d)
     const auto tolx = 1e-10;
 
     const auto solution = CppAD::fsolve_trust_region_dodleg(Root2d<CppAD::AD<double> >{},
-        std::vector<double>{ 0., 0. }, max_iters, tolf, tolx);
+        false, std::vector<double>{ 0., 0. }, max_iters, tolf, tolx);
 
     EXPECT_EQ(solution.status, decltype(solution)::success);
     EXPECT_NEAR(solution.x[0], 0.35324661960, 1e-10);

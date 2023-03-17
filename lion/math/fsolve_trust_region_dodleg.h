@@ -71,7 +71,7 @@ inline fsolve_trust_region_dodleg_result<Dvector>
     // size(g) == size(x)), with seed vector "xi". The Jacobian of
     // the "g" equations is calculated via CppAD. These equations
     // MUST define a member typedef "ADvector" and a member function
-    // "operator()(ADvector &g, const ADvector &x)", i.e., the
+    // "void operator()(ADvector &g, const ADvector &x)", i.e., the
     // standard ipopt interface for cost functions.
     //
 
@@ -116,6 +116,7 @@ inline fsolve_trust_region_dodleg_result<Dvector>
         ADvector _a_g;
     };
 
+    // call the solver with the ADFun
     return fsolve_trust_region_dodleg(
         adfun_with_retape_capability(retape, std::forward<G>(g_eval), xi),
         xi, std::forward<Args>(args)...);
@@ -141,8 +142,9 @@ inline fsolve_trust_region_dodleg_result<Dvector>
     // SQUARE system of nonlinear constraints "g(x) = 0" (in which
     // size(g) == size(x)), with seed vector "xi". The equations
     // are represented by input "adfun", which MUST define a member
-    // function "Forward(std::size_t q, const Dvector &x)" to evaluate
-    // the equations and their first derivatives w.r.t. "x".
+    // function "Dvector Forward(std::size_t q, const Dvector &x)"
+    // to evaluate the equations and their first derivatives
+    // w.r.t. "x".
     //
 
     using scalar_type = typename Dvector::value_type;
