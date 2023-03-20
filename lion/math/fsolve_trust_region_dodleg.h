@@ -359,19 +359,22 @@ inline fsolve_trust_region_dodleg_result<Dvector>
                 auto &dNewton = stepwork;
                 std::copy(g.cbegin(), g.cend(), dNewton.begin());
                 std::copy(jac.cbegin(), jac.cend(), jacwork.begin());
-                lusolve(dNewton.data(), jacwork.data(), n, 1);
-                for (auto i = 0u; i < n; ++i) {
-                    // scale the Gauss-Newton step
-                    dNewton[i] *= -scales[i];
-                }
+                const auto lusolve_failed =
+                    lusolve(dNewton.data(), jacwork.data(), n, 1) != 0;
 
-                if (!std::all_of(dNewton.cbegin(), dNewton.cend(),
-                    [](auto d) { return std::isfinite(d); })) {
+                if (lusolve_failed ||
+                    !std::all_of(dNewton.cbegin(), dNewton.cend(),
+                        [](auto d) { return std::isfinite(d); })) {
 
                     // take the Cauchy step if the Gauss-Newton step gives bad values
                     quadobj = objCauchy;
                 }
                 else {
+                    for (auto i = 0u; i < n; ++i) {
+                        // scale the Gauss-Newton step
+                        dNewton[i] *= -scales[i];
+                    }
+
                     const auto normdNewt2 =
                         std::inner_product(dNewton.cbegin(), dNewton.cend(),
                             dNewton.cbegin(), scalar_type{ 0 });

@@ -160,7 +160,8 @@ inline int lusolve(T *B, T *A, int rows_A, int cols_B)
 
     }
 
-    for (auto iy = 0; iy < nm1; ++iy) {
+    for (std::ptrdiff_t iy = 0; iy < nm1; ++iy) { // changed from "auto" to "std::ptrdiff_t"
+                                                  // to avoid a useless gcc warning
         if (ipiv[iy] != iy + 1) {
             const auto kAcol{ ipiv[iy] - 1 };
             for (jA = 0; jA < cols_B; ++jA) {

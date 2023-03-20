@@ -119,27 +119,72 @@ using combine_types_t = typename combine_types<T, U>::type;
 
 /// Type-trait style function to eliminate copy constructors (via std::enable_if) from a class constructor template that
 /// only has variadic arguments (i.e., "template<typename... Args> ClassName(Args&&...) { ... }").
-/**
-* @tparam Class The constructed class.
-* @tparam FirstArg The first parameter of the class's ctor.
-* @tparam RestOfArgs The rest of parameters of the class's ctor.
-* @tparam std::enable_if_t<...> To declare that a ctor with this signature can never be a copy ctor.
-* @return True.
-*/
+//!
+//! @tparam Class The constructed class.
+//! @tparam FirstArg The first parameter of the class's ctor.
+//! @tparam RestOfArgs The rest of parameters of the class's ctor.
+//! @tparam std::enable_if_t<...> To declare that a ctor with this signature can never be a copy ctor.
+//! @return True.
+//!
 template<class Class, typename FirstArg, typename... RestOfArgs,
     typename std::enable_if_t<sizeof...(RestOfArgs) != 0u || !std::is_same_v<Class, std::decay_t<FirstArg> > >* = nullptr>
 constexpr auto is_not_copy_ctor() { return true; }
 
 /// Type-trait style function to eliminate copy constructors (via std::enable_if) from a class constructor template that
 /// only has variadic arguments (i.e., "template<typename... Args> Class(Args&&...) { ... }").
-/**
-* @tparam Class The constructed class.
-* @tparam Arg The single parameter of the class's ctor.
-* @tparam std::enable_if_t<...> To declare that a ctor with this signature must be a copy ctor.
-* @return False.
-*/
+//!
+//! @tparam Class The constructed class.
+//! @tparam Arg The single parameter of the class's ctor.
+//! @tparam std::enable_if_t<...> To declare that a ctor with this signature must be a copy ctor.
+//! @return False.
+//!
 template<class Class, typename SingleArg,
     typename std::enable_if_t<std::is_same_v<Class, std::decay_t<SingleArg> > >* = nullptr>
 constexpr auto is_not_copy_ctor() { return false; }
+
+
+/// Helper template to declare a type that may be a dummy,
+/// empty type ("nothing") or an actual type, based on the
+/// value of a constexpr boolean flag. This is the primary
+/// template that gets used when the mentioned flag is false.
+//!
+//! @tparam ShouldBeType The constexpr boolean flag indicating
+//!   if the declared type should be an actual type (if true)
+//!   or an empty, dummy type (if false).
+//! @tparam (empty) To be used by its specialization.
+//!
+template<bool ShouldBeType, typename = void>
+struct type_or_nothing
+{
+  /// Struct representing an empty, dummy type.
+  struct nothing
+  {
+    /// Class ctor (does nothing, admits anything).
+    /**
+     * @tparam Args Parameter pack that won't get used.
+     */
+    template<typename... Args>
+    constexpr nothing(Args&&...) {}
+  };
+
+  /// Member type pointing to the empty, dummy type.
+  using type = nothing;
+};
+
+/// Specialization of the above template that gets used
+/// when the constexpr boolean flag is true.
+//!
+//! @tparam T The actual type we desire to declare.
+//!
+template<typename T>
+struct type_or_nothing<true, T>
+{
+  /// Member type pointing to the actual type we desire
+  /// to declare.
+  using type = T;
+};
+
+template<bool ShouldBeType, typename T>
+using type_or_nothing_t = typename type_or_nothing<ShouldBeType, T>::type;
 
 #endif
