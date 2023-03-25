@@ -23,8 +23,7 @@ constexpr auto pi{ pi_T<double> };
 constexpr auto eps{ eps_T<double> };
 constexpr auto inf{ inf_T<double> };
 constexpr auto Inf{ inf };
-constexpr auto nan{ nan_T<double> };
-constexpr auto NaN{ nan };
+constexpr auto NaN{ nan_T<double> };
 
 constexpr double g0{ 9.81 };
 constexpr double KMH{ 1.0 / 3.6 };
