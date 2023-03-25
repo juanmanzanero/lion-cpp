@@ -31,9 +31,11 @@ struct fsolve_trust_region_dodleg_result
     enum status_type
     {
         not_defined = -100,             // initial status, before calling the function
+
         success = 1,                    // equation solved, first-order optimality is small
         stop_at_tiny_step = 2,          // change in x smaller than the specified tolerance, or Jacobian at x is undefined
         stop_at_acceptable_point = 3,   // change in residual less than the specified tolerance
+
         maxiter_exceeded = 0,           // max. number of iterations exceeded
         invalid_number_detected = -1,   // NaN or Inf detected
         local_infeasibility = -2,       // equation not solved
