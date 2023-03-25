@@ -31,7 +31,7 @@ enum class basic_root_solvers_exitflag : int
     local_infeasibility = -2,         // equation not solved, possibly converged to a singular point
     invalid_number_detected = -3,     // NaN or Inf detected
     no_sign_change_found = -6,        // did not encounter a sign change of the objective function, roots cannot be found (fzero only)
-    same_sign_at_domain_limits = -200 // objective function has the same sign at both ends of the domain (fzero only)
+    same_sign_at_domain_limits = -200 // objective function has the same sign at both ends of the domain (fzero only, the routine may find a zero if lucky!)
 };
 
 
@@ -50,13 +50,14 @@ inline std::tuple<T, T,
     // Returns an std::tuple containing "[x, fval, exitflag]",
     // where "fval = fun(x)" which should be approx 0 when successful.
     //
-    // The "exitflag" can take the following values:
+    // The "exitflag" output can take the following values from enum class
+    // "basic_root_solvers_exitflag":
     //
-    //     * 1 (success) -> function converged to a solution x.
-    //     * -3          -> nan or inf function value was encountered.
-    //     * -5          -> the algorithm might have converged to a singular point.
-    //     * -6          -> fzero did not detect a sign change.
-    //     * -100        -> limit of max. numer of function evaluations was reached
+    //     * success                 -> function converged to a solution x.
+    //     * invalid_number_detected -> nan or inf function value was encountered.
+    //     * local_infeasibility     -> the algorithm might have converged to a singular point.
+    //     * no_sign_change_found    -> fzero did not detect a sign change.
+    //     * maxiter_exceeded        -> limit of max. numer of function evaluations was reached
     //
     // NOTE: this function comes from code generation of Matlab's "fzero".
     //
@@ -273,14 +274,15 @@ inline std::tuple<T, T,
     // The function returns an std::tuple containing "[x, fval, exitflag]",
     // where "fval = fun(x)", which should be approx 0 when successful.
     //
-    // The "exitflag" can take the following values:
+    // The "exitflag" output can take the following values from enum class
+    // "basic_root_solvers_exitflag":
     //
-    //     * 1 (success) -> function converged to a solution x.
-    //     * -3          -> nan or inf function value was encountered.
-    //     * -5          -> the algorithm might have converged to a singular point.
-    //     * -6          -> fzero did not detect a sign change.
-    //     * -100        -> limit of max. numer of function evaluations was reached
-    //     * -200        -> sign(fun(a)) == sign(fun(b)), but the routine may find a zero if lucky!
+    //     * success                    -> function converged to a solution x.
+    //     * invalid_number_detected    -> nan or inf function value was encountered.
+    //     * local_infeasibility        -> the algorithm might have converged to a singular point.
+    //     * no_sign_change_found       -> fzero did not detect a sign change.
+    //     * maxiter_exceeded           -> limit of max. numer of function evaluations was reached
+    //     * same_sign_at_domain_limits -> sign(fun(a)) == sign(fun(b)), but the routine may find a zero if lucky!
     //
     // NOTE: this function comes from code generation of Matlab's "fzero".
     //
@@ -477,12 +479,13 @@ constexpr std::tuple<T, T,
     // damping factor "alpha" (multiplies the step) and seed "x0".
     // Returns an std::tuple containing "[x, fval, exitflag]".
     //
-    // The "exitflag" can take the following values:
+    // The "exitflag" output can take the following values from enum class
+    // "basic_root_solvers_exitflag":
     //
-    //     * 1 (numeric) -> function converged to a solution x with abs(fun(x)) <= tolf
-    //     * +2          -> function converged to a solution x with abs(fun(x)) > tolf (Newton step has become < tolx)
-    //     * -3          -> NaN or Inf function value was encountered
-    //     * -100        -> limit of max. numer of function evaluations was reached
+    //     * success                 -> function converged to a solution x with abs(fun(x)) <= tolf
+    //     * stop_at_tiny_step       -> function converged to a solution x with abs(fun(x)) > tolf (Newton step has become < tolx)
+    //     * invalid_number_detected -> NaN or Inf function value was encountered
+    //     * maxiter_exceeded        -> limit of max. numer of function evaluations was reached
     //
 
     const auto tolf_e = tolf / std::numeric_limits<TolType>::epsilon();
@@ -536,11 +539,12 @@ constexpr std::tuple<T,
     // Applies fixed-point iteration to solve equation "x = fun(x)". Returns an
     // std::tuple containing "[x, exitflag]".
     //
-    // The "exitflag" can take the following values:
+    // The "exitflag" output can take the following values from enum class
+    // "basic_root_solvers_exitflag":
     //
-    //     * 1 (success) -> Function converged to a solution x.
-    //     * -3          -> NaN or Inf function value was encountered.
-    //     * -100        -> limit of max. numer of function evaluations was reached
+    //     * success                 -> Function converged to a solution x.
+    //     * invalid_number_detected -> NaN or Inf function value was encountered.
+    //     * maxiter_exceeded        -> limit of max. numer of function evaluations was reached
     //
 
     const auto tolx_e = tolx / std::numeric_limits<TolType>::epsilon();
@@ -594,12 +598,13 @@ constexpr std::tuple<std::array<T, 2>,
     // numerically, taking central finite differences of step sizes
     // given by "deltas_numjac".
     //
-    // The "exitflag" can take the following values:
+    // The "exitflag" output can take the following values from enum class
+    // "basic_root_solvers_exitflag":
     //
-    //     * 1 (numeric) -> function converged to a solution x with abs(fun(x)) <= tolf
-    //     * +2          -> function converged to a solution x with abs(fun(x)) > tolf (Newton step has become < tolx)
-    //     * -3          -> NaN or Inf function value was encountered
-    //     * -100        -> limit of max. numer of function evaluations was reached
+    //     * success                 -> function converged to a solution x with abs(fun(x)) <= tolf
+    //     * stop_at_tiny_step       -> function converged to a solution x with abs(fun(x)) > tolf (Newton step has become < tolx)
+    //     * invalid_number_detected -> NaN or Inf function value was encountered
+    //     * maxiter_exceeded        -> limit of max. numer of function evaluations was reached
     //
 
     const auto tolf_e = tolf / std::numeric_limits<TolType>::epsilon();
