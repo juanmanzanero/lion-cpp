@@ -21,7 +21,7 @@ template<typename T>
 constexpr bool samesign(T x, T y)
 {
     //
-    // Returns true if x and y have the same sign (0 considered positive).
+    // Returns true if "x" and "y" have the same sign (0 considered positive).
     //
 
     return (x >= T{ 0 }) == (y >= T{ 0 });
@@ -31,7 +31,7 @@ template<typename T>
 constexpr bool samesign(T x, T y, T z)
 {
     //
-    // Returns true if x, y and z have the same sign (0 considered positive).
+    // Returns true if "x", "y" and "z" have the same sign (0 considered positive).
     //
 
     const auto sx = x >= T{ 0 };
