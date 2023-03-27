@@ -5,7 +5,7 @@
 
 #include <tuple>
 
-#include "lion/foundation/utils.hpp"
+#include "lion/foundation/utils.h"
 
 
 //
@@ -347,7 +347,7 @@ inline std::tuple<T, T,
 
     // f(a) and f(b) should formally differ in sign, but we'll let the routine continue
     // (there are cases in which it can find a zero nevertheless)
-    if ((fval >= T{ 0 }) == (fa >= T{ 0 })) { // if (samesign(fval, fa)) {
+    if (samesign(fval, fa)) {
         exitflag = basic_root_solvers_exitflag::same_sign_at_domain_limits;
     }
 

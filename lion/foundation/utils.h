@@ -39,7 +39,13 @@ inline std::string get_current_date_and_time()
 }
 
 template <typename T> 
-constexpr int sign(T val); 
+constexpr int sign(T val);
+
+template<typename T>
+constexpr bool samesign(T x, T y);
+
+template<typename T>
+constexpr bool samesign(T x, T y, T z);
 
 template<typename T = double>
 constexpr bool eq_fp(T x, T y, T tol = static_cast<T>(1.));
@@ -137,5 +143,6 @@ constexpr std::array<T, 3u> rotmat2ea(const std::array<T, 9u> &M)
                               wrap_to_pi(pitch_rad),
                               wrap_to_pi(roll_rad) };
 }
+
 
 #endif

@@ -18,6 +18,28 @@ constexpr int sign(T val)
 }
 
 template<typename T>
+constexpr bool samesign(T x, T y)
+{
+    //
+    // Returns true if x and y have the same sign (0 considered positive).
+    //
+
+    return (x >= T{ 0 }) == (y >= T{ 0 });
+}
+
+template<typename T>
+constexpr bool samesign(T x, T y, T z)
+{
+    //
+    // Returns true if x, y and z have the same sign (0 considered positive).
+    //
+
+    const auto sx = x >= T{ 0 };
+
+    return (sx == (y >= T{ 0 })) && (sx == (z >= T{ 0 }));
+}
+
+template<typename T>
 constexpr bool eq_fp(T x, T y, T tol)
 {
     // Kopriva's AlmostEqual routine
@@ -70,7 +92,7 @@ constexpr T mod_mat(T x, T y)
     }
     else {
         if (!eq_fp(y, static_cast<T>(0.))) {
-            ret = nan_T<T>::nan;
+            ret = nan_T<T>;
         }
     }
 
