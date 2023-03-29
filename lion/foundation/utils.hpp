@@ -344,4 +344,34 @@ inline std::tuple<T,T> find_intersection(const Vector3d<T>& r0, const Vector3d<T
     return {s0, s1};
 }
 
+
+template<typename SizeType>
+constexpr SizeType nchoosek(SizeType n, SizeType k)
+{
+    //
+    // Calculates the binomial coefficient "C(n, k) = n! / ((n - k)! * k!)".
+    // The value is calculated in such a way as to avoid overflow and
+    // roundoff, using integer arithmetic. The code is taken from function
+    // "i4_choose" in file "polynomial.cpp" at
+    // "https://people.math.sc.edu/Burkardt/cpp_src/polynomial/polynomial.html"
+    //
+
+    const auto mn = std::min(k, n - k);
+    if (mn < SizeType{ 0 }) {
+        return SizeType{ 0 };
+    }
+    else if (mn == SizeType{ 0 }) {
+        return SizeType{ 1 };
+    }
+    else {
+        const auto mx = std::max(k, n - k);
+        auto ret = mx + SizeType{ 1 };
+        for (auto i = SizeType{ 2 }; i <= mn; ++i) {
+            ret = (ret * (mx + i)) / i;
+        }
+
+        return ret;
+    }
+}
+
 #endif

@@ -145,4 +145,7 @@ constexpr std::array<T, 3u> rotmat2ea(const std::array<T, 9u> &M)
 }
 
 
+template<typename SizeType>
+constexpr SizeType nchoosek(SizeType n, SizeType k);
+
 #endif

@@ -437,3 +437,134 @@ TEST(utils_test, find_closest_point)
         EXPECT_DOUBLE_EQ(r_closest_computed[i][2], r_closest[i][2]);
     }
 }
+
+
+TEST(utils_test, nchoosek_test)
+{
+    // for invalid inputs (negative, or n < k),
+    // the result is 0
+    constexpr auto sweep = 100;
+    for (auto n = -sweep; n <= sweep; ++n) {
+        for (auto k = -sweep; k <= sweep; ++k) {
+            if (k >= 0 && n > 0  || n == 0 && k == 0) {
+                continue;
+            }
+            EXPECT_EQ(nchoosek(n, k), 0);
+        }
+    }
+
+    // nchoosek(n, 0) == 1 for all n >= 0
+    for (auto n = 0; n <= sweep; ++n) {
+        EXPECT_EQ(nchoosek(n, 0), 1);
+    }
+
+    // nchoosek(n, n) == 1 for all n >= 0
+    for (auto n = 0; n <= sweep; ++n) {
+        EXPECT_EQ(nchoosek(n, n), 1);
+    }
+
+    // nchoosek(n, 1) == n for all n > 0
+    for (auto n = 1; n <= sweep; ++n) {
+        EXPECT_EQ(nchoosek(n, 1), n);
+    }
+
+    // some legitimate inputs (hardcoded with Matlab)
+    // num_tests = 200;
+    // for t = 1:num_tests
+    //     n = randi(50);
+    //     k = randi(50);
+    //     if k >= n || k == 1 || k == 0
+    //         continue
+    //     end
+    //     fprintf('EXPECT_EQ(nchoosek(%dul, %dul), %dul);\n', ...
+    //         n, k, nchoosek(n, k));
+    // end
+    EXPECT_EQ(nchoosek(46ul, 20ul), 5608233007146ul);
+    EXPECT_EQ(nchoosek(36ul, 33ul), 7140ul);
+    EXPECT_EQ(nchoosek(37ul, 19ul), 17672631900ul);
+    EXPECT_EQ(nchoosek(30ul, 6ul), 593775ul);
+    EXPECT_EQ(nchoosek(49ul, 10ul), 8217822536ul);
+    EXPECT_EQ(nchoosek(47ul, 20ul), 9762479679106ul);
+    EXPECT_EQ(nchoosek(14ul, 8ul), 3003ul);
+    EXPECT_EQ(nchoosek(20ul, 19ul), 20ul);
+    EXPECT_EQ(nchoosek(40ul, 12ul), 5586853480ul);
+    EXPECT_EQ(nchoosek(33ul, 12ul), 354817320ul);
+    EXPECT_EQ(nchoosek(43ul, 26ul), 421171648758ul);
+    EXPECT_EQ(nchoosek(32ul, 31ul), 32ul);
+    EXPECT_EQ(nchoosek(9ul, 5ul), 126ul);
+    EXPECT_EQ(nchoosek(46ul, 35ul), 13340783196ul);
+    EXPECT_EQ(nchoosek(37ul, 12ul), 1852482996ul);
+    EXPECT_EQ(nchoosek(26ul, 4ul), 14950ul);
+    EXPECT_EQ(nchoosek(37ul, 28ul), 124403620ul);
+    EXPECT_EQ(nchoosek(43ul, 40ul), 12341ul);
+    EXPECT_EQ(nchoosek(38ul, 6ul), 2760681ul);
+    EXPECT_EQ(nchoosek(36ul, 16ul), 7307872110ul);
+    EXPECT_EQ(nchoosek(46ul, 32ul), 239877544005ul);
+    EXPECT_EQ(nchoosek(13ul, 5ul), 1287ul);
+    EXPECT_EQ(nchoosek(42ul, 30ul), 11058116888ul);
+    EXPECT_EQ(nchoosek(48ul, 4ul), 194580ul);
+    EXPECT_EQ(nchoosek(30ul, 15ul), 155117520ul);
+    EXPECT_EQ(nchoosek(42ul, 10ul), 1471442973ul);
+    EXPECT_EQ(nchoosek(23ul, 20ul), 1771ul);
+    EXPECT_EQ(nchoosek(42ul, 34ul), 118030185ul);
+    EXPECT_EQ(nchoosek(29ul, 9ul), 10015005ul);
+    EXPECT_EQ(nchoosek(46ul, 28ul), 2818953098830ul);
+    EXPECT_EQ(nchoosek(41ul, 23ul), 202112640600ul);
+    EXPECT_EQ(nchoosek(49ul, 4ul), 211876ul);
+    EXPECT_EQ(nchoosek(30ul, 21ul), 14307150ul);
+    EXPECT_EQ(nchoosek(16ul, 14ul), 120ul);
+    EXPECT_EQ(nchoosek(41ul, 22ul), 244662670200ul);
+    EXPECT_EQ(nchoosek(37ul, 25ul), 1852482996ul);
+    EXPECT_EQ(nchoosek(41ul, 18ul), 202112640600ul);
+    EXPECT_EQ(nchoosek(46ul, 10ul), 4076350421ul);
+    EXPECT_EQ(nchoosek(39ul, 28ul), 1676056044ul);
+    EXPECT_EQ(nchoosek(34ul, 21ul), 927983760ul);
+    EXPECT_EQ(nchoosek(47ul, 24ul), 16123801841550ul);
+    EXPECT_EQ(nchoosek(36ul, 28ul), 30260340ul);
+    EXPECT_EQ(nchoosek(49ul, 27ul), 49699896548176ul);
+    EXPECT_EQ(nchoosek(49ul, 6ul), 13983816ul);
+    EXPECT_EQ(nchoosek(30ul, 27ul), 4060ul);
+    EXPECT_EQ(nchoosek(46ul, 28ul), 2818953098830ul);
+    EXPECT_EQ(nchoosek(41ul, 8ul), 95548245ul);
+    EXPECT_EQ(nchoosek(24ul, 13ul), 2496144ul);
+    EXPECT_EQ(nchoosek(24ul, 21ul), 2024ul);
+    EXPECT_EQ(nchoosek(31ul, 19ul), 141120525ul);
+    EXPECT_EQ(nchoosek(44ul, 40ul), 135751ul);
+    EXPECT_EQ(nchoosek(45ul, 22ul), 4116715363800ul);
+    EXPECT_EQ(nchoosek(46ul, 36ul), 4076350421ul);
+    EXPECT_EQ(nchoosek(48ul, 28ul), 16735679449896ul);
+    EXPECT_EQ(nchoosek(28ul, 16ul), 30421755ul);
+    EXPECT_EQ(nchoosek(23ul, 7ul), 245157ul);
+    EXPECT_EQ(nchoosek(25ul, 12ul), 5200300ul);
+    EXPECT_EQ(nchoosek(39ul, 18ul), 62359143990ul);
+    EXPECT_EQ(nchoosek(46ul, 9ul), 1101716330ul);
+    EXPECT_EQ(nchoosek(36ul, 29ul), 8347680ul);
+    EXPECT_EQ(nchoosek(20ul, 9ul), 167960ul);
+    EXPECT_EQ(nchoosek(45ul, 28ul), 1103068603890ul);
+    EXPECT_EQ(nchoosek(19ul, 11ul), 75582ul);
+    EXPECT_EQ(nchoosek(43ul, 3ul), 12341ul);
+    EXPECT_EQ(nchoosek(15ul, 7ul), 6435ul);
+    EXPECT_EQ(nchoosek(41ul, 4ul), 101270ul);
+    EXPECT_EQ(nchoosek(48ul, 25ul), 30957699535776ul);
+    EXPECT_EQ(nchoosek(42ul, 8ul), 118030185ul);
+    EXPECT_EQ(nchoosek(47ul, 42ul), 1533939ul);
+    EXPECT_EQ(nchoosek(45ul, 30ul), 344867425584ul);
+    EXPECT_EQ(nchoosek(21ul, 2ul), 210ul);
+    EXPECT_EQ(nchoosek(38ul, 8ul), 48903492ul);
+    EXPECT_EQ(nchoosek(39ul, 12ul), 3910797436ul);
+    EXPECT_EQ(nchoosek(38ul, 35ul), 8436ul);
+    EXPECT_EQ(nchoosek(27ul, 17ul), 8436285ul);
+    EXPECT_EQ(nchoosek(42ul, 41ul), 42ul);
+    EXPECT_EQ(nchoosek(28ul, 14ul), 40116600ul);
+    EXPECT_EQ(nchoosek(35ul, 12ul), 834451800ul);
+    EXPECT_EQ(nchoosek(23ul, 20ul), 1771ul);
+    EXPECT_EQ(nchoosek(50ul, 47ul), 19600ul);
+    EXPECT_EQ(nchoosek(28ul, 11ul), 21474180ul);
+    EXPECT_EQ(nchoosek(38ul, 28ul), 472733756ul);
+    EXPECT_EQ(nchoosek(45ul, 18ul), 1715884494940ul);
+    EXPECT_EQ(nchoosek(28ul, 18ul), 13123110ul);
+    EXPECT_EQ(nchoosek(38ul, 7ul), 12620256ul);
+    EXPECT_EQ(nchoosek(42ul, 2ul), 861ul);
+    EXPECT_EQ(nchoosek(40ul, 19ul), 131282408400ul);
+    EXPECT_EQ(nchoosek(13ul, 7ul), 1716ul);
+}
