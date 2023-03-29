@@ -187,4 +187,34 @@ struct type_or_nothing<true, T>
 template<bool ShouldBeType, typename T>
 using type_or_nothing_t = typename type_or_nothing<ShouldBeType, T>::type;
 
+
+//
+// std::true_type if the tested type is an
+// specialization of a template class.
+//
+
+template<typename T, template<typename...> class>
+struct is_specialization : std::false_type {};
+
+template<template<typename...> class T, typename... Ts>
+struct is_specialization<T<Ts...>, T> : std::true_type {};
+
+template<typename T, template<typename...> class C>
+constexpr bool is_specialization_v = is_specialization<T, C>::value;
+
+
+//
+// std::true_type if the tested type is
+// an std::array.
+//
+
+template<typename Arr, typename = void>
+struct is_std_array : std::false_type {};
+
+template<typename T, std::size_t N>
+struct is_std_array<std::array<T, N> > : std::true_type {};
+
+template<typename Arr>
+constexpr bool is_std_array_v = is_std_array<Arr>::value;
+
 #endif
