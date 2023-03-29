@@ -39,24 +39,32 @@ constexpr bool samesign(T x, T y, T z)
     return (sx == (y >= T{ 0 })) && (sx == (z >= T{ 0 }));
 }
 
-template<typename T>
-constexpr bool eq_fp(T x, T y, T tol)
-{
-    // Kopriva's AlmostEqual routine
-    const T teps = tol * eps_T<T>;
-    const T diff = fabs(x - y);
 
-    const T ax = fabs(x);
-    const T ay = fabs(y);
+template<typename T, typename TolType>
+constexpr bool eq_fp(T x, T y, TolType tol)
+{
+    //
+    // Kopriva's AlmostEqual routine,
+    // tests equality of two floating-point
+    // numbers. Input tol is a multiple of
+    // "std::numeric_limits<T>::epsilon()".
+    //
+
+    using std::abs;
+
+    const auto teps = tol * std::numeric_limits<TolType>::epsilon();
+    const auto diff = abs(x - y);
+    const auto ax = abs(x);
+    const auto ay = abs(y);
 
     if (ax <= teps || ay <= teps) {
-        return diff <= static_cast<T>(2.) * teps;
+        return diff <= TolType{ 2 } * teps;
     }
     else {
         return diff <= teps * ax && diff <= teps * ay;
     }
-
 }
+
 
 template<typename T>
 constexpr T mod_mat(T x, T y)

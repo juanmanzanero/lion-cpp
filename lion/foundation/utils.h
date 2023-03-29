@@ -47,22 +47,22 @@ constexpr bool samesign(T x, T y);
 template<typename T>
 constexpr bool samesign(T x, T y, T z);
 
-template<typename T = double>
-constexpr bool eq_fp(T x, T y, T tol = static_cast<T>(1.));
+template<typename T, typename TolType = T>
+constexpr bool eq_fp(T x, T y, TolType tol = TolType{ 1 });
 
-template<typename T = double>
+template<typename T>
 constexpr T mod_mat(T x, T y);
 
-template<typename T = double>
+template<typename T>
 constexpr T wrap_to_pi(T ang);
 
-template<typename T = double>
+template<typename T>
 constexpr T wrap_to_2pi(T ang);
 
-template<typename T = double>
+template<typename T>
 constexpr T wrap_to_180(T ang);
 
-template<typename T = double>
+template<typename T>
 constexpr T wrap_to_360(T ang);
 
 template<typename scalar_type = double>
@@ -86,10 +86,10 @@ inline std::vector<scalar_type> string_to_double_vector(std::string s)
 }
 
 
-template<typename T = scalar>
+template<typename T>
 constexpr T smooth_pos(T a, scalar eps2);
 
-template<typename T = scalar>
+template<typename T>
 constexpr T smooth_sign(T a, scalar eps2);
 
 
@@ -108,10 +108,10 @@ inline std::tuple<Vector3d<T>,T,std::array<size_t,2>> find_intersection(const st
 template<typename T>
 inline std::tuple<T,T> find_intersection(const Vector3d<T>& r0, const Vector3d<T>& p0, const sVector3d& r1, const sVector3d& p1);
 
+
 template<typename T>
 constexpr std::array<T, 3u> rotmat2ea(const std::array<T, 9u> &M)
 {
-    // Author: Diego Lodares Gomez
     //
     // Returns an std::array holding the Euler angles in 'ZYX' sequence
     // "[yaw, pitch, roll]", in rad, from the input rotation matrix,
