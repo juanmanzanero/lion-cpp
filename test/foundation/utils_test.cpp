@@ -446,7 +446,7 @@ TEST(utils_test, nchoosek_test)
     constexpr auto sweep = 100;
     for (auto n = -sweep; n <= sweep; ++n) {
         for (auto k = -sweep; k <= sweep; ++k) {
-            if (k >= 0 && n > 0  || n == 0 && k == 0) {
+            if ((k >= 0 && n > 0)  || (n == 0 && k == 0)) {
                 continue;
             }
             EXPECT_EQ(nchoosek(n, k), 0);
