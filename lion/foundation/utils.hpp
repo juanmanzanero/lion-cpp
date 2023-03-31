@@ -151,16 +151,32 @@ constexpr T smooth_sign(T a, scalar eps2)
 
 
 template <typename T>
-inline std::vector<T> linspace(T a, T b, size_t N) {
-    T h = (b - a) / static_cast<T>(N-1);
-    std::vector<T> xs(N);
-    typename std::vector<T>::iterator x;
-    T val;
-    for (x = xs.begin(), val = a; x != xs.end(); ++x, val += h)
-        *x = val;
+constexpr std::vector<T> linspace(T lo, T hi, std::size_t num_points)
+{
+    //
+    // Returns a vector of size "num_points", holding
+    // linearly equally spaced points in the (closed)
+    // interval "[lo, hi]".
+    //
 
-    // Make sure the last element numerically fits the endpoint
-    xs.back() = b;
+    static_assert(!std::is_integral_v<T>, "linspace:"
+        " the input interval limits should not be"
+        " of an integral type.");
+
+    std::vector<T> xs(num_points);
+    if (num_points != 0u) {
+        // use Matlab's formula rigorously, so that
+        // we get the exact same numbers
+        const auto nm1 = num_points - 1u;
+        const auto extent = hi - lo;
+        for (auto count = 1u; count < nm1; ++count) {
+            xs[count] = lo + (count * extent) / nm1;
+        }
+
+        xs.front() = lo;
+        xs.back() = hi;
+    }
+
     return xs;
 }
 

@@ -92,9 +92,8 @@ constexpr T smooth_pos(T a, scalar eps2);
 template<typename T>
 constexpr T smooth_sign(T a, scalar eps2);
 
-
 template <typename T>
-inline std::vector<T> linspace(T a, T b, size_t N);  
+constexpr std::vector<T> linspace(T lo, T hi, std::size_t num_points);
 
 template<typename T>
 inline T trapz(const std::vector<T>& x, const std::vector<T>& y);
