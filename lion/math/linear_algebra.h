@@ -21,9 +21,12 @@ inline void matmul(T *X, const T *A, const T *B, int rows_A, int cols_A_rows_B, 
     //
     // Fills the result of multiplying two dense matrices in column-major
     // order, i.e., "X = A * B". Solution "X" must be preallocated on
-    // entry, to size "rows_A * cols_B", and is also a column-major matrix.
-    // The number of columns of "A" must coincide with the number of rows
-    // of "B", equal to input "cols_A_rows_B".
+    // entry, to size "rows_A x cols_B", and is also a column-major matrix.
+    // "A" holds the first operand in column-major order and has size
+    // "rows_A x cols_A_rows_B". "B" holds the second operand in column-
+    // major order and has size "cols_A_rows_B x cols_B". Hence, the number
+    // of columns of "A" must coincide with the number of rows of "B",
+    // (equal to input "cols_A_rows_B").
     //
 
     if (cols_A_rows_B != 1) {
@@ -73,23 +76,24 @@ inline void matmul(T *X, const T *A, const T *B, int rows_A, int cols_A_rows_B, 
 
 
 template<typename T>
-inline int lusolve(T *B, T *A, int rows_A, int cols_B)
+inline int lusolve(T *B, T *A, int rows_A_rows_B, int cols_B)
 {
     //
     // Direct solve of the dense square problem "A * X = B", via LU with
     // partial pivoting (i.e., applying a decomposition "A = P * L * U").
     // All matrices are in column-major order. On entry, "B" contains the
     // problem's RHS (which may have multiple colums), and holds solution
-    // "X" on return. Matrix "A" must hold the problem's LHS matrix on
-    // entry, and exits as the LU factors ("A = P * L * U", where P is a
-    // permutation matrix that could be reconstructed using the ipiv local
-    // variable, since the i-th row of matrix "A" is interchanged with row
-    // "ipiv[i]"). The function returns 0 upon successful exit.
+    // "X" on return, of size "rows_A_rows_B x cols_B". Matrix "A" must
+    // hold the problem's square LHS matrix on entry, of size "rows_A_rows_B x
+    // rows_A_rows_B" and exits as the LU factors ("A = P * L * U", where
+    // P is a permutation matrix that could be reconstructed using the "ipiv"
+    // local variable, since the i-th row of matrix "A" is interchanged with
+    // row "ipiv[i]"). The function returns 0 upon successful exit.
     //
 
     int ret{ 0 };
 
-    const auto n{ rows_A };
+    const auto &n = rows_A_rows_B;
     auto *const ipiv{ new int[n] };
     for (auto i = 0; i < n; ++i) {
         ipiv[i] = i + 1;
@@ -210,14 +214,392 @@ inline int lusolve(T *B, T *A, int rows_A, int cols_B)
 
 
 template<typename T>
-inline T rcond(const T *A, int n)
+inline void qrsolve(T *X, T *A, T *B, int rows_A_rows_B, int cols_A, int cols_B)
+{
+    //
+    // Fills "X" with the result of non-square problem "A * X = B", which
+    // may be either under or overdetermined, employing the QR algorithm
+    // with column pivoting. All matrices are in column-major order. Input
+    // matrix "A" should hold the problem's LHS matrix on entry, of size
+    // "rows_A_rows_B x cols_A", and gets overwritten by this function
+    // with its QR fatorization. Input matrix "B" should contain the
+    // problem's RHS, of size "rows_A_rows_B x cols_B" (i.e., it may
+    // have multiple columns), and also gets overwritten by the function.
+    // The result of this function is matrix "X", which should come
+    // prealllocated on entry to size "cols_A x cols_B".
+    //
+
+    // declare some helper coinstants and functions
+    constexpr auto TOL3Z = T{ 2.2204460492503131E-16 };
+
+    const auto xgeqp3 = [](auto *A, auto m, auto n, auto mn, auto *tau, auto *jpvt)
+    {
+        // performs the column-pivoting QR factorization of the
+        // "m x n" matrix A, such that "A * P = Q * R", where "P"
+        // is a column permutation matrix. Info about pivoting is
+        // stored in the "jpvt" array: on exit, if jpvt[j] = k,
+        // then the j-th column of "A * P" was the k-th column
+        // of "A"
+        constexpr auto sqrt_TOL3Z = std::sqrt(TOL3Z);
+        constexpr auto SMALLNUM = T{ 1.0020841800044864E-292 };
+        constexpr auto BIGNUM = T{ 9.9792015476736E+291 };
+
+        const auto xnrm2 = [](auto n, const auto *x, auto ix0)
+        {
+            constexpr auto SMALLSCALE = T{ 3.3121686421112381E-170 };
+
+            auto y = T{ 0 };
+            if (n >= 1) {
+                if (n == 1) {
+                    y = std::abs(x[ix0 - 1]);
+                }
+                else {
+                    auto scale{ SMALLSCALE };
+                    auto kend{ ix0 + n };
+                    for (auto k = ix0; k < kend; ++k) {
+                        auto absxk{ std::abs(x[k - 1]) };
+                        if (absxk > scale) {
+                            auto t{ scale / absxk };
+                            y = T{ 1 } + y * t * t;
+                            scale = absxk;
+                        }
+                        else {
+                            auto t{ absxk / scale };
+                            y += t * t;
+                        }
+                    }
+                    y = scale * std::sqrt(y);
+                }
+            }
+
+            return y;
+        };
+
+        const auto rt_hypotd_snf = [](auto u0, auto u1)
+        {
+            auto a{ std::abs(u0) };
+            auto b{ std::abs(u1) };
+            if (a < b) {
+                a /= b;
+                return b * std::sqrt(a * a + T{ 1 });
+            }
+            else if (a > b) {
+                b /= a;
+                return a * std::sqrt(b * b + T{ 1 });
+            }
+            else if (std::isnan(b)) {
+                return b;
+            }
+            else {
+                return a * std::sqrt(T{ 2 });
+            }
+        };
+
+        const auto xscal = [](auto n, auto a, auto *x, auto ix0)
+        {
+           for (auto k = ix0; k < ix0 + n; ++k) {
+               x[k - 1] *= a;
+           }
+        };
+
+        auto *work{ new T[n] };
+        auto *vn1{ new T[n] };
+        auto *vn2{ new T[n] };
+        auto k{ 1 };
+        for (auto i = 0; i < n; ++i) {
+            jpvt[i] = i + 1;
+            work[i] = T{ 0 };
+
+            vn1[i] = xnrm2(m, A, k);
+            vn2[i] = vn1[i];
+            k += m;
+        }
+
+        for (auto i = 0; i < mn; ++i) {
+            auto i_i{ i + i * m };
+            auto nmi{ n - i };
+            auto mmi{ m - i - 1 };
+            auto itemp{ 1 };
+
+            if (nmi < 1) {
+                itemp = 0;
+            }
+            else {
+                itemp = 1;
+                if (nmi > 1) {
+                    auto ix{ i };
+                    auto smax{ std::abs(vn1[ix]) };
+                    for (k = 2; k <= nmi; ++k) {
+                        ++ix;
+                        auto s{ std::abs(vn1[ix]) };
+                        if (s > smax) {
+                            itemp = k;
+                            smax = s;
+                        }
+                    }
+
+                }
+            }
+
+            auto pvt{ i + itemp - 1 };
+            if (pvt != i) {
+                auto ix{ m * pvt };
+                auto iy{ m * i };
+                for (k = 1; k <= m; ++k) {
+                    auto smax{ A[ix] };
+                    A[ix] = A[iy];
+                    A[iy] = smax;
+                    ++ix;
+                    ++iy;
+                }
+
+                itemp = jpvt[pvt];
+                jpvt[pvt] = jpvt[i];
+                jpvt[i] = itemp;
+                vn1[pvt] = vn1[i];
+                vn2[pvt] = vn2[i];
+            }
+
+            if (i < m - 1) {
+                auto atmp{ A[i_i] };
+                auto d0 = T{ 0 };
+                if (!(1 + mmi <= 0)) {
+                    auto smax{ xnrm2(mmi, A, i_i + 2) };
+                    if (smax != T{ 0 }) {
+                        auto s{ rt_hypotd_snf(A[i_i], smax) };
+                        if (A[i_i] >= T{ 0 }) {
+                            s = -s;
+                        }
+
+                        if (std::abs(s) < SMALLNUM) {
+                            itemp = 0;
+                            do {
+                                itemp++;
+                                xscal(mmi, BIGNUM, A, i_i + 2);
+                                s *= BIGNUM;
+                                atmp *= BIGNUM;
+                            } while (std::abs(s) < SMALLNUM);
+
+                            s = rt_hypotd_snf(atmp, xnrm2(mmi, A, i_i + 2));
+                            if (atmp >= T{ 0 }) {
+                                s = -s;
+                            }
+
+                            d0 = (s - atmp) / s;
+                            xscal(mmi, T{ 1 } / (atmp - s), A, i_i + 2);
+                            for (k = 1; k <= itemp; ++k) {
+                                s *= SMALLNUM;
+                            }
+                            atmp = s;
+
+                        }
+                        else {
+                            d0 = (s - A[i_i]) / s;
+                            smax = T{ 1 } / (A[i_i] - s);
+                            xscal(mmi, smax, A, i_i + 2);
+                            atmp = s;
+                        }
+                    }
+                }
+
+                tau[i] = d0;
+                A[i_i] = atmp;
+            }
+            else {
+                tau[i] = T{ 0 };
+            }
+
+            if (i < n - 1) {
+                const auto atmp{ A[i_i] };
+                auto lastc{ 0 };
+                auto lastv{ 0 };
+                auto i_ip1{ i + (i + 1) * m + 1 };
+
+                A[i_i] = T{ 1 };
+
+                if (tau[i] != T{ 0 }) {
+                    lastc = nmi - 1;
+                    lastv = mmi;
+                    itemp = i_i + mmi;
+                    while ((lastv + 1 > 0) && (A[itemp] == T{ 0 })) {
+                        --lastv;
+                        --itemp;
+                    }
+
+                    auto exitg2{ false };
+                    while ((!exitg2) && (lastc > 0)) {
+                        itemp = i_ip1 + (lastc - 1) * m;
+                        k = itemp;
+                        auto exitg1{ 0 };
+                        do {
+                            if (k <= itemp + lastv) {
+                                if (A[k - 1] != T{ 0 }) {
+                                    exitg1 = 1;
+                                }
+                                else {
+                                    ++k;
+                                }
+                            }
+                            else {
+                                --lastc;
+                                exitg1 = 2;
+                            }
+                        } while (exitg1 == 0);
+
+                        if (exitg1 == 1) {
+                            exitg2 = true;
+                        }
+                    }
+                }
+                else {
+                    lastc = 0;
+                    lastv = -1;
+                }
+
+                if (lastv >= 0) {
+                    if (lastc != 0) {
+                        for (auto iy = 1; iy <= lastc; ++iy) {
+                            work[iy - 1] = T{ 0 };
+                        }
+
+                        auto iy{ 0 };
+                        auto i1{ i_ip1 + m * (lastc - 1) };
+                        itemp = i_ip1;
+                        while (((m > 0) && (itemp <= i1)) || ((m < 0) && (itemp >= i1))) {
+                            auto ix{ i_i };
+                            auto smax = T{ 0 };
+                            pvt = itemp + lastv;
+                            for (k = itemp; k <= pvt; ++k) {
+                                smax += A[k - 1] * A[ix];
+                                ++ix;
+                            }
+
+                            work[iy] += smax;
+                            ++iy;
+                            itemp += m;
+                        }
+                    }
+
+                    if (-tau[i] != T{ 0.0 }) {
+                        itemp = 0;
+                        for (nmi = 1; nmi <= lastc; nmi++) {
+                            if (work[itemp] != T{ 0 }) {
+                                const auto smax{ work[itemp] * -tau[i] };
+                                auto ix{ i_i };
+                                for (pvt = i_ip1; pvt <= lastv + i_ip1; ++pvt) {
+                                    A[pvt - 1] += A[ix] * smax;
+                                    ++ix;
+                                }
+                            }
+
+                            ++itemp;
+                            i_ip1 += m;
+                        }
+                    }
+                }
+
+                A[i_i] = atmp;
+            }
+
+            for (nmi = i + 1; nmi < n; ++nmi) {
+                if (vn1[nmi] != T{ 0 }) {
+                    auto smax{ std::abs(A[i + m * nmi]) / vn1[nmi] };
+                    smax = T{ 1 } - smax * smax;
+                    if (smax < T{ 0 }) {
+                        smax = 0.0;
+                    }
+
+                    auto s{ vn1[nmi] / vn2[nmi] };
+                    s = smax * s * s;
+                    if (s <= sqrt_TOL3Z) {
+                        if (i + 1 < m) {
+                            vn1[nmi] = xnrm2(mmi, A, i + m * nmi + 2);
+                            vn2[nmi] = vn1[nmi];
+                        }
+                        else {
+                            vn1[nmi] = T{ 0 };
+                            vn2[nmi] = T{ 0 };
+                        }
+                    }
+                    else {
+                        vn1[nmi] *= std::sqrt(smax);
+                    }
+                }
+            }
+        }
+
+        delete[] work;
+        delete[] vn1;
+        delete[] vn2;
+    };
+
+    // perform the column-pivoting QR factorization of A
+    const auto &m{ rows_A_rows_B };
+    const auto &n{ cols_A };
+    const auto mn{ std::min(m, n) };
+    auto *jpvt{ new int[n] };
+    auto *tau{ new T[mn] };
+    xgeqp3(A, m, n, mn, tau, jpvt);
+
+    // rank from QR
+    auto rankR{ 0 };
+    auto tol{ static_cast<T>(std::max(m, n)) * std::abs(A[0]) * TOL3Z };
+    while ((rankR < mn) && (!(std::abs(A[rankR + m * rankR]) <= tol))) {
+        ++rankR;
+    }
+
+    for (auto i = 0; i < n * cols_B; ++i) {
+        X[i] = T{ 0 };
+    }
+
+    for (auto k = 0; k < mn; ++k) {
+        if (tau[k] != T{ 0 }) {
+            for (auto j = 0; j < cols_B; ++j) {
+                tol = B[k + m * j];
+                for (auto i = k + 1; i < m; ++i) {
+                    tol += A[i + m * k] * B[i + m * j];
+                }
+
+                tol *= tau[k];
+                if (tol != T{ 0 }) {
+                    B[k + m * j] -= tol;
+                    for (auto i = k + 1; i < m; ++i) {
+                        B[i + m * j] -= A[i + m * k] * tol;
+                    }
+                }
+            }
+        }
+    }
+
+    for (auto k = 0; k < cols_B; ++k) {
+        for (auto i = 0; i < rankR; ++i) {
+            X[jpvt[i] + n * k - 1] = B[i + m * k];
+        }
+
+        for (auto j = rankR - 1; j >= 0; --j) {
+            X[jpvt[j] + n * k - 1] /= A[j + m * j];
+            for (auto i = 0; i < j; ++i) {
+                X[jpvt[i] + n * k - 1] -= X[jpvt[j] + n * k - 1] *
+                    A[i + m * j];
+            }
+        }
+    }
+
+    delete[] tau;
+    delete[] jpvt;
+}
+
+
+template<typename T>
+inline T rcond(const T *A, int rows_A_cols_A)
 {
     //
     // Returns an estimate for the reciprocal condition of input
-    // square matrix "A" in 1-norm. The matrix has size "n x n" and
-    // should be specified in column-major order. If "A" is well
-    // conditioned, "rcond(A)" is near 1.0. If "A" is badly
-    // conditioned, "rcond(A)" is near 0.
+    // square matrix "A" in 1-norm. This input square matrix has
+    // size "rows_A_cols_A x rows_A_cols_A" and should be specified
+    // in column-major order. If "A" is well conditioned, then
+    // its "rcond" number will be near 1.0. when "A" is badly
+    // conditioned, its "rcond" will be near 0.
     //
 
     // define some helper functions
@@ -293,6 +675,7 @@ inline T rcond(const T *A, int n)
 
 
     // "rcond1"
+    const auto &n{ rows_A_cols_A };
     auto result = T{ 0 };
     if (n == 0) {
         result = std::numeric_limits<T>::infinity();
@@ -442,7 +825,8 @@ inline T rcond(const T *A, int n)
                                 if (ainvnm <= x[0]) {
                                     auto s = T{ 1 };
                                     for (ix = 0; ix < n; ++ix) {
-                                        x[ix] = s * (T{ 1 } +((T{ 1 } +static_cast<T>(ix)) - T{ 1 }) / (static_cast<T>(n) - T{ 1 }));
+                                        x[ix] = s * (T{ 1 } + ((T{ 1 } +static_cast<T>(ix)) - T{ 1 }) /
+                                            (static_cast<T>(n) - T{ 1 }));
                                         s = -s;
                                     }
 
@@ -489,7 +873,8 @@ inline T rcond(const T *A, int n)
                                 else {
                                     auto s = T{ 1 };
                                     for (ix = 0; ix < n; ++ix) {
-                                        x[ix] = s * (T{ 1 } +((T{ 1 } +static_cast<T>(ix)) - T{ 1 }) / (static_cast<T>(n) - T{ 1 }));
+                                        x[ix] = s * (T{ 1 } +((T{ 1 } +static_cast<T>(ix)) - T{ 1 }) /
+                                            (static_cast<T>(n) - T{ 1 }));
                                         s = -s;
                                     }
 
@@ -499,7 +884,8 @@ inline T rcond(const T *A, int n)
                             }
                             else {
                                 if (jump == 5) {
-                                    const auto s = T{ 2 } *b_norm(x, n) / T{ 3 } / static_cast<T>(n);
+                                    const auto s = T{ 2 } * b_norm(x, n) / T{ 3 } /
+                                        static_cast<T>(n);
                                     if (s > ainvnm) {
                                         ainvnm = s;
                                     }
