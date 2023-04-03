@@ -1,3 +1,5 @@
+#include <array>
+
 #include "gtest/gtest.h"
 
 #include "lion/foundation/tuple_helpers.h"
