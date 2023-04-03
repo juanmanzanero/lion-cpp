@@ -24,9 +24,12 @@ if (NOT ipopt_FOUND)
 			execute_process(COMMAND ${CMAKE_INSTALL_NAME_TOOL} -id "@rpath/${HSL_LIB_NAME}" ${HSL_LIBRARY})
 		endif()
 	endif()
-    
+
+
 	add_library(ipopt INTERFACE)
-	target_link_libraries(ipopt INTERFACE ${CMAKE_DL_LIBS})
+
+
+	target_link_libraries(ipopt INTERFACE ${CMAKE_DL_LIBS} fortran_libraries)
 	target_include_directories(ipopt SYSTEM INTERFACE
 		  "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>"
 		  "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>")
@@ -44,9 +47,6 @@ if (NOT ipopt_FOUND)
                "$<BUILD_INTERFACE:${MUMPS_LIBRARY}>"
                "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_LIBDIR}/${MUMPS_LIB_NAME}>")
 
-
-        target_link_directories(ipopt INTERFACE ${CMAKE_Fortran_IMPLICIT_LINK_DIRECTORIES})
-        target_link_libraries(ipopt INTERFACE ${CMAKE_Fortran_IMPLICIT_LINK_LIBRARIES})
 
         foreach(t ${IPOPT_LIB_ALL_FILES})
     	    install(FILES "${t}" TYPE LIB) 

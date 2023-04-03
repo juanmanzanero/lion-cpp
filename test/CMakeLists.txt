@@ -28,10 +28,8 @@ macro(new_test)
     if (MSYS)
 	ADD_CUSTOM_TARGET(${BINARY}_link_tinyxml_windows ALL
 	                  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR}/lion/thirdparty/bin/msys-tinyxml2-9.dll ${CMAKE_BINARY_DIR}/test/${binary_name}/msys-tinyxml2-9.dll)
-	ADD_CUSTOM_TARGET(${BINARY}_link_lapack_windows ALL
-	                  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR}/lion/thirdparty/bin/msys-lapack-3.dll ${CMAKE_BINARY_DIR}/test/${binary_name}/msys-lapack-3.dll)			  
-	ADD_CUSTOM_TARGET(${BINARY}_link_blas_windows ALL
-	                  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR}/lion/thirdparty/bin/msys-blas-3.dll ${CMAKE_BINARY_DIR}/test/${binary_name}/msys-blas-3.dll)			  
+	ADD_CUSTOM_TARGET(${BINARY}_link_mumps_windows ALL
+	                  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR}/lion/thirdparty/bin/libcoinmumps-3.dll ${CMAKE_BINARY_DIR}/test/${binary_name}/libcoinmumps-3.dll)			  
     endif()
 endmacro()
 

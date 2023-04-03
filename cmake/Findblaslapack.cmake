@@ -11,7 +11,7 @@ if (NOT blaslapack_FOUND)
 
 
         add_library(blaslapack INTERFACE)
-        target_link_libraries(blaslapack INTERFACE ${CMAKE_DL_LIBS})
+        target_link_libraries(blaslapack INTERFACE ${CMAKE_DL_LIBS} fortran_libraries)
 
         set(IPOPT_LIBRARY_INSTALL ${CMAKE_INSTALL_FULL_LIBDIR}/${IPOPT_LIB_NAME})
 

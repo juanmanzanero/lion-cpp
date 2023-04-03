@@ -18,6 +18,11 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/lion/thirdparty/include)
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/lion/thirdparty/bin)
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
+# Create fortran libraries
+add_library(fortran_libraries INTERFACE)
+target_link_directories(fortran_libraries INTERFACE ${CMAKE_Fortran_IMPLICIT_LINK_DIRECTORIES})
+target_link_libraries(fortran_libraries INTERFACE ${CMAKE_Fortran_IMPLICIT_LINK_LIBRARIES})
+    
 # Download third party libraries
 include(get-third-party)
 
@@ -54,7 +59,7 @@ target_include_directories(lion SYSTEM INTERFACE
 	"$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}/lion/thirdparty/include>"
 )
 
-target_link_libraries(lion INTERFACE ipopt blaslapack tinyxml2)
+target_link_libraries(lion INTERFACE ipopt blaslapack tinyxml2 fortran_libraries)
 
 # Create a lion header only
 add_library(header_only INTERFACE)
@@ -99,7 +104,7 @@ install(FILES ${version_file} ${config_file}
   DESTINATION ${cmake_files_install_dir})
 
 # Export the targets
-install(TARGETS lion ipopt blaslapack tinyxml2 header_only
+install(TARGETS lion ipopt blaslapack tinyxml2 header_only fortran_libraries
   EXPORT ${targets_export_name}
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
   ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
