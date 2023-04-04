@@ -240,9 +240,9 @@ inline void qrsolve(T *X, T *A, T *B, int rows_A_rows_B, int cols_A, int cols_B)
         // stored in the "jpvt" array: on exit, if jpvt[j] = k,
         // then the j-th column of "A * P" was the k-th column
         // of "A"
+        constexpr auto sqrt_TOL3Z = T{ 1.4901161193847656e-08 };
         constexpr auto SMALLNUM = T{ 1.0020841800044864E-292 };
         constexpr auto BIGNUM = T{ 9.9792015476736E+291 };
-        const auto sqrt_TOL3Z = std::sqrt(TOL3Z);
 
         const auto xnrm2 = [](auto n, const auto *x, auto ix0)
         {
