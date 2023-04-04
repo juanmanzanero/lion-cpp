@@ -62,6 +62,12 @@ jobs:
 
     - uses: actions/upload-artifact@v2 
       with:
+        name: math_test_release_data
+        path: test/math/data/
+        retention-days: 1 
+
+    - uses: actions/upload-artifact@v2 
+      with:
         name: libraries_release
         path: ${{runner.workspace}}/build/lion/thirdparty/lib/*
         retention-days: 1 
@@ -114,6 +120,12 @@ jobs:
       with:
         name: propagators_test_debug_data
         path: test/propagators/data/
+        retention-days: 1 
+
+    - uses: actions/upload-artifact@v2 
+      with:
+        name: math_test_debug_data
+        path: test/math/data/
         retention-days: 1 
 
     - uses: actions/upload-artifact@v2 
@@ -254,6 +266,11 @@ jobs:
 
     - uses: actions/download-artifact@v2
       with:
+        name: math_test_release_data
+        path: ${{runner.workspace}}/data
+
+    - uses: actions/download-artifact@v2
+      with:
         name: libraries_release
         path: ${{runner.workspace}}
       
@@ -282,6 +299,11 @@ jobs:
 
     - uses: actions/download-artifact@v2
       with:
+        name: math_test_debug_data
+        path: ${{runner.workspace}}/data
+
+    - uses: actions/download-artifact@v2
+      with:
         name: libraries_debug
         path: ${{runner.workspace}}
       
@@ -307,6 +329,11 @@ jobs:
       with:
         name: tests_debug
         path: ${{runner.workspace}}
+
+    - uses: actions/download-artifact@v2
+      with:
+        name: math_test_debug_data
+        path: ${{runner.workspace}}/data
 
     - uses: actions/download-artifact@v2
       with:
@@ -690,6 +717,11 @@ jobs:
       with:
         name: propagators_test_release_data
 
+    - uses: geekyeggo/delete-artifact@v1
+      continue-on-error: true
+      with:
+        name: math_test_release_data
+
   remove_artifacts_debug:
   
     runs-on: ubuntu-latest
@@ -718,7 +750,10 @@ jobs:
       with:
         name: propagators_test_debug_data
 
-
+    - uses: geekyeggo/delete-artifact@v1
+      continue-on-error: true
+      with:
+        name: math_test_debug_data
 
     - uses: geekyeggo/delete-artifact@v1
       continue-on-error: true
