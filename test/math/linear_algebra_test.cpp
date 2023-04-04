@@ -15,7 +15,7 @@
 constexpr auto tolnear = 1e2 * std::numeric_limits<double>::epsilon();
 
 
-Xml_document reference_file("./data/linear_algebra_test.xml", true);
+Xml_document reference_file("data/linear_algebra_test.xml", true);
 
 
 inline std::vector<double> comma_separated_string2vector_of_doubles(const std::string &str)
