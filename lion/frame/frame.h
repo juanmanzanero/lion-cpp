@@ -82,7 +82,8 @@ class Frame
     //! Applies x = xO + Qpc*x' over all the chain of parent frames until the inertial frame
     //! is reached
     //! @param[in] x: the vector of this frame to be computed. Defaults to the origin (0,0,0)
-    tVector3d get_absolute_position(const tVector3d& x = tVector3d(0.0)) const;
+    tVector3d get_absolute_position() const;
+    tVector3d get_absolute_position(const tVector3d& x) const;
 
     //!  Returns the absolute velocity of a point \p x with velocity \p dx of this frame
     //! AND projects it back to this frame
@@ -91,9 +92,9 @@ class Frame
     //! xBody = Q(Body|Inertial)xInertial
     //! @param[in] x: position of the point of this frame. Defaults to the origin (0,0,0)
     //! @param[in] dx: local velocity of the point of this frame. Defaults to fixed point (0,0,0)
-    tVector3d get_absolute_velocity_in_body(const tVector3d& x = tVector3d(0.0),
-                                                      const tVector3d& dx = tVector3d(0.0) 
-                                                     ) const;
+    tVector3d get_absolute_velocity_in_body() const;
+    tVector3d get_absolute_velocity_in_body(const tVector3d& x) const;
+    tVector3d get_absolute_velocity_in_body(const tVector3d& x, const tVector3d& dx) const;
 
     //!  Returns the absolute velocity of a point \p x with velocity \p dx of this frame
     //! AND projects to this frame's parent.
@@ -102,9 +103,9 @@ class Frame
     //! xParent = Q(Parent|Inertial)xInertial
     //! @param[in] x: position of the point of this frame. Defaults to the origin (0,0,0)
     //! @param[in] dx: local velocity of the point of this frame. Defaults to fixed point (0,0,0)
-    tVector3d get_absolute_velocity_in_parent(const tVector3d& x = tVector3d(0.0),
-                                                        const tVector3d& dx = tVector3d(0.0)
-                                                       ) const;
+    tVector3d get_absolute_velocity_in_parent() const;
+    tVector3d get_absolute_velocity_in_parent(const tVector3d& x) const;
+    tVector3d get_absolute_velocity_in_parent(const tVector3d& x, const tVector3d& dx) const;
     
     //!  Returns the absolute velocity of a point \p x with velocity \p dx of this frame
     //! projected in inertial frame.
@@ -112,9 +113,9 @@ class Frame
     //! inertial frame is reached.
     //! @param[in] x: position of the point of this frame. Defaults to the origin (0,0,0)
     //! @param[in] dx: local velocity of the point of this frame. Defaults to fixed point (0,0,0)
-    tVector3d get_absolute_velocity_in_inertial(const tVector3d& x = tVector3d(0.0),
-                                                          const tVector3d& dx = tVector3d(0.0)
-                                                         ) const;
+    tVector3d get_absolute_velocity_in_inertial() const;
+    tVector3d get_absolute_velocity_in_inertial(const tVector3d& x) const;
+    tVector3d get_absolute_velocity_in_inertial(const tVector3d& x, const tVector3d& dx) const;
 
     //!  Returns the position and velocity of a point \p x with velocity \p dx relative to another
     //! moving frame \p target.
@@ -131,8 +132,8 @@ class Frame
     //! @param[out] returns the tuple (x,v). One can use std::tie(x,v) = f() to unwrap the variables.
     //!                 or std::get<0|1>f() to only get one of the two.
     std::pair<tVector3d,tVector3d> get_position_and_velocity_in_target(const Frame& target, 
-                                                                       const tVector3d& x = tVector3d(0.0), 
-                                                                       const tVector3d& dx = tVector3d(0.0)
+                                                                       const tVector3d& x = tVector3d{0.}, 
+                                                                       const tVector3d& dx = tVector3d{0.}
                                                                       ) const;
 
     //! Returns the rotation matrix from the children to the parent

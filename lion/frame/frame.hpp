@@ -168,6 +168,17 @@ constexpr inline size_t Frame<T>::generation() const
 
 
 template<typename T>
+inline typename Frame<T>::tVector3d Frame<T>::get_absolute_position() const
+{
+    if (is_inertial())
+        return Frame<T>::tVector3d{0.};
+
+    return get_parent_ptr()->get_absolute_position(_x);
+}
+
+
+
+template<typename T>
 inline typename Frame<T>::tVector3d Frame<T>::get_absolute_position(const typename Frame<T>::tVector3d& x) const
 {
     if (is_inertial())
@@ -175,6 +186,35 @@ inline typename Frame<T>::tVector3d Frame<T>::get_absolute_position(const typena
 
     return get_parent_ptr()->get_absolute_position(_x + _Qpc*x);
 }
+
+template<typename T>
+inline typename Frame<T>::tVector3d Frame<T>::get_absolute_velocity_in_body() const
+{
+    if ( is_inertial() )
+        return Frame<T>::tVector3d{0.};
+
+    else if ( get_parent_ptr()->is_inertial() )
+        return _frame_velocity;
+
+    else
+        return _Qcp*get_parent_ptr()->get_absolute_velocity_in_body(_x, _Qpc*(_frame_velocity));
+}
+
+
+
+template<typename T>
+inline typename Frame<T>::tVector3d Frame<T>::get_absolute_velocity_in_body(const typename Frame<T>::tVector3d& x) const
+{
+    if ( is_inertial() )
+        return Frame<T>::tVector3d{0.};
+
+    else if ( get_parent_ptr()->is_inertial() )
+        return _frame_velocity + cross(_omega_pc_self, x);
+
+    else
+        return _Qcp*get_parent_ptr()->get_absolute_velocity_in_body(_x + _Qpc*x, _Qpc*(_frame_velocity + cross(_omega_pc_self,x)));
+}
+
 
 
 template<typename T>
@@ -190,6 +230,27 @@ inline typename Frame<T>::tVector3d Frame<T>::get_absolute_velocity_in_body(cons
         return _Qcp*get_parent_ptr()->get_absolute_velocity_in_body(_x + _Qpc*x, _Qpc*(_frame_velocity + dx + cross(_omega_pc_self,x)));
 }
 
+
+template<typename T>
+inline typename Frame<T>::tVector3d Frame<T>::get_absolute_velocity_in_parent() const
+{
+    if ( is_inertial() )
+        return Frame<T>::tVector3d{0.};
+
+    return _Qpc*get_absolute_velocity_in_body();
+}
+
+
+template<typename T>
+inline typename Frame<T>::tVector3d Frame<T>::get_absolute_velocity_in_parent(const typename Frame<T>::tVector3d& x) const
+{
+    if ( is_inertial() )
+        return Frame<T>::tVector3d{0.};
+
+    return _Qpc*get_absolute_velocity_in_body(x);
+}
+
+
     
 template<typename T>
 inline typename Frame<T>::tVector3d Frame<T>::get_absolute_velocity_in_parent(const typename Frame<T>::tVector3d& x, const typename Frame<T>::tVector3d& dx) const
@@ -198,6 +259,25 @@ inline typename Frame<T>::tVector3d Frame<T>::get_absolute_velocity_in_parent(co
         return dx;
 
     return _Qpc*get_absolute_velocity_in_body(x, dx);
+}
+
+template<typename T>
+inline typename Frame<T>::tVector3d Frame<T>::get_absolute_velocity_in_inertial() const
+{
+    if ( is_inertial() )
+        return Frame<T>::tVector3d{0.};
+    else
+        return get_parent_ptr()->get_absolute_velocity_in_inertial(_x, _Qpc*(_frame_velocity));
+}
+
+
+template<typename T>
+inline typename Frame<T>::tVector3d Frame<T>::get_absolute_velocity_in_inertial(const typename Frame<T>::tVector3d& x) const
+{
+    if ( is_inertial() )
+        return Frame<T>::tVector3d{0.};
+    else
+        return get_parent_ptr()->get_absolute_velocity_in_inertial(_x + _Qpc*x, _Qpc*(_frame_velocity + cross(_omega_pc_self,x)));
 }
 
 
@@ -209,6 +289,7 @@ inline typename Frame<T>::tVector3d Frame<T>::get_absolute_velocity_in_inertial(
     else
         return get_parent_ptr()->get_absolute_velocity_in_inertial(_x + _Qpc*x, _Qpc*(_frame_velocity + dx + cross(_omega_pc_self,x)));
 }
+
  
 template<typename T>
 inline std::pair<typename Frame<T>::tVector3d,typename Frame<T>::tVector3d> Frame<T>::get_position_and_velocity_in_target(const Frame<T>& target, const typename Frame<T>::tVector3d& x, const typename Frame<T>::tVector3d& dx) const
