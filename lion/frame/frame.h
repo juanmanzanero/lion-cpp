@@ -249,6 +249,22 @@ class Frame
     //! @param[in] bUpdate: if true, will call update()
     void add_rotation(const T angle, const T dangle, const Axis axis, const bool bUpdate = true);
 
+    //! Override the angular rotations by the ones indicated
+    //! @param[in] angles: new angles [rad]
+    //! @param[in] dangles: new angular velocities [rad/s]
+    //! @param[in] axes: which axes (X/Y/Z)
+    void set_rotations(const std::vector<T>& angles, const std::vector<T>& dangles, const std::vector<Axis>& axes)
+    {
+        assert(angles.size() == dangles.size());
+        assert(angles.size() == axes.size());
+
+        _angles  = angles;
+        _dangles = dangles;
+        _axis    = axes;
+
+        update();
+    }
+
  private:
     
     //! Settable parameters

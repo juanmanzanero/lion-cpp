@@ -882,7 +882,4 @@ TEST_F(Rotation_wrt_target_test, omega_wrt_target)
     {
         SUCCEED();
     }
-
-
-
 }
