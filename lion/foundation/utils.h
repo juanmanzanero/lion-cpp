@@ -1,5 +1,6 @@
-#ifndef __UTILS_H__
-#define __UTILS_H__
+#ifndef LION_FOUNDATION_UTILS_H
+#define LION_FOUNDATION_UTILS_H
+
 
 #include <sstream>
 #include <string>
@@ -13,6 +14,7 @@
 #include "types.h"
 #include "lion/math/vector3d.h"
 #include "lion/foundation/lion_exception.h"
+
 
 constexpr double& Value(double& val);
 constexpr const double& Value(const double& val);
@@ -107,44 +109,21 @@ inline std::tuple<Vector3d<T>,T,std::array<size_t,2>> find_intersection(const st
 template<typename T>
 inline std::tuple<T,T> find_intersection(const Vector3d<T>& r0, const Vector3d<T>& p0, const sVector3d& r1, const sVector3d& p1);
 
+template<typename T, typename Matrix3x3Type>
+constexpr Matrix3x3Type ea2rotmat(T yaw_rad, T pitch_rad, T roll_rad);
 
-template<typename T>
-constexpr std::array<T, 3u> rotmat2ea(const std::array<T, 9u> &M)
-{
-    //
-    // Returns an std::array holding the Euler angles in 'ZYX' sequence
-    // "[yaw, pitch, roll]", in rad, from the input rotation matrix,
-    // given as an std::array in column-major format.
-    //
+template<typename Matrix3x3Type, typename Array3Type>
+constexpr Array3Type rotmat2ea(const Matrix3x3Type &M);
 
-    // gymbal lock tolerance, calculated with
-    // "gymbal_lock_pitch_tol_deg = 0.001;
-    //  gymbal_lock_pitch_zone = cos(deg2rad(gymbal_lock_pitch_tol_deg));"
-    constexpr auto gymbal_lock_pitch_zone = T{ 0.999999999847691 };
-    const auto sinp = -M[2];
-
-
-    T pitch_rad;
-    if (std::fabs(sinp) <= gymbal_lock_pitch_zone) {
-        pitch_rad = std::asin(sinp);
-    }
-    else if (sinp >= T{ 0 }) {
-        pitch_rad = T{ 0.5 } * pi_T<T>;
-    }
-    else {
-        pitch_rad = -T{ 0.5 } * pi_T<T>;
-    }
-
-    const auto yaw_rad = std::atan2(M[1], M[0]);
-    const auto roll_rad = std::atan2(M[5], M[8]);
-
-    return std::array<T, 3u>{ wrap_to_pi(yaw_rad),
-                              wrap_to_pi(pitch_rad),
-                              wrap_to_pi(roll_rad) };
-}
-
+template<typename T, typename Matrix3x3Type>
+constexpr Matrix3x3Type tcs2rotmat(T toe_rad, T camber_rad, T spin_rad);
 
 template<typename SizeType>
 constexpr SizeType nchoosek(SizeType n, SizeType k);
+
+template<typename T,
+    typename Array2Type = std::array<T, 2> >
+constexpr std::pair<Array2Type, bool> sin_cos_solve(T lhs_s, T lhs_c, T rhs,
+    T tolzero = 1e3 * std::numeric_limits<T>::epsilon());
 
 #endif
