@@ -120,7 +120,7 @@ constexpr T wrap_to_pi(T angle_rad)
 
     // return mod_mat(angle_rad + pi_T<T>, T{ 2 } * pi_T<T>) - pi_T<T>;
     return angle_rad - T{ 2 } * pi_T<T> *
-        std::floor(T{ 0.5 } * angle_rad / pi_T<T> + T{ 0.5 }));
+        std::floor(T{ 0.5 } * angle_rad / pi_T<T> + T{ 0.5 });
 }
 
 template<typename T>
