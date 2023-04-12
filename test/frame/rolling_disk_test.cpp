@@ -171,3 +171,195 @@ TEST_P(Rolling_disk_test, get_absolute_velocity_in_parent)
                                                                                 + dalpha*x0*cos(theta)+2.0*dalpha*R*sin(theta));
     EXPECT_DOUBLE_EQ(frame3.get_absolute_velocity_in_parent({0.0,R,0.0}).at(2), 0.0);
 }
+
+
+TEST_P(Rolling_disk_test, get_origin_from_rotation_matrix) 
+{
+    sFrame frame1_from_rot = sFrame(frame1.get_origin(), frame1.get_relative_velocity_in_self(), frame1.get_rotation_matrix(), frame1.get_omega_wrt_parent_in_body(), inclined_frame, 
+                                    sFrame::Frame_velocity_types::this_frame);
+
+    sFrame frame2_from_rot = sFrame(frame2.get_origin(), frame2.get_relative_velocity_in_self(), frame2.get_rotation_matrix(), frame2.get_omega_wrt_parent_in_body(), frame1_from_rot, 
+                                    sFrame::Frame_velocity_types::this_frame);
+
+    sFrame frame3_from_rot = sFrame(frame3.get_origin(), frame3.get_relative_velocity_in_self(), frame3.get_rotation_matrix(), frame3.get_omega_wrt_parent_in_body(), frame2_from_rot, 
+                                    sFrame::Frame_velocity_types::this_frame);
+
+    EXPECT_DOUBLE_EQ(frame1_from_rot.get_origin().at(0), x0);
+    EXPECT_DOUBLE_EQ(frame1_from_rot.get_origin().at(1),  R);
+    EXPECT_DOUBLE_EQ(frame1_from_rot.get_origin().at(2),0.0);
+
+    for (size_t i = 0; i < 3; ++i)
+        EXPECT_DOUBLE_EQ(frame2_from_rot.get_origin().at(i),0.0);
+
+    for (size_t i = 0; i < 3; ++i)
+        EXPECT_DOUBLE_EQ(frame3_from_rot.get_origin().at(i),0.0);
+}
+
+
+
+TEST_P(Rolling_disk_test, get_absolute_position_from_rotation_matrix)
+{
+    sFrame frame1_from_rot = sFrame(frame1.get_origin(), frame1.get_relative_velocity_in_self(), frame1.get_rotation_matrix(), frame1.get_omega_wrt_parent_in_body(), inclined_frame, 
+                                    sFrame::Frame_velocity_types::this_frame);
+
+    sFrame frame2_from_rot = sFrame(frame2.get_origin(), frame2.get_relative_velocity_in_self(), frame2.get_rotation_matrix(), frame2.get_omega_wrt_parent_in_body(), frame1_from_rot, 
+                                    sFrame::Frame_velocity_types::this_frame);
+
+    sFrame frame3_from_rot = sFrame(frame3.get_origin(), frame3.get_relative_velocity_in_self(), frame3.get_rotation_matrix(), frame3.get_omega_wrt_parent_in_body(), frame2_from_rot, 
+                                    sFrame::Frame_velocity_types::this_frame);
+
+    EXPECT_DOUBLE_EQ(frame1_from_rot.get_absolute_position().at(0),x0*cos(alpha)-R*sin(alpha));
+    EXPECT_DOUBLE_EQ(frame1_from_rot.get_absolute_position().at(1),x0*sin(alpha)+R*cos(alpha));
+    EXPECT_DOUBLE_EQ(frame1_from_rot.get_absolute_position().at(2), 0.0);
+
+    EXPECT_DOUBLE_EQ(frame2_from_rot.get_absolute_position().at(0), x0*cos(alpha) - R*sin(alpha));
+    EXPECT_DOUBLE_EQ(frame2_from_rot.get_absolute_position().at(1), x0*sin(alpha) + R*cos(alpha));
+    EXPECT_DOUBLE_EQ(frame2_from_rot.get_absolute_position().at(2), 0.0);
+
+    EXPECT_DOUBLE_EQ(frame2_from_rot.get_absolute_position({-R*sin(theta),-R*cos(theta),0.0}).at(0), x0*cos(alpha));
+    EXPECT_DOUBLE_EQ(frame2_from_rot.get_absolute_position({-R*sin(theta),-R*cos(theta),0.0}).at(1), x0*sin(alpha));
+    EXPECT_DOUBLE_EQ(frame2_from_rot.get_absolute_position({-R*sin(theta),-R*cos(theta),0.0}).at(2),           0.0);
+
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_position().at(0),  x0*cos(alpha) - R*sin(alpha));
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_position().at(1),  x0*sin(alpha) + R*cos(alpha));
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_position().at(2), 0.0);
+
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_position({0.0,-R,0.0}).at(0), x0*cos(alpha));
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_position({0.0,-R,0.0}).at(1), x0*sin(alpha));
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_position({0.0,-R,0.0}).at(2),           0.0);
+}
+
+TEST_P(Rolling_disk_test, get_relative_velocity_in_parent_from_rotation_matrix)
+{
+    sFrame frame1_from_rot = sFrame(frame1.get_origin(), frame1.get_relative_velocity_in_self(), frame1.get_rotation_matrix(), frame1.get_omega_wrt_parent_in_body(), inclined_frame, 
+                                    sFrame::Frame_velocity_types::this_frame);
+
+    sFrame frame2_from_rot = sFrame(frame2.get_origin(), frame2.get_relative_velocity_in_self(), frame2.get_rotation_matrix(), frame2.get_omega_wrt_parent_in_body(), frame1_from_rot, 
+                                    sFrame::Frame_velocity_types::this_frame);
+
+    sFrame frame3_from_rot = sFrame(frame3.get_origin(), frame3.get_relative_velocity_in_self(), frame3.get_rotation_matrix(), frame3.get_omega_wrt_parent_in_body(), frame2_from_rot, 
+                                    sFrame::Frame_velocity_types::this_frame);
+
+    EXPECT_DOUBLE_EQ(frame1_from_rot.get_relative_velocity_in_parent().at(0),  omega*R);
+    EXPECT_DOUBLE_EQ(frame1_from_rot.get_relative_velocity_in_parent().at(1),      0.0);
+    EXPECT_DOUBLE_EQ(frame1_from_rot.get_relative_velocity_in_parent().at(2),      0.0);
+
+    for (size_t i = 0; i < 3; ++i)
+        EXPECT_DOUBLE_EQ(frame2_from_rot.get_relative_velocity_in_parent().at(i), 0.0);
+
+    for (size_t i = 0; i < 3; ++i)
+        EXPECT_DOUBLE_EQ(frame3_from_rot.get_relative_velocity_in_parent().at(i), 0.0);
+}
+
+
+TEST_P(Rolling_disk_test, get_absolute_velocity_in_inertial_from_rotation_matrix)
+{
+    sFrame frame1_from_rot = sFrame(frame1.get_origin(), frame1.get_relative_velocity_in_self(), frame1.get_rotation_matrix(), frame1.get_omega_wrt_parent_in_body(), inclined_frame, 
+                                    sFrame::Frame_velocity_types::this_frame);
+
+    sFrame frame2_from_rot = sFrame(frame2.get_origin(), frame2.get_relative_velocity_in_self(), frame2.get_rotation_matrix(), frame2.get_omega_wrt_parent_in_body(), frame1_from_rot, 
+                                    sFrame::Frame_velocity_types::this_frame);
+
+    sFrame frame3_from_rot = sFrame(frame3.get_origin(), frame3.get_relative_velocity_in_self(), frame3.get_rotation_matrix(), frame3.get_omega_wrt_parent_in_body(), frame2_from_rot, 
+                                    sFrame::Frame_velocity_types::this_frame);
+
+    EXPECT_DOUBLE_EQ(frame1_from_rot.get_absolute_velocity_in_inertial().at(0),  omega*R*cos(alpha) - dalpha*(x0*sin(alpha)+R*cos(alpha)));
+    EXPECT_DOUBLE_EQ(frame1_from_rot.get_absolute_velocity_in_inertial().at(1),  omega*R*sin(alpha) + dalpha*(x0*cos(alpha)-R*sin(alpha)));
+    EXPECT_DOUBLE_EQ(frame1_from_rot.get_absolute_velocity_in_inertial().at(2),                 0.0);
+
+    EXPECT_DOUBLE_EQ(frame2_from_rot.get_absolute_velocity_in_inertial().at(0),  omega*R*cos(alpha) - dalpha*(x0*sin(alpha)+R*cos(alpha)));
+    EXPECT_DOUBLE_EQ(frame2_from_rot.get_absolute_velocity_in_inertial().at(1),  omega*R*sin(alpha) + dalpha*(x0*cos(alpha)-R*sin(alpha)));
+    EXPECT_DOUBLE_EQ(frame2_from_rot.get_absolute_velocity_in_inertial().at(2),                 0.0);
+
+    EXPECT_DOUBLE_EQ(frame2_from_rot.get_absolute_velocity_in_inertial({-R*sin(theta),-R*cos(theta),0.0}).at(0), -dalpha*x0*sin(alpha));
+    EXPECT_DOUBLE_EQ(frame2_from_rot.get_absolute_velocity_in_inertial({-R*sin(theta),-R*cos(theta),0.0}).at(1),  dalpha*x0*cos(alpha));
+    EXPECT_DOUBLE_EQ(frame2_from_rot.get_absolute_velocity_in_inertial({-R*sin(theta),-R*cos(theta),0.0}).at(2), 0.0);
+
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_velocity_in_inertial().at(0),  omega*R*cos(alpha) - dalpha*(x0*sin(alpha)+R*cos(alpha)));
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_velocity_in_inertial().at(1),  omega*R*sin(alpha) + dalpha*(x0*cos(alpha)-R*sin(alpha)));
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_velocity_in_inertial().at(2),                 0.0);
+
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_velocity_in_inertial({0.0,-R,0.0}).at(0), -dalpha*x0*sin(alpha));
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_velocity_in_inertial({0.0,-R,0.0}).at(1),  dalpha*x0*cos(alpha));
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_velocity_in_inertial({0.0,-R,0.0}).at(2), 0.0);
+
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_velocity_in_inertial({0.0,R,0.0}).at(0),  2.0*omega*R*cos(alpha) - dalpha*(x0*sin(alpha)+2.0*R*cos(alpha)));
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_velocity_in_inertial({0.0,R,0.0}).at(1),  2.0*omega*R*sin(alpha) + dalpha*(x0*cos(alpha)-2.0*R*sin(alpha)));
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_velocity_in_inertial({0.0,R,0.0}).at(2),                 0.0);
+}
+
+
+TEST_P(Rolling_disk_test, get_absolute_velocity_in_body_from_rotation_matrix)
+{
+    sFrame frame1_from_rot = sFrame(frame1.get_origin(), frame1.get_relative_velocity_in_self(), frame1.get_rotation_matrix(), frame1.get_omega_wrt_parent_in_body(), inclined_frame, 
+                                    sFrame::Frame_velocity_types::this_frame);
+
+    sFrame frame2_from_rot = sFrame(frame2.get_origin(), frame2.get_relative_velocity_in_self(), frame2.get_rotation_matrix(), frame2.get_omega_wrt_parent_in_body(), frame1_from_rot, 
+                                    sFrame::Frame_velocity_types::this_frame);
+
+    sFrame frame3_from_rot = sFrame(frame3.get_origin(), frame3.get_relative_velocity_in_self(), frame3.get_rotation_matrix(), frame3.get_omega_wrt_parent_in_body(), frame2_from_rot, 
+                                    sFrame::Frame_velocity_types::this_frame);
+
+    EXPECT_DOUBLE_EQ(frame1_from_rot.get_absolute_velocity_in_body().at(0),  omega*R-dalpha*R);
+    EXPECT_NEAR     (frame1_from_rot.get_absolute_velocity_in_body().at(1), dalpha*x0, 2.0e-16);
+    EXPECT_DOUBLE_EQ(frame1_from_rot.get_absolute_velocity_in_body().at(2),      0.0);
+
+    EXPECT_DOUBLE_EQ(frame2_from_rot.get_absolute_velocity_in_body().at(0),  omega*R*cos(theta) + dalpha*x0*sin(theta)-dalpha*R*cos(theta));
+    EXPECT_DOUBLE_EQ(frame2_from_rot.get_absolute_velocity_in_body().at(1), -omega*R*sin(theta) + dalpha*x0*cos(theta)+dalpha*R*sin(theta));
+    EXPECT_DOUBLE_EQ(frame2_from_rot.get_absolute_velocity_in_body().at(2),                 0.0);
+
+    EXPECT_DOUBLE_EQ(frame2_from_rot.get_absolute_velocity_in_body({-R*sin(theta),-R*cos(theta),0.0}).at(0), dalpha*x0*sin(theta));
+    EXPECT_DOUBLE_EQ(frame2_from_rot.get_absolute_velocity_in_body({-R*sin(theta),-R*cos(theta),0.0}).at(1), dalpha*x0*cos(theta));
+    EXPECT_DOUBLE_EQ(frame2_from_rot.get_absolute_velocity_in_body({-R*sin(theta),-R*cos(theta),0.0}).at(2), 0.0);
+
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_velocity_in_body().at(0),  omega*R - dalpha*R);
+    EXPECT_NEAR     (frame3_from_rot.get_absolute_velocity_in_body().at(1),  dalpha*x0, 2.0e-16 );
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_velocity_in_body().at(2),  0.0 );
+
+    EXPECT_NEAR     (frame3_from_rot.get_absolute_velocity_in_body({0.0,-R,0.0}).at(0), 0.0, 2.0e-16);
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_velocity_in_body({0.0,-R,0.0}).at(1), dalpha*x0);
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_velocity_in_body({0.0,-R,0.0}).at(2), 0.0);
+
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_velocity_in_body({0.0,R,0.0}).at(0), 2.0*omega*R - 2.0*dalpha*R);
+    EXPECT_NEAR     (frame3_from_rot.get_absolute_velocity_in_body({0.0,R,0.0}).at(1), dalpha*x0, 4.0e-16);
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_velocity_in_body({0.0,R,0.0}).at(2), 0.0);
+}
+
+
+TEST_P(Rolling_disk_test, get_absolute_velocity_in_parent_from_rotation_matrix)
+{
+    sFrame frame1_from_rot = sFrame(frame1.get_origin(), frame1.get_relative_velocity_in_self(), frame1.get_rotation_matrix(), frame1.get_omega_wrt_parent_in_body(), inclined_frame, 
+                                    sFrame::Frame_velocity_types::this_frame);
+
+    sFrame frame2_from_rot = sFrame(frame2.get_origin(), frame2.get_relative_velocity_in_self(), frame2.get_rotation_matrix(), frame2.get_omega_wrt_parent_in_body(), frame1_from_rot, 
+                                    sFrame::Frame_velocity_types::this_frame);
+
+    sFrame frame3_from_rot = sFrame(frame3.get_origin(), frame3.get_relative_velocity_in_self(), frame3.get_rotation_matrix(), frame3.get_omega_wrt_parent_in_body(), frame2_from_rot, 
+                                    sFrame::Frame_velocity_types::this_frame);
+
+    EXPECT_DOUBLE_EQ(frame1_from_rot.get_absolute_velocity_in_parent().at(0),  omega*R -dalpha*R);
+    EXPECT_NEAR     (frame1_from_rot.get_absolute_velocity_in_parent().at(1), dalpha*x0, 2.0e-16);
+    EXPECT_DOUBLE_EQ(frame1_from_rot.get_absolute_velocity_in_parent().at(2),      0.0);
+
+    EXPECT_DOUBLE_EQ(frame2_from_rot.get_absolute_velocity_in_parent().at(0), omega*R-dalpha*R);
+    EXPECT_NEAR     (frame2_from_rot.get_absolute_velocity_in_parent().at(1), dalpha*x0, 2.0e-16);
+    EXPECT_DOUBLE_EQ(frame2_from_rot.get_absolute_velocity_in_parent().at(2), 0.0);
+
+    EXPECT_NEAR     (frame2_from_rot.get_absolute_velocity_in_parent({-R*sin(theta),-R*cos(theta),0.0}).at(0), 0.0, 2.0e-16);
+    EXPECT_DOUBLE_EQ(frame2_from_rot.get_absolute_velocity_in_parent({-R*sin(theta),-R*cos(theta),0.0}).at(1), dalpha*x0);
+    EXPECT_DOUBLE_EQ(frame2_from_rot.get_absolute_velocity_in_parent({-R*sin(theta),-R*cos(theta),0.0}).at(2), 0.0);
+
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_velocity_in_parent().at(0),  omega*R*cos(theta) + dalpha*x0*sin(theta)-dalpha*R*cos(theta));
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_velocity_in_parent().at(1), -omega*R*sin(theta) + dalpha*x0*cos(theta)+dalpha*R*sin(theta));
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_velocity_in_body().at(2),                 0.0);
+
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_velocity_in_parent({0.0,-R,0.0}).at(0), dalpha*x0*sin(theta));
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_velocity_in_parent({0.0,-R,0.0}).at(1), dalpha*x0*cos(theta));
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_velocity_in_parent({0.0,-R,0.0}).at(2), 0.0);
+
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_velocity_in_parent({0.0,R,0.0}).at(0),   2.0*omega*R*cos(theta) 
+                                                                                + dalpha*x0*sin(theta)-2.0*dalpha*R*cos(theta));
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_velocity_in_parent({0.0,R,0.0}).at(1), - 2.0*omega*R*sin(theta) 
+                                                                                + dalpha*x0*cos(theta)+2.0*dalpha*R*sin(theta));
+    EXPECT_DOUBLE_EQ(frame3_from_rot.get_absolute_velocity_in_parent({0.0,R,0.0}).at(2), 0.0);
+}

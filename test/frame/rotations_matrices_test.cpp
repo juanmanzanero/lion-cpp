@@ -74,7 +74,7 @@ class Rotation_wrt_target_test : public :: testing::Test
     const std::array<scalar,9> dtheta = {0.1, -0.25, pi/12.0, -pi/12.0, pi, -pi/4.0, pi/8.0, -pi/8.0, 0.668};
     const std::array<Axis,9> axis = {X,Y,Z,Z,Y,X,X,Z,X};
 
-    const sFrame frame1;
+    const sFrame frame1 = sFrame();
     const sFrame frame2 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[0]}, {dtheta[0]}, {axis[0]}, frame1, sFrame::Frame_velocity_types::parent_frame);
     const sFrame frame3 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[1]}, {dtheta[1]}, {axis[1]}, frame2, sFrame::Frame_velocity_types::parent_frame);
     const sFrame frame4 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[2]}, {dtheta[2]}, {axis[2]}, frame2, sFrame::Frame_velocity_types::parent_frame);
@@ -85,7 +85,7 @@ class Rotation_wrt_target_test : public :: testing::Test
     const sFrame frame9 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[7]}, {dtheta[7]}, {axis[7]}, frame6, sFrame::Frame_velocity_types::parent_frame);
     const sFrame frame10 = sFrame(sVector3d(0.0), sVector3d(0.0), {theta[8]}, {dtheta[8]}, {axis[8]}, frame6, sFrame::Frame_velocity_types::parent_frame);
 
-    const sFrame frame11;
+    const sFrame frame11 = sFrame();
 
     // Rotation matrices
     const sMatrix3x3 Q12 = rotation_matrix_x(theta[0]);

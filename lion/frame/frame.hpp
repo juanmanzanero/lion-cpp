@@ -3,16 +3,19 @@
 template<typename T>
 inline Frame<T>::Frame(const typename Frame<T>::tVector3d& x, const typename Frame<T>::tVector3d& frame_velocity, const std::vector<T> angles, 
                     const std::vector<T> dangles, const std::vector<Axis> axis, const Frame<T>& parent, const Frame_velocity_types& frame_velocity_type) 
-: _parent(&parent),
+: _angular_description_mode(Frame_angular_description_mode::from_angles_and_derivatives),
+  _parent(&parent),
   _x(x), 
   _frame_velocity(), 
   _angles(angles), 
   _dangles(dangles), 
   _axis(axis),
-  _updated(false)
+  _updated(false),
+  _Qpc(tMatrix3x3::eye()),
+  _Qcp(tMatrix3x3::eye()),
+  _omega_pc_self(tVector3d::zeros()),
+  _omega_pc_parent(tVector3d::zeros())
 {
- try
- { 
     if ( _angles.size() != _dangles.size() ) 
     {
         throw lion_exception("angles and angles derivatives vectors do not have the same size"); 
@@ -48,12 +51,41 @@ inline Frame<T>::Frame(const typename Frame<T>::tVector3d& x, const typename Fra
     default:
         throw lion_exception("[ERROR] Frame() -> frame_velocity_type is not recognized");
     }
- } 
- catch( const lion_exception& error )
- {
-    throw;
- }
 }
+
+template<typename T>
+inline Frame<T>::Frame(const tVector3d& x, const tVector3d& frame_velocity, const tMatrix3x3& rotation_matrix_pc, const tVector3d& omega_pc_self, const Frame& parent,
+    const Frame_velocity_types& frame_velocity_type)
+: _angular_description_mode(Frame_angular_description_mode::from_rotation_matrix_and_omega),
+  _parent(&parent),
+  _x(x),
+  _frame_velocity(),
+  _angles(),
+  _dangles(),
+  _axis(),
+  _updated(false),
+  _Qpc(rotation_matrix_pc),
+  _Qcp(tMatrix3x3::eye()),
+  _omega_pc_self(omega_pc_self),
+  _omega_pc_parent(tVector3d::zeros())
+{
+    update();
+
+    switch (frame_velocity_type)
+    {
+    case(Frame_velocity_types::parent_frame):
+        _frame_velocity = _Qcp * frame_velocity;
+        break;
+    case(Frame_velocity_types::this_frame):
+        _frame_velocity = frame_velocity;
+        break;
+    default:
+        throw lion_exception("[ERROR] Frame() -> frame_velocity_type is not recognized");
+    }
+
+}
+
+
 
 
 template<typename T>
@@ -62,73 +94,94 @@ inline void Frame<T>::update()
     if ( is_inertial() )
         return;
 
-    if ( _angles.size() == 0 )
+    switch (_angular_description_mode)
     {
-        _Qpc = tMatrix3x3::eye();
-        _Qcp = tMatrix3x3::eye();
+     case (Frame_angular_description_mode::from_angles_and_derivatives):
+     {
+        if ( _angles.size() == 0 )
+        {
+            _Qpc = tMatrix3x3::eye();
+            _Qcp = tMatrix3x3::eye();
+            _omega_pc_self = tVector3d::zeros();
+            _omega_pc_parent = tVector3d::zeros();
+    
+            _updated = true;
+            return;
+        }
+    
+    //  Compute the rotation matrix
+        std::vector<tMatrix3x3> fwd_rot_matrices;
+        std::vector<tMatrix3x3> bwd_rot_matrices;
+    
+    //  Accumulated forward rotation matrices: X_parent = Q_{12}Q_{23}...Q_{j-1,j}Xj
+        std::vector<tMatrix3x3> accumulated_fwd_rot_matrices(_angles.size());
+    
+    //  Accumulated backward rotation matrices: X_child = Q_{N,N-1}Q_{N-1,N-2}...Q_{j+1,j}Xj
+        std::vector<tMatrix3x3> accumulated_bwd_rot_matrices(_angles.size());
+    
+        for (size_t i = 0; i < _angles.size(); ++i)
+        {
+            switch(_axis[i])
+            {
+             case(X):
+                fwd_rot_matrices.push_back(rotation_matrix_x(_angles[i]));
+                break;
+    
+             case(Y):
+                fwd_rot_matrices.push_back(rotation_matrix_y(_angles[i]));
+                break;
+    
+             case(Z):
+                fwd_rot_matrices.push_back(rotation_matrix_z(_angles[i]));
+                break;
+            } 
+    
+            bwd_rot_matrices.push_back(transpose(fwd_rot_matrices.at(i)));
+        }
+    
+        accumulated_fwd_rot_matrices.front() = fwd_rot_matrices.front();
+    
+        for (size_t i=1; i< _angles.size(); ++i)
+            accumulated_fwd_rot_matrices[i] = accumulated_fwd_rot_matrices[i-1]*fwd_rot_matrices[i];
+    
+    
+        accumulated_bwd_rot_matrices.back() = bwd_rot_matrices.back();
+        for (int i = _angles.size()-2; i >= 0; --i)
+            accumulated_bwd_rot_matrices[i] = accumulated_bwd_rot_matrices[i+1]*bwd_rot_matrices[i];
+    
+        _Qpc = accumulated_fwd_rot_matrices.back();
+        _Qcp = accumulated_bwd_rot_matrices.front();
+    
+        // Compute omega
         _omega_pc_self = tVector3d::zeros();
         _omega_pc_parent = tVector3d::zeros();
+    
+        for (size_t i = 0; i < _angles.size(); ++i)
+        {
+            tVector3d new_rot(tVector3d::zeros());
+            new_rot[_axis[i]] = _dangles[i];
+            _omega_pc_self += accumulated_bwd_rot_matrices[i]*new_rot;
+            _omega_pc_parent += accumulated_fwd_rot_matrices[i]*new_rot;
+        }
+    
+        _updated = true;
+    
+        break;
+     }
+     case (Frame_angular_description_mode::from_rotation_matrix_and_omega):
+     {
+
+        _Qcp = transpose(_Qpc);
+        _omega_pc_parent = _Qpc*_omega_pc_self;
 
         _updated = true;
-        return;
+        
+        break;
+     }
+     default:
+        throw lion_exception("[ERROR] Frame<T>::update -> wrong frame angular decription mode");
+
     }
-
-//  Compute the rotation matrix
-    std::vector<tMatrix3x3> fwd_rot_matrices;
-    std::vector<tMatrix3x3> bwd_rot_matrices;
-
-//  Accumulated forward rotation matrices: X_parent = Q_{12}Q_{23}...Q_{j-1,j}Xj
-    std::vector<tMatrix3x3> accumulated_fwd_rot_matrices(_angles.size());
-
-//  Accumulated backward rotation matrices: X_child = Q_{N,N-1}Q_{N-1,N-2}...Q_{j+1,j}Xj
-    std::vector<tMatrix3x3> accumulated_bwd_rot_matrices(_angles.size());
-
-    for (size_t i = 0; i < _angles.size(); ++i)
-    {
-        switch(_axis[i])
-        {
-         case(X):
-            fwd_rot_matrices.push_back(rotation_matrix_x(_angles[i]));
-            break;
-
-         case(Y):
-            fwd_rot_matrices.push_back(rotation_matrix_y(_angles[i]));
-            break;
-
-         case(Z):
-            fwd_rot_matrices.push_back(rotation_matrix_z(_angles[i]));
-            break;
-        } 
-
-        bwd_rot_matrices.push_back(transpose(fwd_rot_matrices.at(i)));
-    }
-
-    accumulated_fwd_rot_matrices.front() = fwd_rot_matrices.front();
-
-    for (size_t i=1; i< _angles.size(); ++i)
-        accumulated_fwd_rot_matrices[i] = accumulated_fwd_rot_matrices[i-1]*fwd_rot_matrices[i];
-
-
-    accumulated_bwd_rot_matrices.back() = bwd_rot_matrices.back();
-    for (int i = _angles.size()-2; i >= 0; --i)
-        accumulated_bwd_rot_matrices[i] = accumulated_bwd_rot_matrices[i+1]*bwd_rot_matrices[i];
-
-    _Qpc = accumulated_fwd_rot_matrices.back();
-    _Qcp = accumulated_bwd_rot_matrices.front();
-
-    // Compute omega
-    _omega_pc_self = tVector3d::zeros();
-    _omega_pc_parent = tVector3d::zeros();
-
-    for (size_t i = 0; i < _angles.size(); ++i)
-    {
-        tVector3d new_rot(tVector3d::zeros());
-        new_rot[_axis[i]] = _dangles[i];
-        _omega_pc_self += accumulated_bwd_rot_matrices[i]*new_rot;
-        _omega_pc_parent += accumulated_fwd_rot_matrices[i]*new_rot;
-    }
-
-    _updated = true;
 
     return;
 }
@@ -137,18 +190,11 @@ inline void Frame<T>::update()
 template<typename T>
 inline const Frame<T>& Frame<T>::get_parent() const 
 {
- try
- { 
     if ( !is_inertial() ) 
         return *_parent; 
     else
         throw lion_exception("Inertial frames have no parents");
     
- }
- catch( const lion_exception& error )
- {
-    throw;
- }
 }
 
 
@@ -294,8 +340,6 @@ inline typename Frame<T>::tVector3d Frame<T>::get_absolute_velocity_in_inertial(
 template<typename T>
 inline std::pair<typename Frame<T>::tVector3d,typename Frame<T>::tVector3d> Frame<T>::get_position_and_velocity_in_target(const Frame<T>& target, const typename Frame<T>::tVector3d& x, const typename Frame<T>::tVector3d& dx) const
 {
- try
- {
     // Target is self
     if ( this == &target ) 
         return {x,dx};
@@ -377,11 +421,6 @@ inline std::pair<typename Frame<T>::tVector3d,typename Frame<T>::tVector3d> Fram
 
         return {current_position, current_velocity};
     }
- }
- catch (const lion_exception& error)
- {
-    throw;
- }
 }
 
 template<typename T>
@@ -431,8 +470,6 @@ inline typename Frame<T>::tMatrix3x3 Frame<T>::get_rotation_matrix(const Frame<T
 *       frame_i.get_rotation_matrix(frame_j) = Qji
 */
 {
- try
- {
     // Self rotation...
     if ( this == &target ) 
         return tMatrix3x3::eye();
@@ -489,19 +526,12 @@ inline typename Frame<T>::tMatrix3x3 Frame<T>::get_rotation_matrix(const Frame<T
 
         return transpose(Qtarget)*Qbody;
     }
- }
- catch( const lion_exception& error )
- {
-    throw;
- }
 }
 
 
 template<typename T>
 inline typename Frame<T>::tVector3d Frame<T>::get_omega_in_body(const Frame<T>& target) const
 {
- try
- {
     // Self rotation...
     if ( this == &target ) 
         return tVector3d::zeros();
@@ -564,33 +594,19 @@ inline typename Frame<T>::tVector3d Frame<T>::get_omega_in_body(const Frame<T>& 
 
         return Qbody_currentparent*omega_target + omega_body;
     }
- }
- catch( const lion_exception& error )
- {
-    throw;
- }
 }
 
 
 template<typename T>
 inline typename Frame<T>::tVector3d Frame<T>::get_omega_in_parent(const Frame<T>& target) const
 {
- try
- {
     return _Qpc*get_omega_in_body(target);
- }
- catch(const lion_exception& error)
- { 
-    throw;
- }
 }
 
 
 template<typename T>
 inline typename Frame<T>::tVector3d Frame<T>::get_omega_in_target(const Frame<T>& target) const
 {
- try
- {
     // Self rotation...
     if ( this == &target ) 
         return tVector3d::zeros();
@@ -653,11 +669,6 @@ inline typename Frame<T>::tVector3d Frame<T>::get_omega_in_target(const Frame<T>
 
         return omega_target + Qcp*omega_body;
     }
- }
- catch( const lion_exception& error )
- {
-    throw;
- }
 }
 
 
@@ -674,8 +685,6 @@ inline typename Frame<T>::tVector3d Frame<T>::get_omega_absolute_in_inertial() c
 template<typename T>
 inline size_t Frame<T>::get_crossing_generation(const Frame<T>& f1, const Frame<T>& f2)
 {
- try
- {
     const size_t common_generation = std::min(f1.generation(), f2.generation());
 
     // Complete path up to generation
@@ -702,11 +711,6 @@ inline size_t Frame<T>::get_crossing_generation(const Frame<T>& f1, const Frame<
 
     // If the code reaches here, means that the inertial frames are not the same. Throw an exception
     throw lion_exception("The two frames do not share an ancestor"); 
- }
- catch(const lion_exception& error)
- {
-    throw;
- }
 }
 
 
@@ -772,6 +776,9 @@ constexpr inline void Frame<T>::set_velocity(const typename Frame<T>::tVector3d&
 template<typename T>
 inline void Frame<T>::set_rotation_angle(const size_t which, const T angle, const bool bUpdate) 
 { 
+    if (_angular_description_mode == Frame_angular_description_mode::from_rotation_matrix_and_omega) 
+        throw lion_exception("[ERROR] Frame<T>::set_rotation_angle -> cannot set rotation angle in 'rotation_matrix_and_omega' description mode");
+
     _angles.at(which) = angle; 
     _updated = false; 
 
@@ -785,6 +792,9 @@ inline void Frame<T>::set_rotation_angle(const size_t which, const T angle, cons
 template<typename T>
 inline void Frame<T>::set_rotation_angle(const size_t which, const T angle, const T dangle, const bool bUpdate) 
 {
+    if (_angular_description_mode == Frame_angular_description_mode::from_rotation_matrix_and_omega) 
+        throw lion_exception("[ERROR] Frame<T>::set_rotation_angle -> cannot set rotation angle in 'rotation_matrix_and_omega' description mode");
+
     _angles.at(which) = angle; 
     _dangles.at(which) = dangle; 
     _updated = false;
@@ -799,6 +809,9 @@ inline void Frame<T>::set_rotation_angle(const size_t which, const T angle, cons
 template<typename T>
 inline void Frame<T>::set_angular_speed(const size_t which, const T dangle, const bool bUpdate) 
 {
+    if (_angular_description_mode == Frame_angular_description_mode::from_rotation_matrix_and_omega) 
+        throw lion_exception("[ERROR] Frame<T>::set_angular_speed -> cannot set rotation angle in 'rotation_matrix_and_omega' description mode");
+
     _dangles.at(which) = dangle; 
     _updated = false; 
 
@@ -812,6 +825,9 @@ inline void Frame<T>::set_angular_speed(const size_t which, const T dangle, cons
 template<typename T>
 inline void Frame<T>::add_rotation(const T angle, const T dangle, const Axis axis, const bool bUpdate) 
 { 
+    if (_angular_description_mode == Frame_angular_description_mode::from_rotation_matrix_and_omega) 
+        throw lion_exception("[ERROR] Frame<T>::add_rotation -> cannot add rotation in 'rotation_matrix_and_omega' description mode");
+
     if (is_inertial())
         return;
 

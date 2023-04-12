@@ -88,7 +88,7 @@ class Generic_position_velocity_test : public ::testing::Test
     const std::array<Axis,10> axis = {{ Y,Z,X,X,Y,Z,Y,Y,Z,X }};
    
     // Frames to be tested    
-    const sFrame frame0; // Inertial frame
+    const sFrame frame0 = sFrame(); // Inertial frame
     const sFrame frame1 = sFrame(positions[1],velocities[1], {angles[1]}, {dangles[1]}, {axis[1]}, frame0, sFrame::Frame_velocity_types::parent_frame);
     const sFrame frame2 = sFrame(positions[2],velocities[2], {angles[2]}, {dangles[2]}, {axis[2]}, frame1, sFrame::Frame_velocity_types::parent_frame);
     const sFrame frame3 = sFrame(positions[3],velocities[3], {angles[3]}, {dangles[3]}, {axis[3]}, frame1, sFrame::Frame_velocity_types::parent_frame);
@@ -98,7 +98,7 @@ class Generic_position_velocity_test : public ::testing::Test
     const sFrame frame7 = sFrame(positions[7],velocities[7], {angles[7]}, {dangles[7]}, {axis[7]}, frame4, sFrame::Frame_velocity_types::parent_frame);
     const sFrame frame8 = sFrame(positions[8],velocities[8], {angles[8]}, {dangles[8]}, {axis[8]}, frame5, sFrame::Frame_velocity_types::parent_frame);
     const sFrame frame9 = sFrame(positions[9],velocities[9], {angles[9]}, {dangles[9]}, {axis[9]}, frame5, sFrame::Frame_velocity_types::parent_frame);
-    const sFrame frame10; // Different inertial frame
+    const sFrame frame10 = sFrame(); // Different inertial frame
 
     // Rotation matrices
     const sMatrix3x3 Q01 = rotation_matrix_z(angles[1]);

@@ -14,11 +14,12 @@ class Frame
     using tMatrix3x3 = Matrix3x3<T>;
 
     enum Frame_velocity_types { parent_frame, this_frame };
+    enum Frame_angular_description_mode { from_angles_and_derivatives, from_rotation_matrix_and_omega };
 
     //!  Default constructor. Returns an inertial frame
     Frame() = default;
 
-    //!  Constructor for non-inertial frames
+    //!  Constructor for non-inertial frames providing angles and their derivatives
     //!
     //! @param[in] x: Origin coordinates in \p parent Frame [m]
     //! @param[in] dx: Origin velocity in \p parent or this Frame [m/s]
@@ -35,6 +36,23 @@ class Frame
           const Frame& parent,
           const Frame_velocity_types& frame_velocity_type
          );
+
+    //!  Constructor for non-inertial frames providing a rotation matrix and an omega vector
+    //!
+    //! @param[in] x: Origin coordinates in \p parent Frame [m]
+    //! @param[in] dx: Origin velocity in \p parent or this Frame [m/s]
+    //! @param[in] rotation_matrix_pc: rotation matrix from child to parent
+    //! @param[in] omega_pc_self: omega vector from child to parent, in this frame axis [rad/s]
+    //! @param[in] parent: Frame for which all the quantities above are referred to
+    //! @param[in] velocity_frame: specify frame in which the velocity refers to
+    Frame(const tVector3d& x,
+          const tVector3d& frame_velocity, 
+          const tMatrix3x3& rotation_matrix_pc,
+          const tVector3d& omega_pc_self,
+          const Frame& parent,
+          const Frame_velocity_types& frame_velocity_type
+         );
+
 
     //!  Updates all internal data members: rotation matrices and angular velocity vectors
     void update();
@@ -59,6 +77,9 @@ class Frame
 
     //!  Returns a const reference to the origin velocity (in \p parent Frame)
     constexpr tVector3d get_relative_velocity_in_parent() const { return _Qpc*_frame_velocity; } 
+
+    //!  Returns a const reference to the origin velocity (in \p self Frame)
+    constexpr auto& get_relative_velocity_in_self() const { return _frame_velocity; }
 
     //!  Returns a const reference to the rotation angles vector
     constexpr const std::vector<T>& get_rotation_angles() const { return _angles; } 
@@ -255,6 +276,8 @@ class Frame
     //! @param[in] axes: which axes (X/Y/Z)
     void set_rotations(const std::vector<T>& angles, const std::vector<T>& dangles, const std::vector<Axis>& axes)
     {
+        _angular_description_mode = Frame_angular_description_mode::from_angles_and_derivatives;
+
         assert(angles.size() == dangles.size());
         assert(angles.size() == axes.size());
 
@@ -265,7 +288,23 @@ class Frame
         update();
     }
 
+    void set_rotation_matrix_and_omega(const tMatrix3x3& rotation_matrix_pc, const tVector3d& omega_pc_self)
+    {
+        if (_angular_description_mode = Frame_angular_description_mode::from_angles_and_derivatives)
+        {
+            _angles.clear(); _dangles.clear(); _axis.clear();
+        }
+
+        _angular_description_mode = Frame_angular_description_mode::from_rotation_matrix_and_omega;
+
+        _Qpc           = rotation_matrix_pc;
+        _omega_pc_self = omega_pc_self;
+
+        update();
+    }
+
  private:
+    Frame_angular_description_mode _angular_description_mode;
     
     //! Settable parameters
     const Frame* _parent = nullptr; //! Parent frame
