@@ -304,7 +304,7 @@ class Frame
     }
 
  private:
-    Frame_angular_description_mode _angular_description_mode;
+    Frame_angular_description_mode _angular_description_mode = Frame_angular_description_mode::from_angles_and_derivatives;
     
     //! Settable parameters
     const Frame* _parent = nullptr; //! Parent frame
