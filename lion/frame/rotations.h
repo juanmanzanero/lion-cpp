@@ -140,7 +140,7 @@ constexpr Array3Type rotmat2ea(const Matrix3x3Type &M)
 
     // gymbal lock tolerance
     constexpr auto gymbal_lock_tol_deg = T{ 0.001 };
-    constexpr auto gymbal_lock_zone = std::clamp(
+    const auto gymbal_lock_zone = std::clamp(
         std::cos(gymbal_lock_tol_deg * DEG), T{ 0 }, T{ 1 });
 
     const auto sinp = -M[2];
