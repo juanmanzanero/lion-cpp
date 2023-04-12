@@ -1,5 +1,6 @@
 #ifndef LION_FOUNDATION_UTILS_H
 #define LION_FOUNDATION_UTILS_H
+#pragma once
 
 
 #include <sstream>
@@ -10,10 +11,11 @@
 #include <regex>
 #include <iostream>
 #include <time.h>
-#include "constants.h"
-#include "types.h"
-#include "lion/math/vector3d.h"
+
+#include "lion/foundation/types.h"
+#include "lion/foundation/constants.h"
 #include "lion/foundation/lion_exception.h"
+#include "lion/math/vector3d.h"
 
 
 constexpr double& Value(double& val);
@@ -108,15 +110,6 @@ inline std::tuple<Vector3d<T>,T,std::array<size_t,2>> find_intersection(const st
 
 template<typename T>
 inline std::tuple<T,T> find_intersection(const Vector3d<T>& r0, const Vector3d<T>& p0, const sVector3d& r1, const sVector3d& p1);
-
-template<typename T, typename Matrix3x3Type>
-constexpr Matrix3x3Type ea2rotmat(T yaw_rad, T pitch_rad, T roll_rad);
-
-template<typename Matrix3x3Type, typename Array3Type>
-constexpr Array3Type rotmat2ea(const Matrix3x3Type &M);
-
-template<typename T, typename Matrix3x3Type>
-constexpr Matrix3x3Type tcs2rotmat(T toe_rad, T camber_rad, T spin_rad);
 
 template<typename SizeType>
 constexpr SizeType nchoosek(SizeType n, SizeType k);
