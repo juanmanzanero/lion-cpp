@@ -7,6 +7,34 @@
 #include "lion/math/matrix3x3.h"
 
 
+template<typename T>
+struct Euler_angles : std::array<T, 3>
+{
+    using base_type = std::array<T, 3>;
+
+    //! Default constructor
+    constexpr Euler_angles() : base_type{} {}
+
+    //! Constructor from coordinates
+    constexpr Euler_angles(T yaw, T pitch, T roll) : base_type{ yaw, pitch, roll } {};
+
+    //! Constructor from size 3 array
+    constexpr explicit Euler_angles(const base_type& arr) : base_type{ arr } {};
+
+    //! Get yaw
+    constexpr const T& yaw() const { return (*this)[0]; }
+    constexpr       T& yaw()       { return (*this)[0]; }
+
+    //! Get pitch
+    constexpr const T& pitch() const { return (*this)[1]; }
+    constexpr       T& pitch()       { return (*this)[1]; }
+
+    //! Get roll
+    constexpr const T& roll() const { return (*this)[2]; }
+    constexpr       T& roll()       { return (*this)[2]; }
+};
+
+
 //! Get a rotation matrix around the X axis
 //! @param[in] phi: rotation angle [rad]
 template<typename T>
@@ -57,7 +85,7 @@ template<typename T>
 constexpr Matrix3x3<T> drotation_matrix_y(const T phi)
 {
     return Matrix3x3<T>( -sin(phi), 0.0,  cos(phi),
-		                 0.0        , 0.0,            0.0,
+                       0.0        , 0.0,            0.0,
                       -cos(phi), 0.0, -sin(phi) ); 
 }
 
@@ -99,7 +127,7 @@ constexpr Matrix3x3Type ea2rotmat(T yaw_rad, T pitch_rad, T roll_rad)
 {
     //
     // Converts the input Euler angles (in radians and in standard
-    // "yaw-pitch-roll" "Z-Y-X" sequence) to a rotation matrix. This
+    // "yaw-pitch-roll" "ZYX" sequence) to a rotation matrix. This
     // rotation matrix transforms from the rotated frame onto the
     // original one, i.e.,
     // "x_original = ea2rotmat(yaw_rad, pitch_rad, roll_rad) * x_rotated".
@@ -126,22 +154,23 @@ template<typename Matrix3x3Type,
 constexpr Array3Type rotmat2ea(const Matrix3x3Type &M)
 {
     //
-    // Returns an std::array holding the Euler angles in 'ZYX' sequence
-    // "[yaw, pitch, roll]", in rad, from the input rotation matrix,
-    // given as an std::array in column-major format. This input rotation
+    // Returns an std::array holding the Euler angles in "ZYX" sequence
+    // "[yaw, pitch, roll]", in rad, from the input rotation matrix
+    // (specified as an array in column-major order). This input rotation
     // matrix should transform from the rotated frame onto the original
     // one, i.e., "x_original = M * x_rotated".
     //
 
     using T = typename Array3Type::value_type;
-    using std::atan2;
     using std::abs;
+    using std::atan2;
     using std::asin;
 
     // gymbal lock tolerance
-    constexpr auto gymbal_lock_tol_deg = T{ 0.001 };
-    const auto gymbal_lock_zone = std::clamp(
-        std::cos(gymbal_lock_tol_deg * DEG), T{ 0 }, T{ 1 });
+    //constexpr auto gymbal_lock_tol_deg = T{ 0.001 };
+    //constexpr auto gymbal_lock_zone = std::clamp(
+    //    std::cos(gymbal_lock_tol_deg * DEG), T{ 0 }, T{ 1 });
+    constexpr auto gymbal_lock_zone = T{ 0.99999999984769128 };
 
     const auto sinp = -M[2];
     T pitch_rad;
@@ -170,7 +199,7 @@ constexpr Matrix3x3Type tcs2rotmat(T toe_rad, T camber_rad, T spin_rad)
 {
     //
     // Converts the input Euler angles (in radians and in "toe-camber-spin"
-    // "Z-X-Y" sequence) to a rotation matrix. This rotation matrix
+    // "ZXY" sequence) to a rotation matrix. This rotation matrix
     // transforms from the rotated frame onto the original one, i.e.,
     // "x_original = tcs2rotmat(toe_rad, camber_rad, spin_rad) * x_rotated".
     //
@@ -188,6 +217,62 @@ constexpr Matrix3x3Type tcs2rotmat(T toe_rad, T camber_rad, T spin_rad)
     return Matrix3x3Type{ cspin * ctoe - scamber * sspin * stoe, -ccamber * stoe, ctoe * sspin + cspin * scamber * stoe,
         cspin * stoe + ctoe * scamber * sspin, ccamber * ctoe, sspin * stoe - cspin * ctoe * scamber,
         -ccamber * sspin, scamber, ccamber * cspin };
+}
+
+
+template<typename T,
+    typename Array3Type = std::array<T, 3u> >
+constexpr Array3Type angular_kinematic_relationships(T yawdot, T pitchdot, T rolldot,
+    T yaw_rad, T pitch_rad, T roll_rad)
+{
+    //
+    // Returns an array holding the angular velocity components
+    // "[p, q, r]" of a rotating frame (projected onto this same
+    // frame), from the time derivatives of its Euler angles in
+    // "ZYX" sequence "[yawdot, pitchdot, rolldot]" and the values
+    // of these angles "[yaw_rad, pitch_rad, roll_rad]" (given in
+    // radians). The resulting angular velocity components will
+    // share the units of the input Euler angle derivatives.
+    //
+
+    using std::cos;
+    using std::sin;
+
+    const auto cphi = cos(roll_rad);
+    const auto sphi = sin(roll_rad);
+    const auto yawdot_ctheta = yawdot * cos(pitch_rad);
+
+    return Array3Type{ rolldot - yawdot * sin(pitch_rad),
+        yawdot_ctheta * sphi + pitchdot * cphi,
+        yawdot_ctheta * cphi - pitchdot * sphi };
+}
+
+
+template<typename T,
+    typename Array3Type = std::array<T, 3u> >
+constexpr Array3Type inverse_angular_kinematic_relationships(T p, T q, T r,
+    T yaw_rad, T pitch_rad, T roll_rad)
+{
+    //
+    // Returns an array holding the time derivatives of a rotating
+    // frame's Euler angles in "ZYX" sequence "[yawdot, pitchdot,
+    // rolldot]" from its angular velocity components "[p, q, r]"
+    // (projected onto the rotating frame) and its Euler angles
+    // "[yaw_rad, pitch_rad, roll_rad]" (given in radians). These
+    // output derivatives will share the units of the input angular
+    // velocity components.
+    //
+
+    using std::cos;
+    using std::sin;
+
+    const auto cphi = cos(roll_rad);
+    const auto sphi = sin(roll_rad);
+    const auto yawdot = (q * sphi + r * cphi) / cos(pitch_rad);
+
+    return Array3Type{ yawdot,
+        q * cphi - r * sphi,
+        p + yawdot * sin(pitch_rad) };
 }
 
 #endif

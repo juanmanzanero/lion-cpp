@@ -568,3 +568,64 @@ TEST(utils_test, nchoosek_test)
     EXPECT_EQ(nchoosek(40ul, 19ul), 131282408400ul);
     EXPECT_EQ(nchoosek(13ul, 7ul), 1716ul);
 }
+
+
+TEST(utils_test, sin_cos_solve_test)
+{
+    {
+        const auto [sols, valid] = sin_cos_solve(0., 0., 1.);
+        EXPECT_FALSE(valid);
+    }
+
+    {
+        const auto [sols, valid] = sin_cos_solve(1., 1., 10.);
+        EXPECT_FALSE(valid);
+    }
+
+    {
+        const auto [sols, valid] = sin_cos_solve(0., 1., 10.);
+        EXPECT_FALSE(valid);
+    }
+
+    {
+        const auto[sols, valid] = sin_cos_solve(1., 0., 10.);
+        EXPECT_FALSE(valid);
+    }
+
+    constexpr auto tolnear = 1e2 * std::numeric_limits<double>::epsilon();
+
+    {
+        const auto [sols, valid] = sin_cos_solve(1., 0., 1.);
+        EXPECT_TRUE(valid);
+        EXPECT_NEAR(sols[0], std::asin(1.), tolnear);
+        EXPECT_NEAR(sols[1], wrap_to_pi(pi - sols[0]), tolnear);
+    }
+
+    {
+        const auto [sols, valid] = sin_cos_solve(0., 1., 1.);
+        EXPECT_TRUE(valid);
+        EXPECT_NEAR(sols[0], std::acos(1.), tolnear);
+        EXPECT_NEAR(sols[1], wrap_to_pi(-sols[0]), tolnear);
+    }
+
+    {
+        const auto [sols, valid] = sin_cos_solve(0., 1., 1.);
+        EXPECT_TRUE(valid);
+        EXPECT_NEAR(sols[0], std::acos(1.), tolnear);
+        EXPECT_NEAR(sols[1], wrap_to_pi(-sols[0]), tolnear);
+    }
+
+    {
+        const auto [sols, valid] = sin_cos_solve(1., 1., std::sqrt(2));
+        EXPECT_TRUE(valid);
+        EXPECT_NEAR(sols[0], 0.25 * pi, tolnear);
+        EXPECT_NEAR(sols[1], sols[0], tolnear);
+    }
+
+    {
+        const auto [sols, valid] = sin_cos_solve(0.3, 0.45, 0.22);
+        EXPECT_TRUE(valid);
+        EXPECT_NEAR(sols[0], -0.56386708468522428, tolnear);
+        EXPECT_NEAR(sols[1], 1.7398722917803591, tolnear);
+    }
+}
