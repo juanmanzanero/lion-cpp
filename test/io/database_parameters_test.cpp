@@ -28,7 +28,7 @@ TEST_F(Database_parameter_test, double_parameter)
     EXPECT_FALSE(s.__used_parameters[0]);
     EXPECT_FALSE(s.__used_parameters[1]);
 
-    read_parameters(doc, "xml_doc/parameters/", s.get_parameters(), s.__used_parameters);
+    read_parameters(doc, "xml_doc/parameters/", s.__get_parameters(), s.__used_parameters);
 
     EXPECT_TRUE(s.__used_parameters[0]);
     EXPECT_TRUE(s.__used_parameters[1]);
@@ -51,7 +51,7 @@ TEST_F(Database_parameter_test, int_parameter)
     EXPECT_EQ(s.__used_parameters.size(), 1);
     EXPECT_FALSE(s.__used_parameters[0]);
 
-    read_parameters(doc, "xml_doc/parameters/", s.get_parameters(), s.__used_parameters );
+    read_parameters(doc, "xml_doc/parameters/", s.__get_parameters(), s.__used_parameters );
 
     EXPECT_TRUE(s.__used_parameters[0]);
     EXPECT_DOUBLE_EQ(s.i, 100.0);
@@ -71,7 +71,7 @@ TEST_F(Database_parameter_test, vector_parameter)
     EXPECT_EQ(s.__used_parameters.size(), 1);
     EXPECT_FALSE(s.__used_parameters[0]);
 
-    read_parameters(doc, "xml_doc/parameters/", s.get_parameters(), s.__used_parameters );
+    read_parameters(doc, "xml_doc/parameters/", s.__get_parameters(), s.__used_parameters );
 
     EXPECT_TRUE(s.__used_parameters[0]);
     EXPECT_EQ(s.v.size(), v_expected.size());
@@ -95,7 +95,7 @@ TEST_F(Database_parameter_test, vector3_parameter)
     EXPECT_EQ(s.__used_parameters.size(), 1);
     EXPECT_FALSE(s.__used_parameters[0]);
 
-    read_parameters(doc, "xml_doc/parameters/", s.get_parameters(), s.__used_parameters);
+    read_parameters(doc, "xml_doc/parameters/", s.__get_parameters(), s.__used_parameters);
 
     EXPECT_TRUE(s.__used_parameters[0]);
 
@@ -118,7 +118,7 @@ TEST_F(Database_parameter_test, matrix3x3_parameter)
     EXPECT_EQ(s.__used_parameters.size(), 1);
     EXPECT_FALSE(s.__used_parameters[0]);
 
-    read_parameters(doc, "xml_doc/parameters/", s.get_parameters(), s.__used_parameters);
+    read_parameters(doc, "xml_doc/parameters/", s.__get_parameters(), s.__used_parameters);
 
     EXPECT_TRUE(s.__used_parameters[0]);
     for (size_t i = 0; i < 3; ++i)
@@ -136,14 +136,14 @@ TEST_F(Database_parameter_test, unused_parameter)
         DECLARE_PARAMS({"double_parameter",d1},{"double_parameter_2",d2});
     } s;
 
-    read_parameters(doc, "xml_doc/parameters/", s.get_parameters(), s.__used_parameters);
+    read_parameters(doc, "xml_doc/parameters/", s.__get_parameters(), s.__used_parameters);
 
     Xml_element element = doc.get_element("xml_doc/parameters");
     std::string attribute, expected("false");
 
-    for (size_t i = 0; i < s.get_parameters().size(); ++i)
+    for (size_t i = 0; i < s.__get_parameters().size(); ++i)
     {
-        element = doc.get_element("xml_doc/parameters/"+ s.get_parameters()[i].name);
+        element = doc.get_element("xml_doc/parameters/"+ s.__get_parameters()[i].name);
         // Check until you get
         while(element.has_parent())
         {
@@ -164,7 +164,7 @@ TEST_F(Database_parameter_test, unusued_parameter_2)
         DECLARE_PARAMS({"double_parameter",d1});
     } s;
 
-    read_parameters(doc, "xml_doc/parameters/", s.get_parameters(), s.__used_parameters);
+    read_parameters(doc, "xml_doc/parameters/", s.__get_parameters(), s.__used_parameters);
 
     Xml_element element = doc.get_element("xml_doc/parameters/double_parameter_2");
     bool attribute_existance = element.has_attribute("__unused__");
@@ -192,7 +192,7 @@ TEST_F(Database_parameter_test, parameters_all_used_check)
         );
     } s;
 
-    read_parameters(doc2, "xml_doc/", s.get_parameters(), s.__used_parameters);
+    read_parameters(doc2, "xml_doc/", s.__get_parameters(), s.__used_parameters);
     bool parameters_all_used = database_parameters_all_used(doc2.get_root_element());
     EXPECT_TRUE(parameters_all_used);
 }
@@ -206,7 +206,7 @@ TEST_F(Database_parameter_test, parameters_all_used_check_2)
         DECLARE_PARAMS({"double_parameter",d1});
     } s;
 
-    read_parameters(doc2, "xml_doc/", s.get_parameters(), s.__used_parameters);
+    read_parameters(doc2, "xml_doc/", s.__get_parameters(), s.__used_parameters);
     bool parameters_all_used = database_parameters_all_used(doc2.get_root_element());
     EXPECT_FALSE(parameters_all_used);
 }
