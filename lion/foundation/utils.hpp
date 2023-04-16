@@ -438,34 +438,45 @@ constexpr std::pair<Array2Type, bool> sin_cos_solve(T lhs_s, T lhs_c, T rhs,
     // false otherwise (in that case, the output array will be equal to
     // "[nan, nan]").
     //
+    // NOTE: the output solutions of this function will be within the CLOSED
+    // interval "[-pi, pi]". For the solutions to be in "[-pi, pi)", one can
+    // for example call function "wrap_to_pi" on them (we don't do it here so
+    // that the function can be used with CppAD).
+    //
 
-    if (std::abs(lhs_s) > tolzero && std::abs(lhs_c) > tolzero) {
+    using std::abs;
+    using std::sqrt;
+    using std::atan2;
+    using std::asin;
+    using std::acos;
+
+    if (abs(lhs_s) > tolzero && abs(lhs_c) > tolzero) {
         // lhs_s * sin(x) + lhs_c * cos(x) = d * sin(x + p) = rhs
         // d = sqrt(lhs_s^2 + lhs_c^2)
         // p = atan2(lhs_c, lhs_s)
-        const auto arg = rhs / std::sqrt(lhs_s * lhs_s + lhs_c * lhs_c);
-        if (std::abs(arg) <= T{ 1 }) {
-            const auto p = std::atan2(lhs_c, lhs_s);
-            const auto x0 = std::asin(arg);
-            return { Array2Type{ wrap_to_pi(x0 - p), wrap_to_pi(pi_T<T> - x0 - p) },
+        const auto arg = rhs / sqrt(lhs_s * lhs_s + lhs_c * lhs_c);
+        if (abs(arg) <= T{ 1 }) {
+            const auto p = atan2(lhs_c, lhs_s);
+            const auto x0 = asin(arg);
+            return { Array2Type{ x0 - p, T{ pi } - x0 - p },
                 true };
         }
     }
-    else if (std::abs(lhs_s) < tolzero && std::abs(lhs_c) > tolzero) {
+    else if (abs(lhs_s) < tolzero && abs(lhs_c) > tolzero) {
         // lhs_c * cos(x) = rhs
         const auto arg = rhs / lhs_c;
-        if (std::abs(arg) <= T{ 1 }) {
-            const auto x0 = std::acos(arg);
-            return { Array2Type{ wrap_to_pi(x0), wrap_to_pi(-x0) },
+        if (abs(arg) <= T{ 1 }) {
+            const auto x0 = acos(arg);
+            return { Array2Type{ x0, -x0 },
                 true };
         }
     }
-    else if (std::abs(lhs_s) > tolzero && std::abs(lhs_c) < tolzero) {
+    else if (abs(lhs_s) > tolzero && abs(lhs_c) < tolzero) {
         // lhs_s * sin(x) = rhs
         const auto arg = rhs / lhs_s;
-        if (std::abs(arg) <= T{ 1 }) {
-            const auto x0 = std::asin(arg);
-            return { Array2Type{ wrap_to_pi(x0), wrap_to_pi(pi_T<T> - x0) },
+        if (abs(arg) <= T{ 1 }) {
+            const auto x0 = asin(arg);
+            return { Array2Type{ x0, T{ pi } - x0 },
                 true };
         }
     }
