@@ -113,6 +113,8 @@ class Xml_element
     //! Print
     void print(std::ostream& os) const;
     
+    //! Copy the contents of other into this node
+    void copy_contents(Xml_element other);
 
  private:
     tinyxml2::XMLElement* _e;
@@ -130,6 +132,24 @@ inline std::ostream& operator<<(std::ostream& os, const Xml_element& e)
 {
     e.print(os);
     return os;
+}
+
+inline void Xml_element::copy_contents(Xml_element other)
+{
+    tinyxml2::XMLElement* element = other._e->FirstChildElement(); 
+    tinyxml2::XMLNode* previous_sibling_ptr = _e->LastChild();
+    while (element != nullptr)
+    {
+        auto* element_copy = element->DeepClone(_e->GetDocument()); 
+
+        if (previous_sibling_ptr != nullptr)
+            _e->InsertAfterChild(previous_sibling_ptr, element_copy);
+        else
+            _e->InsertFirstChild(element_copy);
+
+        element = element->NextSiblingElement();
+        previous_sibling_ptr = element_copy;
+    }
 }
 
 

@@ -228,3 +228,32 @@ TEST_F(Xml_test, add_child)
 
     EXPECT_EQ(doc.get_element("root/a/b/c/d").get_value(), "my value");
 }
+
+
+TEST_F(Xml_test, deep_copy)
+{
+    Xml_document doc1;
+    doc1.parse("<doc> <a> <a1> true </a1> <empty_node/> </a> </doc>");
+
+    Xml_document doc2;
+    doc2.parse("<doc2> <content1> <content2> content </content2> </content1> </doc2>");
+
+    doc1.get_element("doc/a/empty_node").copy_contents(doc2.get_element("doc2"));
+
+    std::ostringstream s_out_ref;
+    s_out_ref << "<doc>" << std::endl;
+    s_out_ref << "    <a>" << std::endl;
+    s_out_ref << "        <a1> true </a1>" << std::endl;
+    s_out_ref << "        <empty_node>" << std::endl;
+    s_out_ref << "            <content1>" << std::endl;
+    s_out_ref << "                <content2> content </content2>" << std::endl;
+    s_out_ref << "            </content1>" << std::endl;
+    s_out_ref << "        </empty_node>" << std::endl;
+    s_out_ref << "    </a>" << std::endl;
+    s_out_ref << "</doc>" << std::endl;
+
+    std::ostringstream s_out;
+    doc1.print(s_out);
+    EXPECT_EQ(s_out.str(), s_out_ref.str());
+    
+}
