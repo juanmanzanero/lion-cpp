@@ -67,11 +67,11 @@ TEST(rotations_test, ea2rotmat_and_rotmat2ea)
 }
 
 
-TEST(rotations_test, tcs2rotmat)
+TEST(rotations_test, scs2rotmat)
 {
     constexpr auto tolnear = 10. * std::numeric_limits<double>::epsilon();
 
-    constexpr auto T_ea2tcs = Matrix3x3<double>{ 0., -1., 0.,
+    constexpr auto T_ea2scs = Matrix3x3<double>{ 0., -1., 0.,
         1., 0., 0.,
         0., 0., 1. };
 
@@ -79,16 +79,16 @@ TEST(rotations_test, tcs2rotmat)
         for (auto pitch_rad : linspace(-0.5 * pi, 0.5 * pi, 100)) {
             for (auto roll_rad : linspace(-pi, pi, 100)) {
 
-                const auto T_by_tcs = T_ea2tcs *
-                    ea2rotmat(yaw_rad, pitch_rad, roll_rad) * T_ea2tcs.t();
+                const auto T_by_scs = T_ea2scs *
+                    ea2rotmat(yaw_rad, pitch_rad, roll_rad) * T_ea2scs.t();
 
-                const auto toe_rad = yaw_rad;
+                const auto steer_rad = yaw_rad;
                 const auto camber_rad = -pitch_rad;
                 const auto spin_rad = roll_rad;
-                const auto T_by_tcs_ = tcs2rotmat(toe_rad, camber_rad, spin_rad);
+                const auto T_by_scs_ = scs2rotmat(steer_rad, camber_rad, spin_rad);
 
                 for (auto i = 0u; i < 9u; ++i) {
-                    EXPECT_NEAR(T_by_tcs[i], T_by_tcs_[i], tolnear);
+                    EXPECT_NEAR(T_by_scs[i], T_by_scs_[i], tolnear);
                 }
             }
         }
