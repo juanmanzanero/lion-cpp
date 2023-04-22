@@ -1,5 +1,6 @@
 #ifndef LION_MATH_LINEAR_ALGEBRA_H
 #define LION_MATH_LINEAR_ALGEBRA_H
+#pragma once
 
 
 #include <cmath>
@@ -76,32 +77,29 @@ inline void matmul(T *X, const T *A, const T *B, int rows_A, int cols_A_rows_B, 
 
 
 template<typename T>
-inline int lusolve(T *B, T *A, int rows_A_rows_B, int cols_B)
+inline int plufactorize(T *A, int *ipiv_A, int n)
 {
     //
-    // Direct solve of the dense square problem "A * X = B", via LU with
-    // partial pivoting (i.e., applying a decomposition "A = P * L * U").
-    // All matrices are in column-major order. On entry, "B" contains the
-    // problem's RHS (which may have multiple colums), and holds solution
-    // "X" on return, of size "rows_A_rows_B x cols_B". Matrix "A" must
-    // hold the problem's square LHS matrix on entry, of size "rows_A_rows_B x
-    // rows_A_rows_B" and exits as the LU factors ("A = P * L * U", where
-    // P is a permutation matrix that could be reconstructed using the "ipiv"
-    // local variable, since the i-th row of matrix "A" is interchanged with
-    // row "ipiv[i]"). The function returns 0 upon successful exit.
+    // Performs a PLU decomposition of the dense square matrix "A",
+    // of size "n x n", such that "A = P * L * U", where "P" is a
+    // permutation matrix that can be reconstructed through "ipiv_A",
+    // where the i-th row of matrix "A" is interchanged with row
+    // "ipiv_A[i]". On entry, "A" should contain the square matrix
+    // of size "n x n" in column-major order, and "ipiv_A" should come
+    // preallocated to size "n". On exit, "A" will contain the LU
+    // factors of the matrix, and "ipiv_A" the necessary index
+    // permutations. The function returns 0 if the factorization is
+    // successful (i.e., the matrix is non-singular).
     //
 
     int ret{ 0 };
 
-    const auto &n = rows_A_rows_B;
-    auto *const ipiv{ new int[n] };
     for (auto i = 0; i < n; ++i) {
-        ipiv[i] = i + 1;
+        ipiv_A[i] = i + 1;
     }
 
     auto jA{ 0 };
-    const auto nm1{ n - 1 };
-    for (auto j = 0; j < nm1; j++) {
+    for (auto j = 0; j < n - 1; j++) {
         const auto mmj{ n - j };
         const auto c{ j * (n + 1) };
 
@@ -126,10 +124,10 @@ inline int lusolve(T *B, T *A, int rows_A_rows_B, int cols_B)
 
         if (A[c + jA] != T{ 0 }) {
             if (jA != 0) {
-                ipiv[j] = j + jA + 1;
+                ipiv_A[j] = j + jA + 1;
                 auto iX{ j };
                 auto iy{ j + jA };
-                for (auto k = 1; k <= n; ++k) {
+                for (auto k = 0; k < n; ++k) {
                     auto smax{ A[iX] };
                     A[iX] = A[iy];
                     A[iy] = smax;
@@ -166,11 +164,37 @@ inline int lusolve(T *B, T *A, int rows_A_rows_B, int cols_B)
 
     }
 
-    for (std::ptrdiff_t iy = 0; iy < nm1; ++iy) { // changed from "auto" to "std::ptrdiff_t"
-                                                  // to avoid a useless gcc warning
-        if (ipiv[iy] != iy + 1) {
-            const auto kAcol{ ipiv[iy] - 1 };
-            for (jA = 0; jA < cols_B; ++jA) {
+    if (ret == 0 && !(A[n * n - 1] != T{ 0 })) {
+        ret = n;
+    }
+
+    return ret;
+}
+
+
+template<typename T>
+inline void plusolve(T *B, const T *LU_A, const int *ipiv_A, int rows_A_rows_B, int cols_B)
+{
+    //
+    // Direct solve of the dense square problem "A * X = B", via LU with
+    // partial pivoting (i.e., employing a decomposition "A = P * L * U").
+    // Input buffers "LU_A" and "ipiv_A" should hold the PLU factorization
+    // of the problem's square matrix "A" (which has size "rows_A_rows_B x
+    // rows_A_rows_B"), as returned by function "plu_factorize". On entry,
+    // "B" contains the problem's RHS (which may have multiple colums) in
+    // column-major order, and holds solution "X" on return (also in
+    // column-major order) both of size "rows_A_rows_B x cols_B".
+    //
+
+    const auto &n = rows_A_rows_B;
+    if (n < 1) {
+        return;
+    }
+
+    for (std::size_t iy = 0; iy < static_cast<std::size_t>(n) - 1u; ++iy) {
+        if (ipiv_A[iy] != iy + 1) {
+            const auto kAcol{ ipiv_A[iy] - 1 };
+            for (auto jA = 0; jA < cols_B; ++jA) {
                 const auto smax{ B[iy + n * jA] };
                 B[iy + n * jA] = B[kAcol + n * jA];
                 B[kAcol + n * jA] = smax;
@@ -178,37 +202,55 @@ inline int lusolve(T *B, T *A, int rows_A_rows_B, int cols_B)
         }
     }
 
-    for (auto j = 1; j <= cols_B; ++j) {
-        const auto iy{ n * (j - 1) };
+    for (auto j = 0; j < cols_B; ++j) {
+        const auto iy{ n * j };
         for (auto k = 0; k < n; ++k) {
             const auto kAcol{ n * k };
             if (B[k + iy] != T{ 0 }) {
-                for (jA = k + 1; jA < n; ++jA) {
-                    B[jA + iy] -= B[k + iy] * A[jA + kAcol];
+                for (auto jA = k + 1; jA < n; ++jA) {
+                    B[jA + iy] -= B[k + iy] * LU_A[jA + kAcol];
                 }
             }
         }
     }
 
-    for (auto j = 1; j <= cols_B; ++j) {
-        const auto iy{ n * (j - 1) };
+    for (auto j = 0; j < cols_B; ++j) {
+        const auto iy{ n * j };
         for (auto k = n - 1; k + 1 > 0; --k) {
             const auto kAcol{ n * k };
             if (B[k + iy] != T{ 0 }) {
-                B[k + iy] /= A[k + kAcol];
-                for (jA = 0; jA < k; ++jA) {
-                    B[jA + iy] -= B[k + iy] * A[jA + kAcol];
+                B[k + iy] /= LU_A[k + kAcol];
+                for (auto jA = 0; jA < k; ++jA) {
+                    B[jA + iy] -= B[k + iy] * LU_A[jA + kAcol];
                 }
             }
         }
     }
+}
 
-    if (ret == 0 && !(A[n * n - 1] != T{ 0 })) {
-        ret = n;
-    }
 
-    delete[] ipiv;
+template<typename T>
+inline int lusolve(T *B, T *A, int rows_A_rows_B, int cols_B)
+{
+    //
+    // Direct solve of the dense square problem "A * X = B", via LU with
+    // partial pivoting (i.e., applying a decomposition "A = P * L * U").
+    // All matrices are in column-major order. On entry, "B" contains the
+    // problem's RHS (which may have multiple colums), and holds solution
+    // "X" on return, of size "rows_A_rows_B x cols_B". Matrix "A" must
+    // hold the problem's square LHS matrix on entry, of size "rows_A_rows_B x
+    // rows_A_rows_B" and exits as the LU factors ("A = P * L * U", where
+    // "P" is a permutation matrix that could be reconstructed using the "ipiv"
+    // local variable, since the i-th row of matrix "A" is interchanged with
+    // row "ipiv[i]"). The function returns 0 upon successful exit.
+    //
 
+    auto *ipiv_A = new int[rows_A_rows_B];
+
+    auto ret = plufactorize(A, ipiv_A, rows_A_rows_B);
+    plusolve(B, A, ipiv_A, rows_A_rows_B, cols_B);
+
+    delete[] ipiv_A;
     return ret;
 }
 

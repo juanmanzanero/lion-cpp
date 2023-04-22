@@ -21,7 +21,7 @@
 constexpr double& Value(double& val);
 constexpr const double& Value(const double& val);
 
-inline bool to_bool(std::string str) 
+inline bool to_bool(std::string str)
 {
     std::transform(str.begin(), str.end(), str.begin(), ::tolower);
     std::istringstream is(str);

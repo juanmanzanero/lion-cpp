@@ -195,27 +195,27 @@ constexpr Array3Type rotmat2ea(const Matrix3x3Type &M)
 
 template<typename T,
     typename Matrix3x3Type = Matrix3x3<T> >
-constexpr Matrix3x3Type tcs2rotmat(T toe_rad, T camber_rad, T spin_rad)
+constexpr Matrix3x3Type scs2rotmat(T steer_rad, T camber_rad, T spin_rad)
 {
     //
-    // Converts the input Euler angles (in radians and in "toe-camber-spin"
+    // Converts the input Euler angles (in radians and in "steer-camber-spin"
     // "ZXY" sequence) to a rotation matrix. This rotation matrix
     // transforms from the rotated frame onto the original one, i.e.,
-    // "x_original = tcs2rotmat(toe_rad, camber_rad, spin_rad) * x_rotated".
+    // "x_original = scs2rotmat(steer_rad, camber_rad, spin_rad) * x_rotated".
     //
 
     using std::cos;
     using std::sin;
 
-    const auto ctoe = cos(toe_rad);
-    const auto stoe = sin(toe_rad);
+    const auto csteer = cos(steer_rad);
+    const auto ssteer = sin(steer_rad);
     const auto ccamber = cos(camber_rad);
     const auto scamber = sin(camber_rad);
     const auto cspin = cos(spin_rad);
     const auto sspin = sin(spin_rad);
 
-    return Matrix3x3Type{ cspin * ctoe - scamber * sspin * stoe, -ccamber * stoe, ctoe * sspin + cspin * scamber * stoe,
-        cspin * stoe + ctoe * scamber * sspin, ccamber * ctoe, sspin * stoe - cspin * ctoe * scamber,
+    return Matrix3x3Type{ cspin * csteer - scamber * sspin * ssteer, -ccamber * ssteer, csteer * sspin + cspin * scamber * ssteer,
+        cspin * ssteer + csteer * scamber * sspin, ccamber * csteer, sspin * ssteer - cspin * csteer * scamber,
         -ccamber * sspin, scamber, ccamber * cspin };
 }
 

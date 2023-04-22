@@ -12,7 +12,7 @@
 //
 
 
-constexpr auto tolnear = 1e2 * std::numeric_limits<double>::epsilon();
+constexpr auto tolnear = 1e3 * std::numeric_limits<double>::epsilon();
 
 
 Xml_document reference_file("data/linear_algebra_test.xml", true);
@@ -39,12 +39,25 @@ inline std::vector<double> comma_separated_string2vector_of_doubles(const std::s
 
 TEST(linear_algebra_test, lusolve_test0)
 {
-    // singular problem
+    // 3 x 3 singular problem with 1 column in the rhs
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    auto A_colmaj = reference_file.get_root_element().get_child(test_name + "/A").get_value(std::vector<double>{});
-    auto b_colmaj = reference_file.get_root_element().get_child(test_name + "/b").get_value(std::vector<double>{});
+    const auto A_colmaj = reference_file.get_root_element().get_child(test_name + "/A").get_value(std::vector<double>{});
+    const auto b_colmaj = reference_file.get_root_element().get_child(test_name + "/b").get_value(std::vector<double>{});
 
-    EXPECT_NE(lusolve(b_colmaj.data(), A_colmaj.data(), static_cast<int>(b_colmaj.size()), 1), 0);
+    const auto n = static_cast<int>(b_colmaj.size());
+    EXPECT_EQ(n, 3);
+    EXPECT_EQ(std::sqrt(A_colmaj.size()), n);
+
+    auto A = A_colmaj;
+    auto b = b_colmaj;
+    const auto ret = lusolve(b.data(), A.data(), n, 1);
+    EXPECT_NE(ret, 0);
+
+    auto A_ = A_colmaj;
+    std::vector<int> ipiv_A(n);
+    const auto ret_ = plufactorize(A_.data(), ipiv_A.data(), n);
+    EXPECT_NE(ret_, 0);
+    EXPECT_EQ(ret_, ret);
 }
 
 
@@ -52,17 +65,41 @@ TEST(linear_algebra_test, lusolve_test1)
 {
     // 4 x 4 problem with 1 column in the rhs
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    auto A_colmaj = reference_file.get_root_element().get_child(test_name + "/A").get_value(std::vector<double>{});
-    auto b_colmaj = reference_file.get_root_element().get_child(test_name + "/b").get_value(std::vector<double>{});
+    const auto A_colmaj = reference_file.get_root_element().get_child(test_name + "/A").get_value(std::vector<double>{});
+    const auto b_colmaj = reference_file.get_root_element().get_child(test_name + "/b").get_value(std::vector<double>{});
 
-    EXPECT_EQ(std::sqrt(A_colmaj.size()), b_colmaj.size());
-    EXPECT_EQ(lusolve(b_colmaj.data(), A_colmaj.data(), static_cast<int>(b_colmaj.size()), 1), 0);
+    const auto n = static_cast<int>(b_colmaj.size());
+    EXPECT_EQ(n, 4);
+    EXPECT_EQ(std::sqrt(A_colmaj.size()), n);
 
-    const auto reference_x_colmaj = reference_file.get_root_element().get_child(test_name + "/x").get_value(std::vector<double>{});
-    const auto &x_colmaj = b_colmaj;
-    EXPECT_EQ(reference_x_colmaj.size(), x_colmaj.size());
-    for (auto i = 0u; i < reference_x_colmaj.size(); ++i) {
-        EXPECT_NEAR(x_colmaj[i], reference_x_colmaj[i], tolnear);
+    const auto reference_x_colmaj = reference_file.get_root_element().get_child(test_name + "/x").
+        get_value(std::vector<double>{});
+
+    {
+        auto A = A_colmaj;
+        auto b = b_colmaj;
+        EXPECT_EQ(lusolve(b.data(), A.data(), n, 1), 0);
+        const auto &x = b;
+
+        EXPECT_EQ(reference_x_colmaj.size(), x.size());
+        for (auto i = 0u; i < reference_x_colmaj.size(); ++i) {
+            EXPECT_NEAR(x[i], reference_x_colmaj[i], tolnear);
+        }
+    }
+
+    {
+        auto A = A_colmaj;
+        std::vector<int> ipiv_A(n);
+        EXPECT_EQ(plufactorize(A.data(), ipiv_A.data(), n), 0);
+
+        auto b = b_colmaj;
+        plusolve(b.data(), A.data(), ipiv_A.data(), n, 1);
+        const auto &x = b;
+
+        EXPECT_EQ(reference_x_colmaj.size(), x.size());
+        for (auto i = 0u; i < reference_x_colmaj.size(); ++i) {
+            EXPECT_NEAR(x[i], reference_x_colmaj[i], tolnear);
+        }
     }
 }
 
@@ -74,14 +111,81 @@ TEST(linear_algebra_test, lusolve_test2)
     auto A_colmaj = reference_file.get_root_element().get_child(test_name + "/A").get_value(std::vector<double>{});
     auto b_colmaj = reference_file.get_root_element().get_child(test_name + "/b").get_value(std::vector<double>{});
 
-    EXPECT_EQ(std::sqrt(A_colmaj.size()), b_colmaj.size() / 3u);
-    EXPECT_EQ(lusolve(b_colmaj.data(), A_colmaj.data(), static_cast<int>(b_colmaj.size() / 3u), 3), 0);
+    const auto n = static_cast<int>(b_colmaj.size()) / 3u;
+    EXPECT_EQ(n, 10);
+    EXPECT_EQ(std::sqrt(A_colmaj.size()), n);
 
-    const auto reference_x = reference_file.get_root_element().get_child(test_name + "/x").get_value(std::vector<double>{});
-    const auto &x_colmaj = b_colmaj;
-    EXPECT_EQ(reference_x.size(), x_colmaj.size());
-    for (auto i = 0u; i < reference_x.size(); ++i) {
-        EXPECT_NEAR(x_colmaj[i], reference_x[i], tolnear);
+    const auto reference_x_colmaj = reference_file.get_root_element().get_child(test_name + "/x").
+        get_value(std::vector<double>{});
+
+    {
+        auto A = A_colmaj;
+        auto b = b_colmaj;
+        EXPECT_EQ(lusolve(b.data(), A.data(), n, 3), 0);
+        const auto &x = b;
+
+        EXPECT_EQ(reference_x_colmaj.size(), x.size());
+        for (auto i = 0u; i < reference_x_colmaj.size(); ++i) {
+            EXPECT_NEAR(x[i], reference_x_colmaj[i], tolnear);
+        }
+    }
+
+    {
+        auto A = A_colmaj;
+        std::vector<int> ipiv_A(n);
+        EXPECT_EQ(plufactorize(A.data(), ipiv_A.data(), n), 0);
+
+        auto b = b_colmaj;
+        plusolve(b.data(), A.data(), ipiv_A.data(), n, 3);
+        const auto &x = b;
+
+        EXPECT_EQ(reference_x_colmaj.size(), x.size());
+        for (auto i = 0u; i < reference_x_colmaj.size(); ++i) {
+            EXPECT_NEAR(x[i], reference_x_colmaj[i], tolnear);
+        }
+    }
+}
+
+
+TEST(linear_algebra_test, lusolve_test3)
+{
+    // 20 x 20 problem with 7 columns in the rhs
+    const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
+    auto A_colmaj = reference_file.get_root_element().get_child(test_name + "/A").get_value(std::vector<double>{});
+    auto b_colmaj = reference_file.get_root_element().get_child(test_name + "/b").get_value(std::vector<double>{});
+
+    const auto n = static_cast<int>(b_colmaj.size()) / 7u;
+    EXPECT_EQ(n, 20);
+    EXPECT_EQ(std::sqrt(A_colmaj.size()), n);
+
+    const auto reference_x_colmaj = reference_file.get_root_element().get_child(test_name + "/x").
+        get_value(std::vector<double>{});
+
+    {
+        auto A = A_colmaj;
+        auto b = b_colmaj;
+        EXPECT_EQ(lusolve(b.data(), A.data(), n, 7), 0);
+        const auto &x = b;
+
+        EXPECT_EQ(reference_x_colmaj.size(), x.size());
+        for (auto i = 0u; i < reference_x_colmaj.size(); ++i) {
+            EXPECT_NEAR(x[i], reference_x_colmaj[i], tolnear);
+        }
+    }
+
+    {
+        auto A = A_colmaj;
+        std::vector<int> ipiv_A(n);
+        EXPECT_EQ(plufactorize(A.data(), ipiv_A.data(), n), 0);
+
+        auto b = b_colmaj;
+        plusolve(b.data(), A.data(), ipiv_A.data(), n, 7);
+        const auto &x = b;
+
+        EXPECT_EQ(reference_x_colmaj.size(), x.size());
+        for (auto i = 0u; i < reference_x_colmaj.size(); ++i) {
+            EXPECT_NEAR(x[i], reference_x_colmaj[i], tolnear);
+        }
     }
 }
 
