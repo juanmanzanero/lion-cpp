@@ -116,6 +116,16 @@ class Xml_element
     //! Copy the contents of other into this node
     void copy_contents(Xml_element other);
 
+    //! Delete attribute
+    void delete_attribute(const std::string& attribute_name)
+    {
+
+        if (has_attribute(attribute_name))
+            _e->DeleteAttribute(attribute_name.c_str());
+        else
+            throw lion_exception("[ERROR] delete_attribute -> attribute does not exist");
+    } 
+
  private:
     tinyxml2::XMLElement* _e;
 };
