@@ -217,4 +217,14 @@ struct is_std_array<std::array<T, N> > : std::true_type {};
 template<typename Arr>
 constexpr bool is_std_array_v = is_std_array<Arr>::value;
 
+
+//
+// Reolves to the type that we get when applying the
+// bracket operator (with an input index) to an object
+// (e.g., "decltype(v[i])").
+//
+
+template<class C, typename IndexType = std::size_t>
+using typeof_bracket_operator = std::decay_t<decltype(std::declval<C &>()[std::declval<IndexType>()])>;
+
 #endif
