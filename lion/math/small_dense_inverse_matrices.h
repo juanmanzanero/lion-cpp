@@ -12,7 +12,7 @@
 
 
 template<typename Matrix2x2Type>
-constexpr Matrix2x2Type::value_type det2x2(const Matrix2x2Type &A)
+constexpr typename Matrix2x2Type::value_type det2x2(const Matrix2x2Type &A)
 {
     //
     // Returns the determinant of the input 2 x 2 matrix,
@@ -56,7 +56,7 @@ constexpr Matrix2x2Type inv2x2(const Matrix2x2Type &A)
 
 
 template<typename Matrix3x3Type>
-constexpr Matrix3x3Type::value_type det3x3(const Matrix3x3Type &A)
+constexpr typename Matrix3x3Type::value_type det3x3(const Matrix3x3Type &A)
 {
     //
     // Returns the determinant of the input 3 x 3 matrix,
@@ -120,7 +120,7 @@ constexpr Matrix3x3Type inv3x3(const Matrix3x3Type &A)
 
 
 template<typename Matrix4x4Type>
-constexpr Matrix4x4Type::value_type det4x4(const Matrix4x4Type &A)
+constexpr typename Matrix4x4Type::value_type det4x4(const Matrix4x4Type &A)
 {
     //
     // Returns the determinant of the input 4 x 4 matrix,
@@ -248,7 +248,7 @@ constexpr Matrix4x4Type inv4x4(const Matrix4x4Type &A)
 
 
 template<typename Matrix5x5Type>
-constexpr Matrix5x5Type::value_type det5x5(const Matrix5x5Type &A)
+constexpr typename Matrix5x5Type::value_type det5x5(const Matrix5x5Type &A)
 {
     //
     // Returns the determinant of the input 5 x 5 matrix,
@@ -696,7 +696,7 @@ constexpr Matrix5x5Type inv5x5(const Matrix5x5Type &A)
 
 
 template<typename Matrix6x6Type>
-constexpr Matrix6x6Type::value_type det6x6(const Matrix6x6Type &A)
+constexpr typename Matrix6x6Type::value_type det6x6(const Matrix6x6Type &A)
 {
     //
     // Returns the determinant of the input 6 x 6 matrix,
