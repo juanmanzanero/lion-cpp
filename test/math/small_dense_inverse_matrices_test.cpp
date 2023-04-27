@@ -11,7 +11,7 @@
 //
 
 
-Xml_document reference_file("data/small_dense_inverse_matrices.xml", true);
+static Xml_document reference_file("data/small_dense_inverse_matrices.xml", true);
 
 
 template<typename DetAndInverseMatrixFun>
