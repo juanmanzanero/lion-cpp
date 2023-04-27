@@ -143,7 +143,8 @@ constexpr Matrix3x3Type ea2rotmat(T yaw_rad, T pitch_rad, T roll_rad)
     const auto cphi = cos(roll_rad);
     const auto sphi = sin(roll_rad);
 
-    return Matrix3x3Type{ ctheta * cpsi, sphi * stheta * cpsi - spsi * cphi, cphi * cpsi * stheta + sphi * spsi,
+    return Matrix3x3Type{
+        ctheta * cpsi, sphi * stheta * cpsi - spsi * cphi, cphi * cpsi * stheta + sphi * spsi,
         ctheta * spsi, sphi * stheta * spsi + cpsi * cphi, cphi * spsi * stheta - sphi * cpsi,
         -stheta, sphi * ctheta, cphi * ctheta };
 }
@@ -187,9 +188,51 @@ constexpr Array3Type rotmat2ea(const Matrix3x3Type &M)
     const auto yaw_rad = atan2(M[1], M[0]);
     const auto roll_rad = atan2(M[5], M[8]);
 
-    return Array3Type{ wrap_to_pi(yaw_rad),
+    return Array3Type{
+        wrap_to_pi(yaw_rad),
         wrap_to_pi(pitch_rad),
         wrap_to_pi(roll_rad) };
+}
+
+
+template<typename T, typename Vector3dType,
+    typename Matrix3x3Type = Matrix3x3<T> >
+constexpr Matrix3x3Type angax2rotmat(T angle_rad, const Vector3dType &axis)
+{
+    //
+    // Converts the input angle-axis pair (with the angle given in
+    // radians) to a rotation matrix. This rotation matrix transforms
+    // from the rotated frame onto the original one, i.e.,
+    // "x_original = angax2rotmat(angle_rad, axis) * x_rotated".
+    //
+
+    using std::sqrt;
+    using std::cos;
+    using std::sin;
+
+    const auto invnorm = sqrt(axis[0] * axis[0] +
+        axis[1] * axis[1] + axis[2] * axis[2]);
+
+    const auto x = invnorm * axis[0];
+    const auto y = invnorm * axis[1];
+    const auto z = invnorm * axis[2];
+
+    const auto c = cos(angle_rad);
+    const auto s = sin(angle_rad);
+    const auto C = T{ 1 } - c;
+
+    const auto xyC = x * y * C;
+    const auto xzC = x * z * C;
+    const auto yzC = y * z * C;
+
+    const auto xs = x * s;
+    const auto ys = y * s;
+    const auto zs = z * s;
+
+    return Matrix3x3Type{
+        x * x * C + c, xyC - zs, xzC + ys,
+        xyC + zs, y * y * C + c, yzC - xs,
+        xzC - ys, yzC + xs, z * z * C + c };
 }
 
 
@@ -214,7 +257,8 @@ constexpr Matrix3x3Type scs2rotmat(T steer_rad, T camber_rad, T spin_rad)
     const auto cspin = cos(spin_rad);
     const auto sspin = sin(spin_rad);
 
-    return Matrix3x3Type{ cspin * csteer - scamber * sspin * ssteer, -ccamber * ssteer, csteer * sspin + cspin * scamber * ssteer,
+    return Matrix3x3Type{
+        cspin * csteer - scamber * sspin * ssteer, -ccamber * ssteer, csteer * sspin + cspin * scamber * ssteer,
         cspin * ssteer + csteer * scamber * sspin, ccamber * csteer, sspin * ssteer - cspin * csteer * scamber,
         -ccamber * sspin, scamber, ccamber * cspin };
 }
@@ -242,7 +286,8 @@ constexpr Array3Type angular_kinematic_relationships(T yawdot, T pitchdot, T rol
     const auto sphi = sin(roll_rad);
     const auto yawdot_ctheta = yawdot * cos(pitch_rad);
 
-    return Array3Type{ rolldot - yawdot * sin(pitch_rad),
+    return Array3Type{
+        rolldot - yawdot * sin(pitch_rad),
         yawdot_ctheta * sphi + pitchdot * cphi,
         yawdot_ctheta * cphi - pitchdot * sphi };
 }
@@ -270,7 +315,8 @@ constexpr Array3Type inverse_angular_kinematic_relationships(T p, T q, T r,
     const auto sphi = sin(roll_rad);
     const auto yawdot = (q * sphi + r * cphi) / cos(pitch_rad);
 
-    return Array3Type{ yawdot,
+    return Array3Type{
+        yawdot,
         q * cphi - r * sphi,
         p + yawdot * sin(pitch_rad) };
 }

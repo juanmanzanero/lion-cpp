@@ -191,6 +191,9 @@ template <typename T>
 constexpr Matrix3x3<T> diag(const Vector3d<T> &v);
 
 template <typename T>
+constexpr Matrix3x3<T> diag(const T &val);
+
+template <typename T>
 constexpr Matrix3x3<T> crossmat(const Vector3d<T> &v);
 
 using sMatrix3x3 = Matrix3x3<scalar>;

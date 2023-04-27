@@ -560,6 +560,16 @@ constexpr Matrix3x3<T> diag(const Vector3d<T> &v)
 }
 
 template<typename T>
+constexpr Matrix3x3<T> diag(const T &val)
+{
+    return Matrix3x3<T>{
+        val, 0, 0,
+        0, val, 0,
+        0, 0, val };
+}
+
+
+template<typename T>
 constexpr Matrix3x3<T> crossmat(const Vector3d<T> &v)
 {
     return Matrix3x3<T>{ 0., -v.z(), v.y(),
