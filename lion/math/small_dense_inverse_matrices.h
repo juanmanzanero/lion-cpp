@@ -4,10 +4,10 @@
 
 
 //
-// Defines functions that return the inverses of
-// small dense matrices, in column-major order.
-// I've generated these functions using Matlab's
-// symbolic toolbox.
+// Defines functions that return the determinants
+// and inverses of some small dense matrices, in
+// column-major order. I've generated these functions
+// using Matlab's symbolic toolbox.
 //
 
 
