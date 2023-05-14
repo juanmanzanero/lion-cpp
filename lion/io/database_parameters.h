@@ -1,10 +1,10 @@
 #ifndef __PARAMETERS_H__
 #define __PARAMETERS_H__
 
+#include "cppad/cppad.hpp"
 #include "Xml_document.h"
 #include "lion/math/vector3d.hpp"
 #include "lion/math/matrix3x3.h"
-#include "lion/thirdparty/include/cppad/cppad.hpp"
 
 template<typename T>
 struct Database_parameter

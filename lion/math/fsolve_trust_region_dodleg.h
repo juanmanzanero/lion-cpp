@@ -102,7 +102,7 @@ inline fsolve_trust_region_dodleg_result<Dvector>
 
         auto Forward(std::size_t q, const Dvector &x)
         {
-            if (_retape) {
+            if (_retape && q == 0u) {
                 std::copy(x.cbegin(), x.cend(), _a_x.begin());
                 CppAD::Independent(_a_x);
                 _g_eval(_a_g, _a_x);
@@ -362,7 +362,7 @@ inline fsolve_trust_region_dodleg_result<Dvector>
                 std::copy(g.cbegin(), g.cend(), dNewton.begin());
                 std::copy(jac.cbegin(), jac.cend(), jacwork.begin());
                 const auto lusolve_failed =
-                    lusolve(dNewton.data(), jacwork.data(), n, 1) != 0;
+                    lusolve(dNewton.data(), jacwork.data(), static_cast<int>(n), 1) != 0;
 
                 if (lusolve_failed ||
                     !std::all_of(dNewton.cbegin(), dNewton.cend(),
