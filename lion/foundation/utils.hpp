@@ -225,8 +225,9 @@ inline T trapz(const std::vector<T>& x, const std::vector<T>& y)
 }
 
 
-template<typename ArrayType>
-constexpr ArrayType::value_type sumabs(const ArrayType &x)
+template<typename ArrayType,
+    typename ValueType = typename ArrayType::value_type>
+constexpr ValueType sumabs(const ArrayType &x)
 {
     //
     // Returns the sum of the absolute values of the
@@ -234,13 +235,14 @@ constexpr ArrayType::value_type sumabs(const ArrayType &x)
     //
 
     return std::accumulate(x.cbegin(), x.cend(),
-        typename ArrayType::value_type{ 0 },
+        ValueType{ 0 },
         [](auto accum, auto xi) { return accum + std::abs(xi); });
 }
 
 
-template<typename ArrayType>
-constexpr ArrayType::value_type sumsqr(const ArrayType &x)
+template<typename ArrayType,
+    typename ValueType = typename ArrayType::value_type>
+constexpr ValueType sumsqr(const ArrayType &x)
 {
     //
     // Returns the sum of the squares of the
@@ -248,7 +250,7 @@ constexpr ArrayType::value_type sumsqr(const ArrayType &x)
     //
 
     return std::accumulate(x.cbegin(), x.cend(),
-        typename ArrayType::value_type{ 0 },
+        ValueType{ 0 },
         [](auto accum, auto xi) { return accum + xi * xi; });
 }
 

@@ -629,3 +629,29 @@ TEST(utils_test, sin_cos_solve_test)
         EXPECT_NEAR(sols[1], 1.7398722917803591, tolnear);
     }
 }
+
+
+TEST(utils_test, sumabs_test)
+{
+    constexpr auto n = 20000;
+    std::vector<double> v(n);
+    double sumabs_ = 0.;
+    for (auto i = 0u; i < n; ++i) {
+        v[i] = 100. * (double)rand() / (double)RAND_MAX - 50.;
+        sumabs_ += std::abs(v[i]);
+    }
+    EXPECT_EQ(sumabs_, sumabs(v));
+}
+
+
+TEST(utils_test, sumsqr_test)
+{
+    constexpr auto n = 20000;
+    std::vector<double> v(n);
+    double sumsqr_ = 0.;
+    for (auto i = 0u; i < n; ++i) {
+        v[i] = 100. * (double)rand() / (double)RAND_MAX - 50.;
+        sumsqr_ += v[i] * v[i];
+    }
+    EXPECT_EQ(sumsqr_, sumsqr(v));
+}
