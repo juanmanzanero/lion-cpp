@@ -225,8 +225,7 @@ inline T trapz(const std::vector<T>& x, const std::vector<T>& y)
 }
 
 
-template<typename ArrayType,
-    typename ValueType = typename ArrayType::value_type>
+template<typename ArrayType, typename ValueType>
 constexpr ValueType sumabs(const ArrayType &x)
 {
     //
@@ -240,8 +239,7 @@ constexpr ValueType sumabs(const ArrayType &x)
 }
 
 
-template<typename ArrayType,
-    typename ValueType = typename ArrayType::value_type>
+template<typename ArrayType, typename ValueType>
 constexpr ValueType sumsqr(const ArrayType &x)
 {
     //
