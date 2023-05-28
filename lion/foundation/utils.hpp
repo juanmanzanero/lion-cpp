@@ -225,6 +225,34 @@ inline T trapz(const std::vector<T>& x, const std::vector<T>& y)
 }
 
 
+template<typename ArrayType>
+constexpr ArrayType::value_type sumabs(const ArrayType &x)
+{
+    //
+    // Returns the sum of the absolute values of the
+    // elements in the input array.
+    //
+
+    return std::accumulate(x.cbegin(), x.cend(),
+        typename ArrayType::value_type{ 0 },
+        [](auto accum, auto xi) { return accum + std::abs(xi); });
+}
+
+
+template<typename ArrayType>
+constexpr ArrayType::value_type sumsqr(const ArrayType &x)
+{
+    //
+    // Returns the sum of the squares of the
+    // elements in the input array.
+    //
+
+    return std::accumulate(x.cbegin(), x.cend(),
+        typename ArrayType::value_type{ 0 },
+        [](auto accum, auto xi) { return accum + xi * xi; });
+}
+
+
 template<typename T>
 inline std::tuple<Vector3d<T>,T,std::array<size_t,2>> find_closest_point(const std::vector<sVector3d>& xy_polygon, const Vector3d<T>& x0, bool closed, const size_t i_start, const scalar maximum_distance)
 {
