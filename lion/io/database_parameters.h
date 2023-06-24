@@ -11,7 +11,7 @@ struct Database_parameter
 {
     static_assert(std::is_same_v<T,void> || std::is_same_v<T,const void>);
 
-    enum Parameter_type { DOUBLE, INT, STD_VECTOR_DOUBLE, VECTOR3, MATRIX3X3, AD, BOOL };
+    enum Parameter_type { DOUBLE, INT, STD_VECTOR_DOUBLE, VECTOR3, MATRIX3X3, AD, BOOL, STRING };
 
     Database_parameter(const std::string& name_, const Parameter_type type_, T* address_) : name(name_), type(type_), address(address_) {}
 
@@ -29,6 +29,8 @@ struct Database_parameter
     : name(n), type(AD), address(&v) {}
 
     Database_parameter(const std::string& n, typename std::conditional<std::is_const<T>::value, const bool&, bool&>::type v): name(n), type(BOOL), address(&v) {}
+
+    Database_parameter(const std::string& n, typename std::conditional<std::is_const<T>::value, const std::string&, std::string&>::type v): name(n), type(STRING), address(&v) {}
         
     std::string name;
     Parameter_type type;
@@ -80,6 +82,10 @@ inline void read_parameters(Xml_document& doc, const std::string& path, const st
 
          case(Database_parameter_mutable::BOOL): 
             *static_cast<bool*>(p[i].address) = element.get_value(bool());
+            break;
+
+         case(Database_parameter_mutable::STRING): 
+            *static_cast<std::string*>(p[i].address) = element.get_value();
             break;
 
          default:
@@ -203,6 +209,19 @@ inline bool set_parameter(const std::vector<Database_parameter_mutable>& p, std:
             }
             break;
 
+         case(Database_parameter_mutable::STRING): 
+            if constexpr (std::is_same<std::string,T>::value)
+            {
+                *static_cast<std::string*>(p[i].address) = value;
+                return true;
+            }
+            else
+            {
+                throw lion_exception("Attempt to set BOOL variable from non-bool type");
+            }
+            break;
+
+
          default:
             throw lion_exception("[ERROR] set_parameter -> type not recognized");
             break;
@@ -267,6 +286,12 @@ inline void write_parameters(Xml_document& doc, const std::string& path, const s
          case(Database_parameter<T>::BOOL): 
          {
             doc.add_element(path + ip->name).set_value(std::to_string(*static_cast<const bool*>(ip->address)));
+            break;
+         }
+
+         case(Database_parameter<T>::STRING): 
+         {
+            doc.add_element(path + ip->name).set_value(*static_cast<const std::string*>(ip->address));
             break;
          }
 

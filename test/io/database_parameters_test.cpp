@@ -126,6 +126,27 @@ TEST_F(Database_parameter_test, matrix3x3_parameter)
             EXPECT_DOUBLE_EQ(s.m(i,j), m_expected(i,j));
 }
 
+TEST_F(Database_parameter_test, string_parameter)
+{
+    class Sample_class
+    {
+     public:
+        std::string s;
+        DECLARE_PARAMS({ "string_parameter", s });
+    } s;
+
+
+    std::string s_expected = " String parameter test ";
+    EXPECT_EQ(s.__used_parameters.size(), 1);
+    EXPECT_FALSE(s.__used_parameters[0]);
+
+    read_parameters(doc, "xml_doc/parameters/", s.__get_parameters(), s.__used_parameters);
+
+    EXPECT_TRUE(s.__used_parameters[0]);
+    EXPECT_EQ(s.s, s_expected);
+}
+
+
 TEST_F(Database_parameter_test, unused_parameter)
 {
     class Sample_class

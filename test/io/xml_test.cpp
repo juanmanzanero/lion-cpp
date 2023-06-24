@@ -151,6 +151,7 @@ TEST_F(Xml_test, print_doc)
     sOutRef << "                          5.0 6.0 -6 </vector_parameter>"         << std::endl;
     sOutRef << "        <vector3_parameter>0.6 0.8 -1.0</vector3_parameter>"      << std::endl;
     sOutRef << "        <matrix3_parameter>1 2 3 4 5 6 7 8 9</matrix3_parameter>" << std::endl;
+    sOutRef << "        <string_parameter> String parameter test </string_parameter>" << std::endl;
     sOutRef << "    </parameters>"                                                << std::endl;
     sOutRef << "</xml_doc>"                                                       << std::endl;
     sOut << doc ;
