@@ -16,9 +16,16 @@ constexpr double& Value(double& val) { return val; }
 constexpr const double& Value(const double& val) { return val; }
 
 template <typename T> 
-constexpr int sign(T val) 
+constexpr T sign(const T &x)
 {
-    return (T(0) < val) - (val < T(0));
+    //
+    // Strict sign function:
+    // if x == 0, sign(x) = 0,
+    // elseif x > 0, sign(x) = 1,
+    // elseif x < 0 , sign(x) = -1.
+    //
+
+    return T{ (T{ 0 } < x) - (x < T{ 0 }) };
 }
 
 template<typename T>
@@ -165,16 +172,116 @@ constexpr T wrap_to_360(T angle_deg)
 }
 
 
-template<typename T>
-constexpr T smooth_pos(T a, scalar eps2)
+template<bool ActuallySmooth, typename T, typename S>
+constexpr T smooth_pos(const T &x, S eps2)
 {
-    return 0.5*(a + sqrt(a*a + eps2));
+    //
+    // Returns the positive part of input "x", smoothed
+    // out near 0 with parameter "eps2" (unless template
+    // parameter "ActuallySmooth" is false, in that case
+    // the function returns the strict positive part
+    // of "x").
+    //
+
+    if constexpr (ActuallySmooth) {
+        using std::sqrt;
+
+        return S{ 0.5 } * (x + sqrt(x * x + eps2));
+    }
+    else {
+        (void)eps2;
+
+        return x > T{ 0 } ? x : T{ 0 };
+    }
 }
 
-template<typename T>
-constexpr T smooth_sign(T a, scalar eps2)
+
+template<bool ActuallySmooth, typename T, typename S>
+constexpr T smooth_neg(const T &x, S eps2)
 {
-    return tanh(eps2*a);
+    //
+    // Returns the negative part of input "x", smoothed
+    // out near 0 with parameter "eps2" (unless template
+    // parameter "ActuallySmooth" is false, in that case
+    // the function returns the strict negative part
+    // of "x").
+    //
+
+    return -smooth_pos<ActuallySmooth>(-x, eps2);
+}
+
+
+template<bool ActuallySmooth, typename T, typename S>
+constexpr T smooth_sign(const T &x, S eps)
+{
+    //
+    // Returns the sign of input "x" (where sign(0) = 0),
+    // smoothed out near 0 with parameter "eps" (unless
+    // template parameter "ActuallySmooth" is false, in that
+    // case the function is the strict sign of "x").
+    //
+
+    if constexpr (ActuallySmooth) {
+        using std::tanh;
+
+        return tanh(x / eps);
+    }
+    else {
+        (void)eps;
+
+        return sign(x);
+    }
+}
+
+
+template<bool ActuallySmooth, typename T, typename S>
+constexpr T smooth_abs(const T &x, S eps2)
+{
+    //
+    // Returns the absolute value of input "x", smoothed
+    // out near 0 with parameter "eps2" (unless template
+    // parameter "ActuallySmooth" is false, in that case
+    // the function returns the strict absolute value
+    // of "x").
+    //
+
+    if constexpr (ActuallySmooth) {
+        using std::sqrt;
+
+        return sqrt(x * x + eps2);
+    }
+    else {
+        using std::abs;
+
+        (void)eps2;
+
+        return abs(x);
+    }
+}
+
+
+template<bool ActuallySmooth, typename T, typename S>
+constexpr T smooth_hypot(const T &x, const T &y, S eps2)
+{
+    //
+    // Returns "sqrt(x^2 + y^2)", smoothed out near [0, 0]
+    // with parameter "eps2" (unless template parameter
+    // "ActuallySmooth" is false, in that case the function
+    // returns the strict hypot of "[x, y]").
+    //
+
+    if constexpr (ActuallySmooth) {
+        using std::sqrt;
+
+        return sqrt(x * x + y * y + eps2);
+    }
+    else {
+        using std::hypot;
+
+        (void)eps2;
+
+        return hypot(x, y);
+    }
 }
 
 

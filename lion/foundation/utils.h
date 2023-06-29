@@ -44,7 +44,7 @@ inline std::string get_current_date_and_time()
 }
 
 template <typename T> 
-constexpr int sign(T val);
+constexpr T sign(const T &x);
 
 template<typename T>
 constexpr bool samesign(T x, T y);
@@ -91,11 +91,21 @@ inline std::vector<scalar_type> string_to_double_vector(std::string s)
 }
 
 
-template<typename T>
-constexpr T smooth_pos(T a, scalar eps2);
+template<bool ActuallySmooth = true, typename T, typename S>
+constexpr T smooth_pos(const T &x, S eps2);
 
-template<typename T>
-constexpr T smooth_sign(T a, scalar eps2);
+template<bool ActuallySmooth = true, typename T, typename S>
+constexpr T smooth_neg(const T &x, S eps2);
+
+template<bool ActuallySmooth = true, typename T, typename S>
+constexpr T smooth_sign(const T &x, S eps);
+
+template<bool ActuallySmooth = true, typename T, typename S>
+constexpr T smooth_abs(const T &x, S eps2);
+
+template<bool ActuallySmooth = true, typename T, typename S>
+constexpr T smooth_hypot(const T &x, const T &y, S eps2);
+
 
 template <typename T>
 constexpr std::vector<T> linspace(T lo, T hi, std::size_t num_points);
