@@ -96,4 +96,38 @@ inline std::string strtrim(std::string str)
     return str;
 }
 
+inline std::string& strrep_in_place(std::string& str,
+                                    const std::string& from,
+                                    const std::string& to)
+{
+    //
+    // Replaces all occurrences of "from" with "to"
+    // in the input std::string "str", in place.
+    // Returns a reference to the input string.
+    //
+
+    if (!from.empty()) {
+        std::size_t pos{ 0u };
+        while ((pos = str.find(from, pos)) != std::string::npos) {
+            str.replace(pos, from.length(), to);
+            pos += to.length(); // in case "to" contains "from", like replacing "x" with "yx"
+        }
+    }
+
+    return str;
+}
+
+inline std::string strrep(std::string str,
+                          const std::string& from,
+                          const std::string& to)
+{
+    //
+    // Replaces all occurrences of "from" with "to"
+    // in the input std::string "str".
+    //
+
+    strrep_in_place(str, from, to);
+    return str;
+}
+
 #endif

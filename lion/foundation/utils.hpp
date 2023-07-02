@@ -25,7 +25,7 @@ constexpr T sign(const T &x)
     // elseif x < 0 , sign(x) = -1.
     //
 
-    return T{ (T{ 0 } < x) - (x < T{ 0 }) };
+    return static_cast<T>((T{ 0 } < x) - (x < T{ 0 }));
 }
 
 template<typename T>
@@ -276,11 +276,13 @@ constexpr T smooth_hypot(const T &x, const T &y, S eps2)
         return sqrt(x * x + y * y + eps2);
     }
     else {
-        using std::hypot;
+        //using std::hypot; -> not implemented in CppAD
+        using std::sqrt;
 
         (void)eps2;
 
-        return hypot(x, y);
+        //return hypot(x, y);
+        return sqrt(x * x + y * y);
     }
 }
 
