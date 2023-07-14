@@ -32,4 +32,7 @@ constexpr double CV{ 735.499 };
 constexpr double DEG{ pi / 180.0 };
 constexpr double RAD{ 180.0 / pi };
 
+constexpr double psi2Pa{ 6894.757 };
+constexpr double Pa2psi{ 1.450377438972831e-04 };
+
 #endif

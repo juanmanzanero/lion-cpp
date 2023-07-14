@@ -46,13 +46,16 @@ using Database_parameter_const   = Database_parameter<const void>;
     std::vector<Database_parameter_const> __get_parameters() const { return { __VA_ARGS__ }; } \
     std::vector<bool> __used_parameters = std::vector<bool>(__get_parameters().size(),false); 
 
-inline void read_parameters(Xml_document& doc, const std::string& path, const std::vector<Database_parameter_mutable>& p, std::vector<bool>& used_parameters)
+
+inline void read_parameters(Xml_element &root_element,
+                            const std::vector<Database_parameter_mutable>& p,
+                            std::vector<bool>& used_parameters)
 {
     assert(p.size() == used_parameters.size());
 
     for (size_t i = 0; i < p.size(); ++i)
     {
-        Xml_element element = doc.get_element(path + p[i].name);
+        auto element = root_element.get_child(p[i].name);
 
         switch (p[i].type)
         {
@@ -105,6 +108,16 @@ inline void read_parameters(Xml_document& doc, const std::string& path, const st
                 element.set_attribute<bool>("__unused__", false);
         }
     }
+}
+
+
+inline void read_parameters(Xml_document &doc,
+                            const std::string& path,
+                            const std::vector<Database_parameter_mutable>& p,
+                            std::vector<bool>& used_parameters)
+{
+    auto elem = doc.get_element(path);
+    read_parameters(elem, p, used_parameters);
 }
 
 
