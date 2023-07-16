@@ -1547,19 +1547,30 @@ void ipopt_cppad_solve(
     return;
 }
 
-struct Sparsity_pattern
+struct NLP_complete_output
 {
-    std::vector<size_t> col_jac;
-    std::vector<size_t> row_jac;
-    std::vector<size_t> col_hes;
-    std::vector<size_t> row_hes;
+    Ipopt::Index number_of_variables;
+    Ipopt::Index number_of_constraints;
+    Ipopt::Index jacobian_nnz;
+    Ipopt::Index hessian_nnz;
+    std::vector<Ipopt::Index> col_jac;
+    std::vector<Ipopt::Index> row_jac;
+    std::vector<Ipopt::Index> col_hes;
+    std::vector<Ipopt::Index> row_hes;
+    Ipopt::Number fitness_function;
+    std::vector<Ipopt::Number> constraints;
+    std::vector<Ipopt::Number> grad_f;
+    std::vector<Ipopt::Number> jacobian_constraints;
+    std::vector<Ipopt::Number> hessian_lagrangian;
 };
 
 template <class Dvector, class FG_eval>
-Sparsity_pattern ipopt_cppad_get_sparsity_pattern(
+NLP_complete_output ipopt_cppad_compute_complete_nlp(
     const size_t nx,
     const size_t ng,
-    FG_eval&                             fg_eval)
+    FG_eval& fg_eval,
+    const std::vector<double>& x,
+    const std::vector<double>& lambda)
 {   bool ok = true;
 
     typedef typename FG_eval::ADvector ADvector;
@@ -1574,7 +1585,7 @@ Sparsity_pattern ipopt_cppad_get_sparsity_pattern(
         nf,
         nx,
         ng,
-        Dvector(nx,0.0),
+        x,
         Dvector(nx,0.0),
         Dvector(nx,0.0),
         Dvector(ng,0.0),
@@ -1586,23 +1597,43 @@ Sparsity_pattern ipopt_cppad_get_sparsity_pattern(
         solution
     );
 
-    CppAD::Sparsity_pattern output;
-    output.col_jac.resize(cppad_nlp.get_col_jac().size());
-    output.row_jac.resize(cppad_nlp.get_row_jac().size());
-    output.col_hes.resize(cppad_nlp.get_col_hes().size());
-    output.row_hes.resize(cppad_nlp.get_row_hes().size());
+    CppAD::NLP_complete_output output;
 
-    for (size_t i_nz = 0; i_nz < cppad_nlp.get_col_jac().size(); ++i_nz)
-    {
-        output.col_jac[i_nz] = cppad_nlp.get_col_jac()[i_nz];
-        output.row_jac[i_nz] = cppad_nlp.get_row_jac()[i_nz] - nf;
-    }
+    Ipopt::TNLP::IndexStyleEnum index_style;
 
-    for (size_t i_nz = 0; i_nz < cppad_nlp.get_col_hes().size(); ++i_nz)
-    {
-        output.col_hes[i_nz] = cppad_nlp.get_col_hes()[i_nz];
-        output.row_hes[i_nz] = cppad_nlp.get_row_hes()[i_nz];
-    }
+    // (1) Get NLP info (problem dimensions)
+    cppad_nlp.get_nlp_info(output.number_of_variables, output.number_of_constraints, output.jacobian_nnz, output.hessian_nnz, index_style);
+
+    // (2) Get Jacobian sparsity pattern
+    output.col_jac.resize(output.jacobian_nnz);
+    output.row_jac.resize(output.jacobian_nnz);
+
+    cppad_nlp.eval_jac_g(output.number_of_variables, nullptr, false, output.number_of_constraints, output.jacobian_nnz, output.row_jac.data(), output.col_jac.data(), nullptr);
+
+    // (3) Get Hessian sparsity pattern 
+    output.col_hes.resize(output.hessian_nnz);
+    output.row_hes.resize(output.hessian_nnz);
+
+    cppad_nlp.eval_h(output.number_of_variables, nullptr, false, 1.0, output.number_of_constraints, nullptr, false, output.hessian_nnz, output.row_hes.data(), output.col_hes.data(), nullptr);
+
+    // (4) Evaluate fitness function
+    cppad_nlp.eval_f(output.number_of_variables, x.data(), true, output.fitness_function);
+
+    // (5) Evaluate constraints
+    output.constraints.resize(output.number_of_constraints);
+    cppad_nlp.eval_g(output.number_of_variables, x.data(), false, output.number_of_constraints, output.constraints.data());
+
+    // (6) Evaluate gradient of the fitness function
+    output.grad_f.resize(output.number_of_variables);
+    cppad_nlp.eval_grad_f(output.number_of_variables, x.data(), false, output.grad_f.data());
+
+    // (7) Evaluate gradient of the constraints
+    output.jacobian_constraints.resize(output.jacobian_nnz);
+    cppad_nlp.eval_jac_g(output.number_of_variables, x.data(), false, output.number_of_constraints, output.jacobian_nnz, nullptr, nullptr, output.jacobian_constraints.data());
+
+    // (8) Evaluate Hessian of the Lagrangian
+    output.hessian_lagrangian.resize(output.hessian_nnz);
+    cppad_nlp.eval_h(output.number_of_variables, x.data(), false, 1.0, output.number_of_constraints, lambda.data(), true, output.hessian_nnz, nullptr, nullptr, output.hessian_lagrangian.data());
 
     return output;
 }
