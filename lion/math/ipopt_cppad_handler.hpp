@@ -1,5 +1,5 @@
-# ifndef __IPOPT_CPPAD_HANDLER_HPP__
-# define __IPOPT_CPPAD_HANDLER_HPP__
+# ifndef IPOPT_CPPAD_HANDLER_HPP
+# define IPOPT_CPPAD_HANDLER_HPP
 
 #include <cppad/cppad.hpp>
 #include <coin-or/IpIpoptApplication.hpp>
@@ -230,6 +230,11 @@ public:
         zl_i_     = &zl_i;
         zu_i_     = &zu_i;
     }
+
+    const auto& get_col_jac() const { return col_jac_; }
+    const auto& get_row_jac() const { return row_jac_; }
+    const auto& get_col_hes() const { return col_hes_; }
+    const auto& get_row_hes() const { return row_hes_; }
 
     ipopt_cppad_callback(
         size_t                 nf              ,
@@ -1238,7 +1243,7 @@ public:
 
         if ( vu_values != nullptr )
             solution_.vu = Dvector(vu_values, vu_values + ip_data->curr()->v_U()->Dim());
-            
+
         return;
     }
 
@@ -1534,7 +1539,6 @@ void ipopt_cppad_solve(
         solution
     );
 
-
     // Run the IpoptApplication
     app->OptimizeTNLP(cppad_nlp);
 
@@ -1543,7 +1547,65 @@ void ipopt_cppad_solve(
     return;
 }
 
+struct Sparsity_pattern
+{
+    std::vector<size_t> col_jac;
+    std::vector<size_t> row_jac;
+    std::vector<size_t> col_hes;
+    std::vector<size_t> row_hes;
+};
 
+template <class Dvector, class FG_eval>
+Sparsity_pattern ipopt_cppad_get_sparsity_pattern(
+    const size_t nx,
+    const size_t ng,
+    FG_eval&                             fg_eval)
+{   bool ok = true;
+
+    typedef typename FG_eval::ADvector ADvector;
+    ipopt_cppad_result<Dvector> solution;
+
+    bool retape = false, sparse_forward = true, sparse_reverse = false;
+
+    // Create an interface from Ipopt to this specific problem.
+    // Note the assumption here that ADvector is same as cppd_ipopt::ADvector
+    size_t nf = 1;
+    auto cppad_nlp = CppAD::ipopt_cppad_callback<Dvector, ADvector, FG_eval>(
+        nf,
+        nx,
+        ng,
+        Dvector(nx,0.0),
+        Dvector(nx,0.0),
+        Dvector(nx,0.0),
+        Dvector(ng,0.0),
+        Dvector(ng,0.0),
+        fg_eval,
+        retape,
+        sparse_forward,
+        sparse_reverse,
+        solution
+    );
+
+    CppAD::Sparsity_pattern output;
+    output.col_jac.resize(cppad_nlp.get_col_jac().size());
+    output.row_jac.resize(cppad_nlp.get_row_jac().size());
+    output.col_hes.resize(cppad_nlp.get_col_hes().size());
+    output.row_hes.resize(cppad_nlp.get_row_hes().size());
+
+    for (size_t i_nz = 0; i_nz < cppad_nlp.get_col_jac().size(); ++i_nz)
+    {
+        output.col_jac[i_nz] = cppad_nlp.get_col_jac()[i_nz];
+        output.row_jac[i_nz] = cppad_nlp.get_row_jac()[i_nz] - nf;
+    }
+
+    for (size_t i_nz = 0; i_nz < cppad_nlp.get_col_hes().size(); ++i_nz)
+    {
+        output.col_hes[i_nz] = cppad_nlp.get_col_hes()[i_nz];
+        output.row_hes[i_nz] = cppad_nlp.get_row_hes()[i_nz];
+    }
+
+    return output;
+}
 
 }
 
