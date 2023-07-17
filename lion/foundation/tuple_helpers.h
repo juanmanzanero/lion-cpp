@@ -211,4 +211,24 @@ constexpr auto decay_types_of_a_tuple(const std::tuple<Ts...> &) ->
 template <typename Tuple>
 using decay_tuple = decltype(decay_types_of_a_tuple(std::declval<Tuple>()));
 
+
+//
+// Concatenation.
+//
+
+template <typename Type, std::size_t... sizes>
+constexpr auto array_cat(const std::array<Type, sizes>&... arrays)
+{
+    //
+    // Concatenates the input std::arrays into a single one.
+    //
+
+    std::array<Type, (sizes + ...)> result;
+    std::size_t index{};
+
+    ((std::copy_n(arrays.begin(), sizes, result.begin() + index), index += sizes), ...);
+
+    return result;
+}
+
 #endif
