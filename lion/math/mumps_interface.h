@@ -6,7 +6,8 @@
 #include "coin-or/mumps/dmumps_c.h"
 #define USE_COMM_WORLD -987654
 
-inline std::vector<std::vector<double>> mumps_solve_linear_system(size_t n_cpp, size_t nnz_cpp, std::vector<size_t>& rows_cpp, std::vector<size_t>& cols_cpp, 
+template<typename size_type>
+inline std::vector<std::vector<double>> mumps_solve_linear_system(size_type n_cpp, size_type nnz_cpp, std::vector<size_type>& rows_cpp, std::vector<size_type>& cols_cpp, 
     std::vector<double>& lhs_cpp, const std::vector<std::vector<double>>& rhs_cpp, bool symmetric)
 {
   assert(rows_cpp.size() == nnz_cpp);

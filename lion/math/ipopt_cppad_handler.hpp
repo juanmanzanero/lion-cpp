@@ -1547,6 +1547,7 @@ void ipopt_cppad_solve(
     return;
 }
 
+
 struct NLP_complete_output
 {
     Ipopt::Index number_of_variables;
@@ -1571,7 +1572,8 @@ NLP_complete_output ipopt_cppad_compute_complete_nlp(
     FG_eval& fg_eval,
     const std::vector<double>& x,
     const std::vector<double>& lambda)
-{   bool ok = true;
+{   
+    bool ok = true;
 
     typedef typename FG_eval::ADvector ADvector;
     ipopt_cppad_result<Dvector> solution;
