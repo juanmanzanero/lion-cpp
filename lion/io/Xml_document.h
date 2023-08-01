@@ -31,7 +31,8 @@ class Xml_document
     bool save(const std::string& name) { _name = name; return save(); }
 
     //! Parse an XML document from a string
-    void parse(const std::string& contents) { _doc.Parse(contents.c_str()); }
+    void parse(const char *contents) { _doc.Parse(contents); }
+    void parse(const std::string& contents) { parse(contents.c_str()); }
 
     //! Get the root element
     Xml_element get_root_element() { return _doc.RootElement(); } 

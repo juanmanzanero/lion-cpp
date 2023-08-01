@@ -15,6 +15,19 @@
 constexpr double& Value(double& val) { return val; }
 constexpr const double& Value(const double& val) { return val; }
 
+
+template <typename T0, typename T1, typename T2>
+constexpr bool in_or_on_interval(const T0 &x, const T1 &lo, const T2 &hi)
+{
+    //
+    // Returns true if "x" is inside or on the extremes of
+    // the closed interval "[lo, hi]", false otherwise.
+    //
+
+    return x >= lo && x <= hi;
+}
+
+
 template <typename T> 
 constexpr T sign(const T &x)
 {
