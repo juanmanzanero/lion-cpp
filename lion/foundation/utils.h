@@ -45,7 +45,7 @@ inline std::string get_current_date_and_time()
 
 
 template <typename T0, typename T1, typename T2>
-constexpr bool in_or_on_interval(const T0 &x, const T1 &lo, const T2 &hi)
+constexpr bool in_or_on_interval(const T0 &x, const T1 &lo, const T2 &hi);
 
 template <typename T> 
 constexpr T sign(const T &x);
