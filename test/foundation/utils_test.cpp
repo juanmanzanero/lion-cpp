@@ -655,3 +655,51 @@ TEST(utils_test, sumsqr_test)
     }
     EXPECT_EQ(sumsqr_, sumsqr(v));
 }
+
+
+TEST(utils_test, smoothly_clip)
+{
+    const auto lb = 0.123456;
+    const auto ub = 0.98523;
+
+    const auto x = linspace(lb - 1.0, ub + 1.0, 1000);
+
+    for (const auto& xi : x)
+    {
+        EXPECT_NEAR(smooth_clip(xi, lb, ub, 0.0), smooth_clip<false>(xi, lb, ub, 0.0), 1.0e-15);
+        EXPECT_NEAR(smooth_clip(xi, lb, ub, 0.0), (xi > lb ? (xi < ub ? xi : ub) : lb), 1.0e-15);
+        EXPECT_NEAR(smooth_clip(xi, lb, ub, 1.0e-6), (xi > lb ? (xi < ub ? xi : ub) : lb), 4.0e-4);
+    }
+}
+
+
+TEST(utils_test, smoothly_clip_lower)
+{
+    const auto lb = 0.123456;
+    const auto ub = 0.98523;
+
+    const auto x = linspace(lb - 1.0, ub + 1.0, 1000);
+
+    for (const auto& xi : x)
+    {
+        EXPECT_NEAR(smooth_clip_lower(xi, lb, 0.0), smooth_clip_lower<false>(xi, lb, 0.0), 1.0e-15);
+        EXPECT_NEAR(smooth_clip_lower(xi, lb, 0.0), (xi > lb ? xi : lb), 1.0e-15);
+        EXPECT_NEAR(smooth_clip_lower(xi, lb, 1.0e-6), (xi > lb ? xi : lb), 4.0e-4);
+    }
+}
+
+
+TEST(utils_test, smoothly_clip_upper)
+{
+    const auto lb = 0.123456;
+    const auto ub = 0.98523;
+
+    const auto x = linspace(lb - 1.0, ub + 1.0, 1000);
+
+    for (const auto& xi : x)
+    {
+        EXPECT_NEAR(smooth_clip_upper(xi, ub, 0.0), smooth_clip_upper<false>(xi, ub, 0.0), 1.0e-15);
+        EXPECT_NEAR(smooth_clip_upper(xi, ub, 0.0), (xi < ub ? xi : ub), 1.0e-15);
+        EXPECT_NEAR(smooth_clip_upper(xi, ub, 1.0e-6), (xi < ub ? xi : ub), 4.0e-4);
+    }
+}

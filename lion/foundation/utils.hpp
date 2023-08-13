@@ -299,6 +299,55 @@ constexpr T smooth_hypot(const T &x, const T &y, S eps2)
     }
 }
 
+template<bool ActuallySmooth = true, typename T, typename S>
+constexpr T smooth_clip_lower(const T& x, const S& x_lower, S eps2)
+{
+    //
+    // Clips x to [x_lower, inf), using a squared root smooth modulation,
+    // unless template parameter "ActuallySmooth" is false, in
+    // that case we strictly clip the value
+    //
+    if constexpr (ActuallySmooth) {
+        return 0.5 * (x - x_lower + sqrt((x - x_lower) * (x - x_lower) + eps2)) + x_lower;
+    }
+    else {
+        return (x > x_lower ? x : x_lower);
+    }
+}
+
+template<bool ActuallySmooth = true, typename T, typename S>
+constexpr T smooth_clip_upper(const T& x, const S& x_upper, S eps2)
+{
+    //
+    // Clips x to (-inf, x_upper], using a squared root smooth modulation,
+    // unless template parameter "ActuallySmooth" is false, in
+    // that case we strictly clip the value
+    //
+    if constexpr (ActuallySmooth) {
+        return 0.5 * (x - x_upper - sqrt((x - x_upper) * (x - x_upper) + eps2)) + x_upper;
+    }
+    else {
+        return (x < x_upper ? x : x_upper);
+    }
+}
+
+
+template<bool ActuallySmooth = true, typename T, typename S>
+constexpr T smooth_clip(const T& x, const S& x_lower, const S& x_upper, S eps2)
+{
+    //
+    // Clips x to [x_lower, x_upper], using a squared root smooth modulation,
+    // unless template parameter "ActuallySmooth" is false, in
+    // that case we strictly clip the value
+    //
+    if constexpr (ActuallySmooth) {
+        return 0.5*(sqrt((x-x_lower)*(x-x_lower) + eps2) - sqrt((x - x_upper)*(x - x_upper) + eps2) + (x_lower + x_upper));
+    }
+    else {
+        return (x < x_upper ? (x > x_lower ? x : x_lower) : x_upper);
+    }
+}
+
 
 template <typename T>
 constexpr std::vector<T> linspace(T lo, T hi, std::size_t num_points)

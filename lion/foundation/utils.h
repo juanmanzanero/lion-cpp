@@ -110,6 +110,14 @@ constexpr T smooth_abs(const T &x, S eps2);
 template<bool ActuallySmooth = true, typename T, typename S>
 constexpr T smooth_hypot(const T &x, const T &y, S eps2);
 
+template<bool ActuallySmooth = true, typename T, typename S>
+constexpr T smooth_sign(const T &x, S eps);
+
+template<bool ActuallySmooth = true, typename T, typename S>
+constexpr T smooth_abs(const T &x, S eps2);
+
+template<bool ActuallySmooth = true, typename T, typename S>
+constexpr T smooth_hypot(const T &x, const T &y, S eps2);
 
 template <typename T>
 constexpr std::vector<T> linspace(T lo, T hi, std::size_t num_points);
