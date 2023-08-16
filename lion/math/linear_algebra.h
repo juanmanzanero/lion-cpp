@@ -271,7 +271,7 @@ inline void qrsolve(T *X, T *A, T *B, int rows_A_rows_B, int cols_A, int cols_B)
     // prealllocated on entry to size "cols_A x cols_B".
     //
 
-    // declare some helper coinstants and functions
+    // declare some helper constants and functions
     constexpr auto TOL3Z = T{ 2.2204460492503131E-16 };
 
     const auto xgeqp3 = [](auto *A, auto m, auto n, auto mn, auto *tau, auto *jpvt)

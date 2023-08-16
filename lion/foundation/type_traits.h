@@ -232,8 +232,8 @@ using typeof_bracket_operator = std::decay_t<decltype(std::declval<C &>()[std::d
 // Constexpr version of the ternary operator.
 //
 
-template<bool condition, typename T>
-constexpr T ternary_constexpr(T &&val_if_true, T &&val_if_false)
+template<bool condition, typename T, typename F>
+constexpr auto&& ternary_constexpr(T &&val_if_true, F &&val_if_false)
 {
     //
     // Returns "val_if_true" when "condition" is true,
@@ -244,7 +244,7 @@ constexpr T ternary_constexpr(T &&val_if_true, T &&val_if_false)
         return std::forward<T>(val_if_true);
     }
     else {
-        return std::forward<T>(val_if_false);
+        return std::forward<F>(val_if_false);
     }
 }
 

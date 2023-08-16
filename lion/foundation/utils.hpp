@@ -299,52 +299,91 @@ constexpr T smooth_hypot(const T &x, const T &y, S eps2)
     }
 }
 
-template<bool ActuallySmooth = true, typename T, typename S>
-constexpr T smooth_clip_lower(const T& x, const S& x_lower, S eps2)
+template<bool ActuallySmooth, typename T, typename T1, typename S>
+constexpr T smooth_max(const T& x, const T1 &lo, S eps2)
 {
     //
-    // Clips x to [x_lower, inf), using a squared root smooth modulation,
+    // Clamps "x" to "[lo, inf)", using a squared root smooth modulation,
     // unless template parameter "ActuallySmooth" is false, in
-    // that case we strictly clip the value
+    // that case we strictly clamp the value.
     //
+
     if constexpr (ActuallySmooth) {
-        return 0.5 * (x - x_lower + sqrt((x - x_lower) * (x - x_lower) + eps2)) + x_lower;
+        using std::sqrt;
+
+        const auto Dxlo = x - lo;
+        return S{ 0.5 } * (Dxlo + sqrt(Dxlo * Dxlo + eps2)) + lo;
     }
     else {
-        return (x > x_lower ? x : x_lower);
+        return x > lo ? x : static_cast<T>(lo);
     }
 }
 
-template<bool ActuallySmooth = true, typename T, typename S>
-constexpr T smooth_clip_upper(const T& x, const S& x_upper, S eps2)
+template<bool ActuallySmooth, typename T, typename T1, typename S>
+constexpr T smooth_min(const T& x, const T1 &hi, S eps2)
 {
     //
-    // Clips x to (-inf, x_upper], using a squared root smooth modulation,
+    // Clamps "x" to "(-inf, hi]", using a squared root smooth modulation,
     // unless template parameter "ActuallySmooth" is false, in
-    // that case we strictly clip the value
+    // that case we strictly clamp the value.
     //
+
     if constexpr (ActuallySmooth) {
-        return 0.5 * (x - x_upper - sqrt((x - x_upper) * (x - x_upper) + eps2)) + x_upper;
+        using std::sqrt;
+
+        const auto Dxhi = x - hi;
+        return S{ 0.5 } * (Dxhi - sqrt(Dxhi * Dxhi + eps2)) + hi;
     }
     else {
-        return (x < x_upper ? x : x_upper);
+        return x < hi ? x : static_cast<T>(hi);
     }
 }
 
-
-template<bool ActuallySmooth = true, typename T, typename S>
-constexpr T smooth_clip(const T& x, const S& x_lower, const S& x_upper, S eps2)
+template<bool ActuallySmooth, typename T, typename T1, typename T2, typename S>
+constexpr T smooth_clamp(const T &x, const T1 &lo, const T2 &hi, S eps2)
 {
     //
-    // Clips x to [x_lower, x_upper], using a squared root smooth modulation,
+    // Clamps "x" to "[x_lower, x_upper]", using a squared root smooth modulation,
     // unless template parameter "ActuallySmooth" is false, in
-    // that case we strictly clip the value
+    // that case we strictly clamp the value.
     //
+
     if constexpr (ActuallySmooth) {
-        return 0.5*(sqrt((x-x_lower)*(x-x_lower) + eps2) - sqrt((x - x_upper)*(x - x_upper) + eps2) + (x_lower + x_upper));
+        using std::sqrt;
+
+        const auto Dxlo = x - lo;
+        const auto Dxhi = x - hi;
+        return S{ 0.5 } *(sqrt(Dxlo * Dxlo + eps2) - sqrt(Dxhi * Dxhi + eps2) + lo + hi);
     }
     else {
-        return (x < x_upper ? (x > x_lower ? x : x_lower) : x_upper);
+        return x < hi ? (x > lo ? x : static_cast<T>(lo)) : static_cast<T>(hi);
+    }
+}
+
+template<bool ActuallySmooth, typename T, typename S>
+constexpr T smooth_step(const T &x, S eps)
+{
+    //
+    // Implements the "smooth step" function (i.e., a smoothed
+    // version of the Heavyside step function, with parameter "eps"),
+    // unless template parameter "ActuallySmooth" is false, in
+    // that case it just evaluates the Heavyside step function.
+    //
+
+    if constexpr (ActuallySmooth) {
+        using std::sin;
+        using std::atan;
+
+        return S{ 0.5 } * (S{ 1 } + sin(atan(x / eps)));
+
+
+        // another version that works similarly
+        //using std::tanh;
+        //
+        //return S{ 0.5 } * (S{ 1 } + tanh(x / eps));
+    }
+    else {
+        return x >= S{ 0 } ? T{ 1 } : T{ 0 };
     }
 }
 
