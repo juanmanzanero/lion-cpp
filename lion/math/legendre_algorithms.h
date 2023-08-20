@@ -49,6 +49,57 @@ std::pair<std::vector<scalar>,std::vector<scalar>> gauss_legendre_lobatto_nodes_
 //! @param[in] x: evaluation point
 std::tuple<scalar,scalar,scalar> q_and_L_evaluation(const size_t N, const scalar x);
 
+
+//! Compute the barycentric weights of a given set of nodes
+template<typename scalar_type = scalar>
+inline std::vector<scalar_type> compute_barycentric_weights(const std::vector<scalar_type>& nodes)
+{
+    assert(nodes.size() > 0u);
+
+    const auto polynomial_order = nodes.size() - 1;
+    std::vector<scalar_type> weights(polynomial_order + 1, 1.0);
+
+    for (size_t j = 1; j <= polynomial_order; ++j) {
+        for (size_t k = 0; k < j; ++k) {
+            weights[k] *= nodes[k] - nodes[j];
+            weights[j] *= nodes[j] - nodes[k];
+        }
+    }
+
+    std::for_each(weights.begin(), weights.end(), [](auto& w) { w = 1.0 / w; });
+
+    return weights;
+}
+
+//! Compute the polynomial derivative matrix Dij = lj'(xi)
+//! We store it rowmajor, it is easier to use later this way: Dij = D[(N+1)*i + j]
+//! @param[in] nodes
+template<typename scalar_type = scalar>
+inline std::vector<scalar_type> compute_derivative_matrix(const std::vector<scalar_type>& nodes)
+{
+    assert(nodes.size() > 0u);
+
+    const auto barycentric_weights = compute_barycentric_weights(nodes);
+    const auto polynomial_order = nodes.size() - 1;
+    std::vector<scalar_type> derivative_matrix((polynomial_order + 1) * (polynomial_order + 1), 0.0);
+
+    for (size_t i = 0; i <= polynomial_order; ++i) {
+        const auto diagonal_element = (polynomial_order + 2) * i;
+        for (size_t j = 0; j <= polynomial_order; ++j) {
+            if (j != i)
+            {
+                const auto element = (polynomial_order + 1) * i + j;
+
+                derivative_matrix[element] = barycentric_weights[j] / (barycentric_weights[i] * (nodes[i] - nodes[j]));
+                derivative_matrix[diagonal_element] -= derivative_matrix[element];
+            }
+        }
+    }
+
+    return derivative_matrix;
+
+}
+
 #include "legendre_algorithms.hpp"
 
 #endif
