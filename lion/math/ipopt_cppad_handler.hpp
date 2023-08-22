@@ -63,6 +63,81 @@ public:
     {   status = not_defined; }
 };
 
+template<typename DVector>
+std::tuple<DVector, DVector, DVector> compute_slack_variables_and_their_lagrange_multipliers(const Ipopt::IpoptData* ip_data, const DVector& constraint_lower_bounds, const DVector& constraint_upper_bounds)
+{
+    assert(constraint_lower_bounds.size() == constraint_upper_bounds.size());
+    const auto m = constraint_lower_bounds.size();
+
+    // Return slack variables. We must fetch them from Ipopt's internal storage.
+    const Ipopt::Number* s_values = dynamic_cast<const Ipopt::DenseVector*>(GetRawPtr(ip_data->curr()->s()))->Values();
+    const auto s = DVector(s_values, s_values + ip_data->curr()->s()->Dim());
+
+    // Return Lagrange multipliers for slack variable bounds
+    // Internally, Ipopt only stores multipliers for active bounds (i.e. |bound| < 1.0e18),
+    // so we must skip unilateral constraints
+    const auto num_inequalities = s.size();
+    auto vl = DVector(num_inequalities, 0.0);
+    auto vu = DVector(num_inequalities, 0.0);
+
+    const Ipopt::Number* vl_values = dynamic_cast<const Ipopt::DenseVector*>(GetRawPtr(ip_data->curr()->v_L()))->Values();
+    const auto num_lower_constraint_bound = ip_data->curr()->v_L()->Dim();
+
+    if (vl_values == nullptr && num_lower_constraint_bound > 0)
+    {
+        throw lion_exception("[ERROR] Inconsistent lagrange multipliers for lower slack variable bounds. Pointer is nullptr but size is greater than zero");
+    }
+
+    const Ipopt::Number* vu_values = dynamic_cast<const Ipopt::DenseVector*>(GetRawPtr(ip_data->curr()->v_U()))->Values();
+    const auto num_upper_constraint_bound = ip_data->curr()->v_U()->Dim();
+
+    if (vu_values == nullptr && num_upper_constraint_bound > 0)
+    {
+        throw lion_exception("[ERROR] Inconsistent lagrange multipliers for lower slack variable bounds. Pointer is nullptr but size is greater than zero");
+    }
+
+    size_t i_lower_inequality{ 0u };
+    size_t i_upper_inequality{ 0u };
+    size_t i_inequality{ 0u };
+    for (size_t i_constraint = 0; i_constraint < m; ++i_constraint)
+    {
+        if (std::abs(constraint_lower_bounds[i_constraint] - constraint_upper_bounds[i_constraint]) > 2.0e-16)
+        {
+            // Upper and lower bounds differ, we have an inequality
+
+            if (constraint_lower_bounds[i_constraint] > -1.0e18)
+            {
+                // Lower bound is greater than -1e18, the bound is active
+                vl[i_inequality] = vl_values[i_lower_inequality];
+                ++i_lower_inequality;
+            }
+
+            if (constraint_upper_bounds[i_constraint] < 1.0e18)
+            {
+                // Upper bound is lower than 1e18, the bound is active
+                vu[i_inequality] = vu_values[i_upper_inequality];
+                ++i_upper_inequality;
+            }
+
+            ++i_inequality;
+        }
+    }
+
+    // Check that all constraints were considered
+    if (i_lower_inequality != num_lower_constraint_bound)
+    {
+        throw lion_exception("[ERROR] ipopt_cppad_handler::finalize_solution() -> inconsistent number of inequalities with lower bounds");
+    }
+
+    if (i_upper_inequality != num_upper_constraint_bound)
+    {
+        throw lion_exception("[ERROR] ipopt_cppad_handler::finalize_solution() -> inconsistent number of inequalities with upper bounds");
+    }
+
+    return { s, vl, vu };
+}
+
+
 template <class Dvector, class ADvector, class FG_eval>
 class ipopt_cppad_callback : public Ipopt::TNLP
 {
@@ -1231,18 +1306,7 @@ public:
                 throw lion_exception("x is not ip_data->curr()->x()");
         }
 
-        // Return slack variables
-        const Ipopt::Number* s_values = dynamic_cast<const Ipopt::DenseVector*>(GetRawPtr(ip_data->curr()->s()))->Values();
-        solution_.s = Dvector(s_values, s_values + ip_data->curr()->s()->Dim());
-
-        const Ipopt::Number* vl_values = dynamic_cast<const Ipopt::DenseVector*>(GetRawPtr(ip_data->curr()->v_L()))->Values();
-        if ( vl_values != nullptr )
-            solution_.vl = Dvector(vl_values, vl_values + ip_data->curr()->v_L()->Dim());
-
-        const Ipopt::Number* vu_values = dynamic_cast<const Ipopt::DenseVector*>(GetRawPtr(ip_data->curr()->v_U()))->Values();
-
-        if ( vu_values != nullptr )
-            solution_.vu = Dvector(vu_values, vu_values + ip_data->curr()->v_U()->Dim());
+        std::tie(solution_.s, solution_.vl, solution_.vu) = compute_slack_variables_and_their_lagrange_multipliers(ip_data, gl_, gu_);
 
         return;
     }
@@ -1639,6 +1703,9 @@ NLP_complete_output ipopt_cppad_compute_complete_nlp(
 
     return output;
 }
+
+
+
 
 }
 
