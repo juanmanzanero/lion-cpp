@@ -28,7 +28,7 @@ public:
     }
 };
 
-TEST(Ipopt_optimize_with_cppad_test,optimise)
+TEST(Ipopt_optimize_with_cppad_test,optimize)
 {
     size_t i;
 

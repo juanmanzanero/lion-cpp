@@ -2,6 +2,7 @@
 #define LIONCPP_MATH_OPTIMIZATION_RESULT_H
 
 #include <coin-or/IpIpoptData.hpp>
+#include <coin-or/IpDenseVector.hpp>
 
 #include "lion/foundation/lion_exception.h"
 

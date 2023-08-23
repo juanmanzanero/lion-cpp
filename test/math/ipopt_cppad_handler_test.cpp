@@ -29,7 +29,7 @@ public:
 };
 
 
-TEST(ipopt_optimize_nlp_cppad_test,optimise)
+TEST(ipopt_optimize_nlp_cppad_test,optimize)
 {
     using namespace lioncpp;
 
@@ -101,7 +101,7 @@ TEST(ipopt_optimize_nlp_cppad_test,optimise)
     }
 }
 
-TEST(ipopt_optimize_nlp_cppad_test,optimise_restart)
+TEST(ipopt_optimize_nlp_cppad_test,optimize_restart)
 {
     using namespace lioncpp;
 
