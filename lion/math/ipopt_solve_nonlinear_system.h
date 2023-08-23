@@ -86,14 +86,14 @@ namespace lioncpp {
         app->Options()->SetStringValue("jacobian_approximation", options.jacobian_approximation);
         app->Options()->SetNumericValue("findiff_perturbation", options.findiff_perturbation);
 
-        Ipopt::SmartPtr<Ipopt::TNLP> nlp = new Ipopt_handler<Fitness_function, Equations_type>(n, nc, x0, f, c, x_lb, x_ub, c_lb, c_ub);
+        Ipopt::SmartPtr<Ipopt::TNLP> nlp = new lioncpp::detail::Ipopt_NLP_finite_differences<Fitness_function, Equations_type>(n, nc, x0, f, c, x_lb, x_ub, c_lb, c_ub);
         status = app->OptimizeTNLP(nlp);
 
         Ipopt::Number dual_inf, constr_viol, complementarity, kkt_error, varbounds_viol;
         app->Statistics()->Infeasibilities(dual_inf, constr_viol, varbounds_viol, complementarity, kkt_error);
 
         // Get solution
-        const std::vector<scalar>& x = static_cast<Ipopt_handler<Fitness_function, Equations_type>*>(GetRawPtr(nlp))->x();
+        const std::vector<scalar>& x = static_cast<lioncpp::detail::Ipopt_NLP_finite_differences<Fitness_function, Equations_type>*>(GetRawPtr(nlp))->x();
 
         // Regardless of the ipopt output flag we base the status flag on the constraints violation 
         bool succeed = true;
