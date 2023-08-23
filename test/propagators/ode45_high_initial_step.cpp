@@ -2,6 +2,8 @@
 #include "gtest/gtest.h"
 #include "armonic_oscillator.h"
 
+using namespace lioncpp;
+
 class ODE45_high_initial_step_test : public ::testing::Test
 {
  protected:

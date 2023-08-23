@@ -3,6 +3,8 @@
 
 #include "lion/foundation/types.h"
 
+namespace lioncpp{
+
 //! A class to perform an explicit Euler step
 //! @param F: ODE functor dqdt = f(q,u,t)
 //! @param U: controls functor u = u(t)
@@ -20,6 +22,18 @@ class Explicit_euler
     static void take_step(F& f, U& u, std::array<scalar,N>& q, scalar t, scalar dt);
 };
 
-#include "explicit_euler.hpp"
+
+template<class F, class U, size_t N>
+inline void Explicit_euler<F,U,N>::take_step(F& f, U& u, std::array<scalar,N>& q, scalar t, scalar dt)
+{
+    const auto u_t = u(q,t);
+
+    auto dqdt = f.ode(q,u_t,t);
+    
+    for ( auto [iq,idq] = std::tuple{ q.begin(), dqdt.begin()} ; iq != q.end(); iq++, idq++)
+        *iq += ( (*idq) *= dt );
+}
+
+}
 
 #endif

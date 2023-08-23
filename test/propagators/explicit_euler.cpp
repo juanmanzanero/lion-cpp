@@ -3,6 +3,8 @@
 #include <cmath> 
 #include "armonic_oscillator.h"
 
+using namespace lioncpp;
+
 
 TEST(Explicit_euler_test, Armonic_oscillator)
 {

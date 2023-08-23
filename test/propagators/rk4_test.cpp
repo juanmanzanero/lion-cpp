@@ -3,6 +3,8 @@
 #include <cmath>
 #include "armonic_oscillator.h"
 
+using namespace lioncpp;
+
 TEST(RK4_test, Armonic_oscillator)
 {
     std::array<scalar,2> q = {1.0, 0.0};

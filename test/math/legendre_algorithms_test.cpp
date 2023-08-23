@@ -4,7 +4,7 @@
 
 TEST(Legendre_algorithms_test, Nodes_and_weights_P4)
 {
-    const auto xj = gauss_legendre_nodes_and_weights(4);
+    const auto xj = lioncpp::gauss_legendre_nodes_and_weights(4);
 
     std::array<double,5> x = {   -0.906179845938664,
                                  -0.538469310105683,
@@ -27,7 +27,7 @@ TEST(Legendre_algorithms_test, Nodes_and_weights_P4)
 
 TEST(Legendre_algorithms_test, Nodes_and_weights_P7)
 {
-    const auto xj = gauss_legendre_nodes_and_weights(7);
+    const auto xj = lioncpp::gauss_legendre_nodes_and_weights(7);
 
     std::array<double,8> x = {    -0.960289856497536,
                                   -0.796666477413627,
@@ -58,7 +58,7 @@ TEST(Legendre_algorithms_test, Nodes_and_weights_P7)
 TEST(Legendre_algorithms_test, LGL_Nodes_and_weights_P4)
 {
     const size_t N = 4;
-    const auto [xj, wj] = gauss_legendre_lobatto_nodes_and_weights(N);
+    const auto [xj, wj] = lioncpp::gauss_legendre_lobatto_nodes_and_weights(N);
 
     std::vector<scalar> x =
                   {
@@ -89,7 +89,7 @@ TEST(Legendre_algorithms_test, LGL_Nodes_and_weights_P4)
 TEST(Legendre_algorithms_test, LGL_Nodes_and_weights_P7)
 {
     const size_t N = 7;
-    const auto [xj, wj] = gauss_legendre_lobatto_nodes_and_weights(N);
+    const auto [xj, wj] = lioncpp::gauss_legendre_lobatto_nodes_and_weights(N);
 
     std::vector<scalar> x =
                   {

@@ -3,6 +3,8 @@
 #include "lion/math/matrix3x3.h"
 #include <fstream>
 
+using namespace lioncpp;
+
 template class Polynomial<double>;
 template struct Vector3d<double>;
 template struct Matrix3x3<double>;
