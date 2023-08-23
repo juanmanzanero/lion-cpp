@@ -1,0 +1,136 @@
+#ifndef LIONCPP_MATH_OPTIMIZATION_RESULT_H
+#define LIONCPP_MATH_OPTIMIZATION_RESULT_H
+
+#include <coin-or/IpIpoptData.hpp>
+
+#include "lion/foundation/lion_exception.h"
+
+namespace lioncpp {
+
+    template <class double_vector_type>
+    struct Optimization_result
+    {
+        //! possible values for the result status
+        enum status_type {
+            not_defined,
+            success,
+            maxiter_exceeded,
+            stop_at_tiny_step,
+            stop_at_acceptable_point,
+            local_infeasibility,
+            user_requested_stop,
+            feasible_point_found,
+            diverging_iterates,
+            restoration_failure,
+            error_in_step_computation,
+            invalid_number_detected,
+            too_few_degrees_of_freedom,
+            internal_error,
+            unknown
+        };
+
+
+        //! A function to retrieve Ipopt's slack variables and their bounds Lagrange multipliers
+        struct Slack_and_bound_multipliers
+        {
+            double_vector_type s;
+            double_vector_type vl;
+            double_vector_type vu;
+        };
+
+        static auto compute_slack_variables_and_their_lagrange_multipliers(
+            const Ipopt::IpoptData* ip_data,
+            const double_vector_type& constraint_lower_bounds,
+            const double_vector_type& constraint_upper_bounds)->Slack_and_bound_multipliers;
+
+        status_type status = not_defined; //! solution status
+        Ipopt::Number iter_count;         //! The number of iterations
+        double_vector_type x;             //! the approximation solution
+        double_vector_type zl;            //! Lagrange multipliers corresponding to lower bounds on x
+        double_vector_type zu;            //! Lagrange multipliers corresponding to upper bounds on x
+        double_vector_type g;             //! value of g(x)
+        double_vector_type lambda;        //! Lagrange multipliers correspondiing constraints on g(x)
+        double obj_value;                 //! value of f(x)
+        double_vector_type s;             //! slack variables
+        double_vector_type vl;            //! Lagrange multipliers corresponding to lower bounds on x
+        double_vector_type vu;            //! Lagrange multipliers corresponding to upper bounds on x
+    };
+
+    template<typename double_vector_type>
+    inline auto Optimization_result<double_vector_type>::
+        compute_slack_variables_and_their_lagrange_multipliers(const Ipopt::IpoptData* ip_data, const double_vector_type& constraint_lower_bounds, const double_vector_type& constraint_upper_bounds) -> Slack_and_bound_multipliers
+    {
+        assert(constraint_lower_bounds.size() == constraint_upper_bounds.size());
+        const auto m = constraint_lower_bounds.size();
+
+        // Return slack variables. We must fetch them from Ipopt's internal storage.
+        const Ipopt::Number* s_values = dynamic_cast<const Ipopt::DenseVector*>(GetRawPtr(ip_data->curr()->s()))->Values();
+        const auto s = double_vector_type(s_values, s_values + ip_data->curr()->s()->Dim());
+
+        // Return Lagrange multipliers for slack variable bounds
+        // Internally, Ipopt only stores multipliers for active bounds (i.e. |bound| < 1.0e18),
+        // so we must skip unilateral constraints
+        const auto num_inequalities = s.size();
+        auto vl = double_vector_type(num_inequalities, 0.0);
+        auto vu = double_vector_type(num_inequalities, 0.0);
+
+        const Ipopt::Number* vl_values = dynamic_cast<const Ipopt::DenseVector*>(GetRawPtr(ip_data->curr()->v_L()))->Values();
+        const auto num_lower_constraint_bound = ip_data->curr()->v_L()->Dim();
+
+        if (vl_values == nullptr && num_lower_constraint_bound > 0)
+        {
+            throw lion_exception("[ERROR] Inconsistent lagrange multipliers for lower slack variable bounds. Pointer is nullptr but size is greater than zero");
+        }
+
+        const Ipopt::Number* vu_values = dynamic_cast<const Ipopt::DenseVector*>(GetRawPtr(ip_data->curr()->v_U()))->Values();
+        const auto num_upper_constraint_bound = ip_data->curr()->v_U()->Dim();
+
+        if (vu_values == nullptr && num_upper_constraint_bound > 0)
+        {
+            throw lion_exception("[ERROR] Inconsistent lagrange multipliers for lower slack variable bounds. Pointer is nullptr but size is greater than zero");
+        }
+
+        size_t i_lower_inequality{ 0u };
+        size_t i_upper_inequality{ 0u };
+        size_t i_inequality{ 0u };
+        for (size_t i_constraint = 0; i_constraint < m; ++i_constraint)
+        {
+            if (std::abs(constraint_lower_bounds[i_constraint] - constraint_upper_bounds[i_constraint]) > 2.0e-16)
+            {
+                // Upper and lower bounds differ, we have an inequality
+
+                if (constraint_lower_bounds[i_constraint] > -1.0e18)
+                {
+                    // Lower bound is greater than -1e18, the bound is active
+                    vl[i_inequality] = vl_values[i_lower_inequality];
+                    ++i_lower_inequality;
+                }
+
+                if (constraint_upper_bounds[i_constraint] < 1.0e18)
+                {
+                    // Upper bound is lower than 1e18, the bound is active
+                    vu[i_inequality] = vu_values[i_upper_inequality];
+                    ++i_upper_inequality;
+                }
+
+                ++i_inequality;
+            }
+        }
+
+        // Check that all constraints were considered
+        if (i_lower_inequality != num_lower_constraint_bound)
+        {
+            throw lion_exception("[ERROR] ipopt_cppad_handler::finalize_solution() -> inconsistent number of inequalities with lower bounds");
+        }
+
+        if (i_upper_inequality != num_upper_constraint_bound)
+        {
+            throw lion_exception("[ERROR] ipopt_cppad_handler::finalize_solution() -> inconsistent number of inequalities with upper bounds");
+        }
+
+        return { s, vl, vu };
+    }
+
+}
+
+#endif

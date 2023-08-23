@@ -3,8 +3,8 @@
 
 #include <array>
 #include "lion/foundation/types.h"
+#include "lion/foundation/lion_exception.h"
 #include "lion/math/linear_algebra.h"
-#include "lion/math/ipopt_cppad_handler.hpp"
 #include "lion/math/matrix_extensions.h"
 #include <cppad/cppad.hpp>
 

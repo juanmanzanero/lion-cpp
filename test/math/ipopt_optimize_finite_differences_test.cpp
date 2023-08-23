@@ -1,9 +1,10 @@
 #include "gtest/gtest.h"
-#include "lion/math/optimise.h"
+#include "lion/math/ipopt_optimize_nlp_finite_differences.h"
 #include "lion/foundation/constants.h"
 
-TEST(Optimise_test, sine_minimum_array)
+TEST(Ipopt_optimize_NLP_finite_differences_test, sine_minimum_array)
 {
+    using namespace lioncpp;
     // This problem is simply to find the minimum of the sine function, but with one intermediate equality constraint
 
     // Fitness function: simply f(x,y) = y
@@ -34,9 +35,9 @@ TEST(Optimise_test, sine_minimum_array)
     C c;
 
     // Perform optimisation
-    Optimise_options options;
+    Ipopt_optimize_NLP_finite_differences_options options;
     options.findiff_perturbation = 1.0e-7;
-    auto result = Optimise<F,C>::optimise(2,1,{0.0,0.0},f,c,{-2.0,-2.0},{2.0,2.00},{0.0},{0.0},options);
+    auto result = Ipopt_optimize_NLP_finite_differences<F,C>::optimise(2,1,{0.0,0.0},f,c,{-2.0,-2.0},{2.0,2.00},{0.0},{0.0},options);
     
     // Check results
     EXPECT_EQ(result.solved, true);
@@ -46,8 +47,9 @@ TEST(Optimise_test, sine_minimum_array)
     EXPECT_NEAR(result.f, -1, 1.0e-7);
 }
 
-TEST(Optimise_test, sine_minimum_vector)
+TEST(Ipopt_optimize_NLP_finite_differences_test, sine_minimum_vector)
 {
+    using namespace lioncpp;
     // This problem is simply to find the minimum of the sine function, but with one intermediate equality constraint
 
     // Fitness function: simply f(x,y) = y
@@ -78,9 +80,9 @@ TEST(Optimise_test, sine_minimum_vector)
     C c;
 
     // Perform optimisation
-    Optimise_options options;
+    Ipopt_optimize_NLP_finite_differences_options options;
     options.findiff_perturbation = 1.0e-7;
-    auto result = Optimise<F,C>::optimise(2,1,{0.0,0.0},f,c,{-2.0,-2.0},{2.0,2.00},{0.0},{0.0},options);
+    auto result = Ipopt_optimize_NLP_finite_differences<F,C>::optimise(2,1,{0.0,0.0},f,c,{-2.0,-2.0},{2.0,2.00},{0.0},{0.0},options);
     
     // Check results
     EXPECT_EQ(result.solved, true);

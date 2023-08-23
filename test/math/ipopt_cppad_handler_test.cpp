@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "lion/math/ipopt_cppad_handler.hpp"
+#include "lion/math/ipopt_optimize_nlp_cppad.h"
 #include "lion/math/matrix_extensions.h"
 
 using timeseries = CppAD::AD<double>;
@@ -29,8 +29,10 @@ public:
 };
 
 
-TEST(ipopt_cppad_handler_test,optimise)
+TEST(ipopt_optimize_nlp_cppad_test,optimise)
 {
+    using namespace lioncpp;
+
     size_t i;
 
     // number of independent variables (domain dimension for f and g)
@@ -75,17 +77,17 @@ TEST(ipopt_cppad_handler_test,optimise)
     options += "Numeric point_perturbation_radius  0.\n";
 
     // place to return solution
-    CppAD::ipopt_cppad_result<std::vector<double>> solution;
+    Optimization_result<std::vector<double>> solution;
 
     // solve the problem
-    CppAD::ipopt_cppad_solve<std::vector<double>, FG_eval>(
+    ipopt_optimize_nlp_cppad<std::vector<double>, FG_eval>(
         options, xi, xl, xu, gl, gu, fg_eval, solution
     );
 
     //
     // Check some of the solution values
     //
-    EXPECT_TRUE(solution.status == CppAD::ipopt_cppad_result<std::vector<double>>::success);
+    EXPECT_TRUE(solution.status == Optimization_result<std::vector<double>>::success);
 
     //
     double check_x[]  = { 1.000000, 4.743000, 3.82115, 1.379408 };
@@ -99,8 +101,10 @@ TEST(ipopt_cppad_handler_test,optimise)
     }
 }
 
-TEST(ipopt_cppad_handler_test,optimise_restart)
+TEST(ipopt_optimize_nlp_cppad_test,optimise_restart)
 {
+    using namespace lioncpp;
+
     size_t i;
 
     // number of independent variables (domain dimension for f and g)
@@ -144,10 +148,10 @@ TEST(ipopt_cppad_handler_test,optimise_restart)
     options += "Numeric point_perturbation_radius  0.\n";
 
     // place to return solution
-    CppAD::ipopt_cppad_result<std::vector<double>> solution;
+    Optimization_result<std::vector<double>> solution;
 
     // solve the problem
-    CppAD::ipopt_cppad_solve<std::vector<double>, FG_eval>(
+    ipopt_optimize_nlp_cppad<std::vector<double>, FG_eval>(
         options, xi, xl, xu, gl, gu, lambda_init, zl_init, zu_init, fg_eval, solution
     );
     
@@ -157,7 +161,7 @@ TEST(ipopt_cppad_handler_test,optimise_restart)
     //
     // Check some of the solution values
     //
-    EXPECT_TRUE(solution.status == CppAD::ipopt_cppad_result<std::vector<double>>::success);
+    EXPECT_TRUE(solution.status == Optimization_result<std::vector<double>>::success);
 
     //
     double check_x[]  = { 1.000000, 4.743000, 3.82115, 1.379408 };

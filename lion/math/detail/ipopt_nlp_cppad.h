@@ -1,145 +1,17 @@
-# ifndef IPOPT_CPPAD_HANDLER_HPP
-# define IPOPT_CPPAD_HANDLER_HPP
+#ifndef LIONCPP_MATH_DETAIL_IPOPT_NLP_CPPAD_H
+#define LIONCPP_MATH_DETAIL_IPOPT_NLP_CPPAD_H
 
 #include <cppad/cppad.hpp>
 #include <coin-or/IpIpoptApplication.hpp>
-#include  <coin-or/IpSolveStatistics.hpp>
+#include <coin-or/IpSolveStatistics.hpp>
 #include <coin-or/IpTNLP.hpp>
 #include <coin-or/IpIpoptData.hpp>
 #include <coin-or/IpDenseVector.hpp>
-#include "lion/math/matrix_extensions.h"
-#include "lion/foundation/lion_exception.h"
 
-namespace CppAD 
-{
+namespace lioncpp::detail {
 
-template <class Dvector>
-class ipopt_cppad_result
-{
-public:
-    /// possible values for the result status
-    enum status_type {
-        not_defined,
-        success,
-        maxiter_exceeded,
-        stop_at_tiny_step,
-        stop_at_acceptable_point,
-        local_infeasibility,
-        user_requested_stop,
-        feasible_point_found,
-        diverging_iterates,
-        restoration_failure,
-        error_in_step_computation,
-        invalid_number_detected,
-        too_few_degrees_of_freedom,
-        internal_error,
-        unknown
-    };
-
-    /// possible values for solution status
-    status_type status;
-    /// The number of iterations
-    Ipopt::Number iter_count;
-    /// the approximation solution
-    Dvector x;
-    /// Lagrange multipliers corresponding to lower bounds on x
-    Dvector zl;
-    /// Lagrange multipliers corresponding to upper bounds on x
-    Dvector zu;
-    /// value of g(x)
-    Dvector g;
-    /// Lagrange multipliers correspondiing constraints on g(x)
-    Dvector lambda;
-    /// value of f(x)
-    double obj_value;
-    /// slack variables
-    Dvector s;
-    /// Lagrange multipliers corresponding to lower bounds on x
-    Dvector vl;
-    /// Lagrange multipliers corresponding to upper bounds on x
-    Dvector vu;
-    /// constructor initializes solution status as not yet defined
-    ipopt_cppad_result(void)
-    {   status = not_defined; }
-};
-
-template<typename DVector>
-std::tuple<DVector, DVector, DVector> compute_slack_variables_and_their_lagrange_multipliers(const Ipopt::IpoptData* ip_data, const DVector& constraint_lower_bounds, const DVector& constraint_upper_bounds)
-{
-    assert(constraint_lower_bounds.size() == constraint_upper_bounds.size());
-    const auto m = constraint_lower_bounds.size();
-
-    // Return slack variables. We must fetch them from Ipopt's internal storage.
-    const Ipopt::Number* s_values = dynamic_cast<const Ipopt::DenseVector*>(GetRawPtr(ip_data->curr()->s()))->Values();
-    const auto s = DVector(s_values, s_values + ip_data->curr()->s()->Dim());
-
-    // Return Lagrange multipliers for slack variable bounds
-    // Internally, Ipopt only stores multipliers for active bounds (i.e. |bound| < 1.0e18),
-    // so we must skip unilateral constraints
-    const auto num_inequalities = s.size();
-    auto vl = DVector(num_inequalities, 0.0);
-    auto vu = DVector(num_inequalities, 0.0);
-
-    const Ipopt::Number* vl_values = dynamic_cast<const Ipopt::DenseVector*>(GetRawPtr(ip_data->curr()->v_L()))->Values();
-    const auto num_lower_constraint_bound = ip_data->curr()->v_L()->Dim();
-
-    if (vl_values == nullptr && num_lower_constraint_bound > 0)
-    {
-        throw lion_exception("[ERROR] Inconsistent lagrange multipliers for lower slack variable bounds. Pointer is nullptr but size is greater than zero");
-    }
-
-    const Ipopt::Number* vu_values = dynamic_cast<const Ipopt::DenseVector*>(GetRawPtr(ip_data->curr()->v_U()))->Values();
-    const auto num_upper_constraint_bound = ip_data->curr()->v_U()->Dim();
-
-    if (vu_values == nullptr && num_upper_constraint_bound > 0)
-    {
-        throw lion_exception("[ERROR] Inconsistent lagrange multipliers for lower slack variable bounds. Pointer is nullptr but size is greater than zero");
-    }
-
-    size_t i_lower_inequality{ 0u };
-    size_t i_upper_inequality{ 0u };
-    size_t i_inequality{ 0u };
-    for (size_t i_constraint = 0; i_constraint < m; ++i_constraint)
-    {
-        if (std::abs(constraint_lower_bounds[i_constraint] - constraint_upper_bounds[i_constraint]) > 2.0e-16)
-        {
-            // Upper and lower bounds differ, we have an inequality
-
-            if (constraint_lower_bounds[i_constraint] > -1.0e18)
-            {
-                // Lower bound is greater than -1e18, the bound is active
-                vl[i_inequality] = vl_values[i_lower_inequality];
-                ++i_lower_inequality;
-            }
-
-            if (constraint_upper_bounds[i_constraint] < 1.0e18)
-            {
-                // Upper bound is lower than 1e18, the bound is active
-                vu[i_inequality] = vu_values[i_upper_inequality];
-                ++i_upper_inequality;
-            }
-
-            ++i_inequality;
-        }
-    }
-
-    // Check that all constraints were considered
-    if (i_lower_inequality != num_lower_constraint_bound)
-    {
-        throw lion_exception("[ERROR] ipopt_cppad_handler::finalize_solution() -> inconsistent number of inequalities with lower bounds");
-    }
-
-    if (i_upper_inequality != num_upper_constraint_bound)
-    {
-        throw lion_exception("[ERROR] ipopt_cppad_handler::finalize_solution() -> inconsistent number of inequalities with upper bounds");
-    }
-
-    return { s, vl, vu };
-}
-
-
-template <class Dvector, class ADvector, class FG_eval>
-class ipopt_cppad_callback : public Ipopt::TNLP
+template <class DVector, class ADVector, class FG_eval>
+class Ipopt_NLP_CppAD : public Ipopt::TNLP
 {
 private:
     // ------------------------------------------------------------------
@@ -163,23 +35,23 @@ private:
     /// dimension of the range space for g(x)
     const size_t                    ng_;
     /// initial value for x
-    const Dvector&                  xi_;
+    const DVector&                  xi_;
     /// lower limit for x
-    const Dvector&                  xl_;
+    const DVector&                  xl_;
     /// upper limit for x
-    const Dvector&                  xu_;
+    const DVector&                  xu_;
     /// lower limit for g(x)
-    const Dvector&                  gl_;
+    const DVector&                  gl_;
     /// upper limit for g(x)
-    const Dvector&                  gu_;
+    const DVector&                  gu_;
     /// are lagrange multipliers required?
     bool                            init_lambda_;
     /// initial guess of the lagrange multipliers
-    const Dvector*                  lambda_i_;
+    const DVector*                  lambda_i_;
     /// initial guess of lagrange multipliers for x lower bounds
-    const Dvector*                  zl_i_;
+    const DVector*                  zl_i_;
     /// initial guess of lagrange multipliers for x upper bounds
-    const Dvector*                  zu_i_;
+    const DVector*                  zu_i_;
     /// object that evaluates f(x) and g(x)
     FG_eval&                        fg_eval_;
     /// should operation sequence be retaped for each new x.
@@ -191,7 +63,7 @@ private:
     /// with reverse mode used for Jacobian.
     bool                            sparse_reverse_;
     /// final results are returned to this structure
-    ipopt_cppad_result<Dvector>&          solution_;
+    Optimization_result<DVector>&          solution_;
     // ------------------------------------------------------------------
     // Values that are initilaized by the constructor
     // ------------------------------------------------------------------
@@ -200,9 +72,9 @@ private:
     /// otherwise it is set by cache_new_x each time it is called.
     CppAD::ADFun<double>            adfun_;
     /// value of x corresponding to previous new_x
-    Dvector                         x0_;
+    DVector                         x0_;
     /// value of fg corresponding to previous new_x
-    Dvector                         fg0_;
+    DVector                         fg0_;
     // ----------------------------------------------------------------------
     // Jacobian information
     // ----------------------------------------------------------------------
@@ -263,7 +135,7 @@ private:
     {   size_t i;
         if( retape_ )
         {   // make adfun_, as well as x0_ and fg0_ correspond to this x
-            ADvector a_x(nx_), a_fg(nf_ + ng_);
+            ADVector a_x(nx_), a_fg(nf_ + ng_);
             for(i = 0; i < nx_; i++)
             {   x0_[i] = x[i];
                 a_x[i] = x[i];
@@ -281,24 +153,24 @@ private:
     }
 public:
  
-    ipopt_cppad_callback(
+    Ipopt_NLP_CppAD(
         size_t                 nf              ,
         size_t                 nx              ,
         size_t                 ng              ,
-        const Dvector&         xi              ,
-        const Dvector&         xl              ,
-        const Dvector&         xu              ,
-        const Dvector&         gl              ,
-        const Dvector&         gu              ,
-        const Dvector&         lambda_i        ,
-        const Dvector&         zl_i            ,
-        const Dvector&         zu_i            ,
+        const DVector&         xi              ,
+        const DVector&         xl              ,
+        const DVector&         xu              ,
+        const DVector&         gl              ,
+        const DVector&         gu              ,
+        const DVector&         lambda_i        ,
+        const DVector&         zl_i            ,
+        const DVector&         zu_i            ,
         FG_eval&               fg_eval         ,
         bool                   retape          ,
         bool                   sparse_forward  ,
         bool                   sparse_reverse  ,
-        ipopt_cppad_result<Dvector>& solution ) 
-    : ipopt_cppad_callback(nf,nx,ng,xi,xl,xu,gl,gu,fg_eval,retape,sparse_forward,sparse_reverse,solution)
+        Optimization_result<DVector>& solution ) 
+    : Ipopt_NLP_CppAD(nf,nx,ng,xi,xl,xu,gl,gu,fg_eval,retape,sparse_forward,sparse_reverse,solution)
     {
         init_lambda_ = true;
         lambda_i_ = &lambda_i;
@@ -311,20 +183,20 @@ public:
     const auto& get_col_hes() const { return col_hes_; }
     const auto& get_row_hes() const { return row_hes_; }
 
-    ipopt_cppad_callback(
+    Ipopt_NLP_CppAD(
         size_t                 nf              ,
         size_t                 nx              ,
         size_t                 ng              ,
-        const Dvector&         xi              ,
-        const Dvector&         xl              ,
-        const Dvector&         xu              ,
-        const Dvector&         gl              ,
-        const Dvector&         gu              ,
+        const DVector&         xi              ,
+        const DVector&         xl              ,
+        const DVector&         xu              ,
+        const DVector&         gl              ,
+        const DVector&         gu              ,
         FG_eval&               fg_eval         ,
         bool                   retape          ,
         bool                   sparse_forward  ,
         bool                   sparse_reverse  ,
-        ipopt_cppad_result<Dvector>& solution ) :
+        Optimization_result<DVector>& solution ) :
     nf_ ( nf ),
     nx_ ( nx ),
     ng_ ( ng ),
@@ -357,7 +229,7 @@ public:
 
 //      if( ! retape_ )
         {   // make adfun_ correspond to x -> [ f(x), g(x) ]
-            ADvector a_x(nx_), a_fg(nfg);
+            ADVector a_x(nx_), a_fg(nfg);
             for(i = 0; i < nx_; i++)
                 a_x[i] = xi_[i];
             CppAD::Independent(a_x);
@@ -376,11 +248,11 @@ public:
             if( nx_ <= m )
             {   // use forward mode to compute sparsity
 
-                // number of bits that are packed into one unit in vectorBool
-                size_t n_column = vectorBool::bit_per_unit();
+                // number of bits that are packed into one unit in CppAD::vectorBool
+                size_t n_column = CppAD::vectorBool::bit_per_unit();
 
                 // sparsity patterns for current columns
-                vectorBool r(nx_ * n_column), s(m * n_column);
+                CppAD::vectorBool r(nx_ * n_column), s(m * n_column);
 
                 // compute the sparsity pattern n_column columns at a time
                 size_t n_loop = (nx_ - 1) / n_column + 1;
@@ -408,11 +280,11 @@ public:
             else
             {   // use reverse mode to compute sparsity
 
-                // number of bits that are packed into one unit in vectorBool
-                size_t n_row = vectorBool::bit_per_unit();
+                // number of bits that are packed into one unit in CppAD::vectorBool
+                size_t n_row = CppAD::vectorBool::bit_per_unit();
 
                 // sparsity patterns for current rows
-                vectorBool r(n_row * m), s(n_row * nx_);
+                CppAD::vectorBool r(n_row * m), s(n_row * nx_);
 
                 // compute the sparsity pattern n_row row at a time
                 size_t n_loop = (m - 1) / n_row + 1;
@@ -462,14 +334,14 @@ public:
             // Hessian
             pattern_hes_.resize(nx_ * nx_);
 
-            // number of bits that are packed into one unit in vectorBool
-            size_t n_column = vectorBool::bit_per_unit();
+            // number of bits that are packed into one unit in CppAD::vectorBool
+            size_t n_column = CppAD::vectorBool::bit_per_unit();
 
             // sparsity patterns for current columns
-            vectorBool r(nx_ * n_column), h(nx_ * n_column);
+            CppAD::vectorBool r(nx_ * n_column), h(nx_ * n_column);
 
             // sparsity pattern for range space of function
-            vectorBool s(m);
+            CppAD::vectorBool s(m);
             for(i = 0; i < m; i++)
                 s[i] = true;
 
@@ -787,7 +659,7 @@ public:
         if( new_x )
             cache_new_x(x);
         //
-        Dvector w(nf_ + ng_), dw(nx_);
+        DVector w(nf_ + ng_), dw(nx_);
         for(i = 0; i < nf_; i++)
             w[i] = 1.0;
         for(i = 0; i < ng_; i++)
@@ -931,7 +803,7 @@ public:
             return true;
         //
         if( sparse_forward_ )
-        {   Dvector jac(nk);
+        {   DVector jac(nk);
             adfun_.SparseJacobianForward(
                 x0_ , pattern_jac_, row_jac_, col_jac_, jac, work_jac_
             );
@@ -939,7 +811,7 @@ public:
                 values[k] = jac[k];
         }
         else if( sparse_reverse_ )
-        {   Dvector jac(nk);
+        {   DVector jac(nk);
             adfun_.SparseJacobianReverse(
                 x0_ , pattern_jac_, row_jac_, col_jac_, jac, work_jac_
             );
@@ -948,7 +820,7 @@ public:
         }
         else if( nx_ < ng_ )
         {   // use forward mode
-            Dvector x1(nx_), fg1(nf_ + ng_);
+            DVector x1(nx_), fg1(nf_ + ng_);
             for(j = 0; j < nx_; j++)
                 x1[j] = 0.0;
             // index in col_order_jac_ of next entry
@@ -974,7 +846,7 @@ public:
         {   // user reverse mode
             size_t nfg = nf_ + ng_;
             // user reverse mode
-            Dvector w(nfg), dw(nx_);
+            DVector w(nfg), dw(nx_);
             for(i = 0; i < nfg; i++)
                 w[i] = 0.0;
             // index in row_jac_ of next entry
@@ -1110,14 +982,14 @@ public:
             return true;
 
         // weigting vector for Lagragian
-        Dvector w(nf_ + ng_);
+        DVector w(nf_ + ng_);
         for(i = 0; i < nf_; i++)
             w[i] = obj_factor;
         for(i = 0; i < ng_; i++)
             w[i + nf_] = lambda[i];
         //
         if( sparse_forward_ | sparse_reverse_ )
-        {   Dvector hes(nk);
+        {   DVector hes(nk);
             adfun_.SparseHessian(
                 x0_, w, pattern_hes_, row_hes_, col_hes_, hes, work_hes_
             );
@@ -1125,7 +997,7 @@ public:
                 values[k] = hes[k];
         }
         else
-        {   Dvector hes(nx_ * nx_);
+        {   DVector hes(nx_ * nx_);
             hes = adfun_.Hessian(x0_, w);
             for(k = 0; k < nk; k++)
             {   i = row_hes_[k];
@@ -1201,7 +1073,7 @@ public:
 
     \par solution_[out]
     this is a reference to the solution argument
-    in the constructor for ipopt_cppad_callback.
+    in the constructor for Ipopt_NLP_CppAD.
     The results are stored here
     (see documentation above).
     */
@@ -1224,64 +1096,64 @@ public:
         CPPAD_ASSERT_UNKNOWN(static_cast<size_t>(m) == ng_ );
 
         switch(status)
-        {   // convert status from Ipopt enum to ipopt_cppad_result<Dvector> enum
+        {   // convert status from Ipopt enum to Optimization_result<DVector> enum
             case Ipopt::SUCCESS:
-            solution_.status = ipopt_cppad_result<Dvector>::success;
+            solution_.status = Optimization_result<DVector>::success;
             break;
 
             case Ipopt::MAXITER_EXCEEDED:
             solution_.status =
-                ipopt_cppad_result<Dvector>::maxiter_exceeded;
+                Optimization_result<DVector>::maxiter_exceeded;
             break;
 
             case Ipopt::STOP_AT_TINY_STEP:
             solution_.status =
-                ipopt_cppad_result<Dvector>::stop_at_tiny_step;
+                Optimization_result<DVector>::stop_at_tiny_step;
             break;
 
             case Ipopt::STOP_AT_ACCEPTABLE_POINT:
             solution_.status =
-                ipopt_cppad_result<Dvector>::stop_at_acceptable_point;
+                Optimization_result<DVector>::stop_at_acceptable_point;
             break;
 
             case Ipopt::LOCAL_INFEASIBILITY:
             solution_.status =
-                ipopt_cppad_result<Dvector>::local_infeasibility;
+                Optimization_result<DVector>::local_infeasibility;
             break;
 
             case Ipopt::USER_REQUESTED_STOP:
             solution_.status =
-                ipopt_cppad_result<Dvector>::user_requested_stop;
+                Optimization_result<DVector>::user_requested_stop;
             break;
 
             case Ipopt::DIVERGING_ITERATES:
             solution_.status =
-                ipopt_cppad_result<Dvector>::diverging_iterates;
+                Optimization_result<DVector>::diverging_iterates;
             break;
 
             case Ipopt::RESTORATION_FAILURE:
             solution_.status =
-                ipopt_cppad_result<Dvector>::restoration_failure;
+                Optimization_result<DVector>::restoration_failure;
             break;
 
             case Ipopt::ERROR_IN_STEP_COMPUTATION:
             solution_.status =
-                ipopt_cppad_result<Dvector>::error_in_step_computation;
+                Optimization_result<DVector>::error_in_step_computation;
             break;
 
             case Ipopt::INVALID_NUMBER_DETECTED:
             solution_.status =
-                ipopt_cppad_result<Dvector>::invalid_number_detected;
+                Optimization_result<DVector>::invalid_number_detected;
             break;
 
             case Ipopt::INTERNAL_ERROR:
             solution_.status =
-                ipopt_cppad_result<Dvector>::internal_error;
+                Optimization_result<DVector>::internal_error;
             break;
 
             default:
             solution_.status =
-                ipopt_cppad_result<Dvector>::unknown;
+                Optimization_result<DVector>::unknown;
         }
 
         solution_.x.resize(nx_);
@@ -1306,7 +1178,10 @@ public:
                 throw lion_exception("x is not ip_data->curr()->x()");
         }
 
-        std::tie(solution_.s, solution_.vl, solution_.vu) = compute_slack_variables_and_their_lagrange_multipliers(ip_data, gl_, gu_);
+        auto slacks_data = Optimization_result<DVector>::compute_slack_variables_and_their_lagrange_multipliers(ip_data, gl_, gu_);
+        solution_.s = std::move(slacks_data.s);
+        solution_.vl = std::move(slacks_data.vl);
+        solution_.vu = std::move(slacks_data.vu);
 
         return;
     }
@@ -1345,368 +1220,5 @@ public:
     }
 };
 
-
-inline void parse_options(Ipopt::SmartPtr<Ipopt::IpoptApplication>& app, const std::string& options, bool& retape, bool& sparse_forward, bool& sparse_reverse)
-{
-    // process the options argument
-    size_t begin_1, end_1, begin_2, end_2, begin_3, end_3;
-    begin_1     = 0;
-    retape          = false;
-    sparse_forward  = false;
-    sparse_reverse  = false;
-    while( begin_1 < options.size() )
-    {   // split this line into tokens
-        while( options[begin_1] == ' ')
-            begin_1++;
-        end_1   = options.find_first_of(" \n", begin_1);
-        begin_2 = end_1;
-        while( options[begin_2] == ' ')
-            begin_2++;
-        end_2   = options.find_first_of(" \n", begin_2);
-        begin_3 = end_2;
-        while( options[begin_3] == ' ')
-            begin_3++;
-        end_3   = options.find_first_of(" \n", begin_3);
-
-        // check for errors
-        CPPAD_ASSERT_KNOWN(
-            (end_1 != std::string::npos)  &
-            (end_2 != std::string::npos)  &
-            (end_3 != std::string::npos)  ,
-            "ipopt::solve: missing '\\n' at end of an option line"
-        );
-        CPPAD_ASSERT_KNOWN(
-            (end_1 > begin_1) & (end_2 > begin_2) ,
-            "ipopt::solve: an option line does not have two tokens"
-        );
-
-        // get first two tokens
-        std::string tok_1 = options.substr(begin_1, end_1 - begin_1);
-        std::string tok_2 = options.substr(begin_2, end_2 - begin_2);
-
-        // get third token
-        std::string tok_3;
-        bool three_tok = false;
-        three_tok |= tok_1 == "Sparse";
-        three_tok |= tok_1 == "String";
-        three_tok |= tok_1 == "Numeric";
-        three_tok |= tok_1 == "Integer";
-        if( three_tok )
-        {   CPPAD_ASSERT_KNOWN(
-                (end_3 > begin_3) ,
-                "ipopt::solve: a Sparse, String, Numeric, or Integer\n"
-                "option line does not have three tokens."
-            );
-            tok_3 = options.substr(begin_3, end_3 - begin_3);
-        }
-
-        // switch on option type
-        if( tok_1 == "Retape" )
-        {   CPPAD_ASSERT_KNOWN(
-                (tok_2 == "true") | (tok_2 == "false") ,
-                "ipopt::solve: Retape value is not true or false"
-            );
-            retape = (tok_2 == "true");
-        }
-        else if( tok_1 == "Sparse" )
-        {   CPPAD_ASSERT_KNOWN(
-                (tok_2 == "true") | (tok_2 == "false") ,
-                "ipopt::solve: Sparse value is not true or false"
-            );
-            CPPAD_ASSERT_KNOWN(
-                (tok_3 == "forward") | (tok_3 == "reverse") ,
-                "ipopt::solve: Sparse direction is not forward or reverse"
-            );
-            if( tok_2 == "false" )
-            {   sparse_forward = false;
-                sparse_reverse = false;
-            }
-            else
-            {   sparse_forward = tok_3 == "forward";
-                sparse_reverse = tok_3 == "reverse";
-            }
-        }
-        else if ( tok_1 == "String" )
-            app->Options()->SetStringValue(tok_2.c_str(), tok_3.c_str());
-        else if ( tok_1 == "Numeric" )
-        {   Ipopt::Number value = std::atof( tok_3.c_str() );
-            app->Options()->SetNumericValue(tok_2.c_str(), value);
-        }
-        else if ( tok_1 == "Integer" )
-        {   Ipopt::Index value = std::atoi( tok_3.c_str() );
-            app->Options()->SetIntegerValue(tok_2.c_str(), value);
-        }
-        else
-            CPPAD_ASSERT_KNOWN(
-            false,
-            "ipopt::solve: First token is not one of\n"
-            "Retape, Sparse, String, Numeric, Integer"
-        );
-
-        begin_1 = end_3;
-        while( options[begin_1] == ' ')
-            begin_1++;
-        if( options[begin_1] != '\n' ) CPPAD_ASSERT_KNOWN(
-            false,
-            "ipopt::solve: either more than three tokens "
-            "or no '\\n' at end of a line"
-        );
-        begin_1++;
-    }
-
-
 }
-
-
-template <class Dvector, class FG_eval>
-void ipopt_cppad_solve(
-    const std::string&                   options   ,
-    const Dvector&                       xi        ,
-    const Dvector&                       xl        ,
-    const Dvector&                       xu        ,
-    const Dvector&                       gl        ,
-    const Dvector&                       gu        ,
-    FG_eval&                             fg_eval   ,
-    ipopt_cppad_result<Dvector>&        solution  )
-{   bool ok = true;
-
-    typedef typename FG_eval::ADvector ADvector;
-
-    CPPAD_ASSERT_KNOWN(
-        xi.size() == xl.size() && xi.size() == xu.size() ,
-        "ipopt::solve: size of xi, xl, and xu are not all equal."
-    );
-    CPPAD_ASSERT_KNOWN(
-        gl.size() == gu.size() ,
-        "ipopt::solve: size of gl and gu are not equal."
-    );
-    size_t nx = xi.size();
-    size_t ng = gl.size();
-
-    // Create an IpoptApplication
-    using Ipopt::IpoptApplication;
-    Ipopt::SmartPtr<IpoptApplication> app = new IpoptApplication();
-
-    bool retape = false, sparse_forward = false, sparse_reverse = false;
-    parse_options(app, options, retape, sparse_forward, sparse_reverse);
-//  CPPAD_ASSERT_KNOWN(
-//      ! ( retape & (sparse_forward | sparse_reverse) ) ,
-//      "ipopt::solve: retape and sparse both true is not supported."
-//  );
-
-    // Initialize the IpoptApplication and process the options
-    Ipopt::ApplicationReturnStatus status = app->Initialize();
-    ok    &= status == Ipopt::Solve_Succeeded;
-    if( ! ok )
-    {   solution.status = ipopt_cppad_result<Dvector>::unknown;
-        return;
-    }
-
-    // Create an interface from Ipopt to this specific problem.
-    // Note the assumption here that ADvector is same as cppd_ipopt::ADvector
-    size_t nf = 1;
-    Ipopt::SmartPtr<Ipopt::TNLP> cppad_nlp =
-    new CppAD::ipopt_cppad_callback<Dvector, ADvector, FG_eval>(
-        nf,
-        nx,
-        ng,
-        xi,
-        xl,
-        xu,
-        gl,
-        gu,
-        fg_eval,
-        retape,
-        sparse_forward,
-        sparse_reverse,
-        solution
-    );
-
-    // Run the IpoptApplication
-    app->OptimizeTNLP(cppad_nlp);
-
-    solution.iter_count = app->Statistics()->IterationCount();
-
-    return;
-}
-
-template <class Dvector, class FG_eval>
-void ipopt_cppad_solve(
-    const std::string&                   options   ,
-    const Dvector&                       xi        ,
-    const Dvector&                       xl        ,
-    const Dvector&                       xu        ,
-    const Dvector&                       gl        ,
-    const Dvector&                       gu        ,
-    const Dvector&                       lambda_i  ,
-    const Dvector&                       zl_i      ,
-    const Dvector&                       zu_i      ,
-    FG_eval&                             fg_eval   ,
-    ipopt_cppad_result<Dvector>&        solution  )
-{   bool ok = true;
-
-    typedef typename FG_eval::ADvector ADvector;
-
-    CPPAD_ASSERT_KNOWN(
-        xi.size() == xl.size() && xi.size() == xu.size() ,
-        "ipopt::solve: size of xi, xl, and xu are not all equal."
-    );
-    CPPAD_ASSERT_KNOWN(
-        gl.size() == gu.size() ,
-        "ipopt::solve: size of gl and gu are not equal."
-    );
-    size_t nx = xi.size();
-    size_t ng = gl.size();
-
-    // Create an IpoptApplication
-    using Ipopt::IpoptApplication;
-    Ipopt::SmartPtr<IpoptApplication> app = new IpoptApplication();
-
-    // Set warm initialization
-    app->Options()->SetStringValue("warm_start_init_point", "yes");
-    app->Options()->SetNumericValue("warm_start_bound_frac", 1.0e-16);
-    app->Options()->SetNumericValue("warm_start_mult_bound_push",1.0e-16);
-    app->Options()->SetNumericValue("warm_start_slack_bound_frac",1.0e-16);
-    app->Options()->SetNumericValue("warm_start_slack_bound_push",1.0e-16);
-
-    bool retape = false, sparse_forward = false, sparse_reverse = false;
-    parse_options(app, options, retape, sparse_forward, sparse_reverse);
-
-    // Initialize the IpoptApplication and process the options
-    Ipopt::ApplicationReturnStatus status = app->Initialize();
-    ok    &= status == Ipopt::Solve_Succeeded;
-    if( ! ok )
-    {   solution.status = ipopt_cppad_result<Dvector>::unknown;
-        return;
-    }
-
-    // Create an interface from Ipopt to this specific problem.
-    // Note the assumption here that ADvector is same as cppd_ipopt::ADvector
-    size_t nf = 1;
-    Ipopt::SmartPtr<Ipopt::TNLP> cppad_nlp =
-    new CppAD::ipopt_cppad_callback<Dvector, ADvector, FG_eval>(
-        nf,
-        nx,
-        ng,
-        xi,
-        xl,
-        xu,
-        gl,
-        gu,
-        lambda_i,
-        zl_i,
-        zu_i,
-        fg_eval,
-        retape,
-        sparse_forward,
-        sparse_reverse,
-        solution
-    );
-
-    // Run the IpoptApplication
-    app->OptimizeTNLP(cppad_nlp);
-
-    solution.iter_count = app->Statistics()->IterationCount();
-
-    return;
-}
-
-
-struct NLP_complete_output
-{
-    Ipopt::Index number_of_variables;
-    Ipopt::Index number_of_constraints;
-    Ipopt::Index jacobian_nnz;
-    Ipopt::Index hessian_nnz;
-    std::vector<Ipopt::Index> col_jac;
-    std::vector<Ipopt::Index> row_jac;
-    std::vector<Ipopt::Index> col_hes;
-    std::vector<Ipopt::Index> row_hes;
-    Ipopt::Number fitness_function;
-    std::vector<Ipopt::Number> constraints;
-    std::vector<Ipopt::Number> grad_f;
-    std::vector<Ipopt::Number> jacobian_constraints;
-    std::vector<Ipopt::Number> hessian_lagrangian;
-};
-
-template <class Dvector, class FG_eval>
-NLP_complete_output ipopt_cppad_compute_complete_nlp(
-    const size_t nx,
-    const size_t ng,
-    FG_eval& fg_eval,
-    const std::vector<double>& x,
-    const std::vector<double>& lambda)
-{   
-    bool ok = true;
-
-    typedef typename FG_eval::ADvector ADvector;
-    ipopt_cppad_result<Dvector> solution;
-
-    bool retape = false, sparse_forward = true, sparse_reverse = false;
-
-    // Create an interface from Ipopt to this specific problem.
-    // Note the assumption here that ADvector is same as cppd_ipopt::ADvector
-    size_t nf = 1;
-    auto cppad_nlp = CppAD::ipopt_cppad_callback<Dvector, ADvector, FG_eval>(
-        nf,
-        nx,
-        ng,
-        x,
-        Dvector(nx,0.0),
-        Dvector(nx,0.0),
-        Dvector(ng,0.0),
-        Dvector(ng,0.0),
-        fg_eval,
-        retape,
-        sparse_forward,
-        sparse_reverse,
-        solution
-    );
-
-    CppAD::NLP_complete_output output;
-
-    Ipopt::TNLP::IndexStyleEnum index_style;
-
-    // (1) Get NLP info (problem dimensions)
-    cppad_nlp.get_nlp_info(output.number_of_variables, output.number_of_constraints, output.jacobian_nnz, output.hessian_nnz, index_style);
-
-    // (2) Get Jacobian sparsity pattern
-    output.col_jac.resize(output.jacobian_nnz);
-    output.row_jac.resize(output.jacobian_nnz);
-
-    cppad_nlp.eval_jac_g(output.number_of_variables, nullptr, false, output.number_of_constraints, output.jacobian_nnz, output.row_jac.data(), output.col_jac.data(), nullptr);
-
-    // (3) Get Hessian sparsity pattern 
-    output.col_hes.resize(output.hessian_nnz);
-    output.row_hes.resize(output.hessian_nnz);
-
-    cppad_nlp.eval_h(output.number_of_variables, nullptr, false, 1.0, output.number_of_constraints, nullptr, false, output.hessian_nnz, output.row_hes.data(), output.col_hes.data(), nullptr);
-
-    // (4) Evaluate fitness function
-    cppad_nlp.eval_f(output.number_of_variables, x.data(), true, output.fitness_function);
-
-    // (5) Evaluate constraints
-    output.constraints.resize(output.number_of_constraints);
-    cppad_nlp.eval_g(output.number_of_variables, x.data(), false, output.number_of_constraints, output.constraints.data());
-
-    // (6) Evaluate gradient of the fitness function
-    output.grad_f.resize(output.number_of_variables);
-    cppad_nlp.eval_grad_f(output.number_of_variables, x.data(), false, output.grad_f.data());
-
-    // (7) Evaluate gradient of the constraints
-    output.jacobian_constraints.resize(output.jacobian_nnz);
-    cppad_nlp.eval_jac_g(output.number_of_variables, x.data(), false, output.number_of_constraints, output.jacobian_nnz, nullptr, nullptr, output.jacobian_constraints.data());
-
-    // (8) Evaluate Hessian of the Lagrangian
-    output.hessian_lagrangian.resize(output.hessian_nnz);
-    cppad_nlp.eval_h(output.number_of_variables, x.data(), false, 1.0, output.number_of_constraints, lambda.data(), true, output.hessian_nnz, nullptr, nullptr, output.hessian_lagrangian.data());
-
-    return output;
-}
-
-
-
-
-}
-
-# endif
+#endif

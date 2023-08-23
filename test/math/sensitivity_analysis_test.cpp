@@ -1,5 +1,5 @@
 #include "lion/math/sensitivity_analysis.h"
-#include "lion/math/ipopt_cppad_handler.hpp"
+#include "lion/math/ipopt_optimize_nlp_cppad.h"
 #include "gtest/gtest.h"
 
 
@@ -77,6 +77,8 @@ class FG_parameter
 
 TEST(Sensitivity_analysis_test, check_consistency_test)
 {
+    using namespace lioncpp;
+
     // initial value of the independent variables
     const std::vector<double> x0 = {1.0, 5.0, 5.0, 1.0};
 
@@ -94,10 +96,10 @@ TEST(Sensitivity_analysis_test, check_consistency_test)
     options += "Integer max_iter     10\n";
     options += "Numeric tol          1e-6\n";
 
-    CppAD::ipopt_cppad_result<std::vector<double>> solution;
+    Optimization_result<std::vector<double>> solution;
 
     // solve the problem
-    CppAD::ipopt_cppad_solve<std::vector<double>, FG_eval>(
+    ipopt_optimize_nlp_cppad<std::vector<double>, FG_eval>(
         options, x0, x_lb, x_ub, c_lb, c_ub, fg_eval, solution
     );
 
@@ -109,6 +111,7 @@ TEST(Sensitivity_analysis_test, check_consistency_test)
 
 TEST(Sensitivity_analysis_test, compute_sensitivity_analysis_1_parameter)
 {
+    using namespace lioncpp;
 
     // initial value of the independent variables
     const std::vector<double> x0 = {0.0, 0.0};
@@ -131,10 +134,10 @@ TEST(Sensitivity_analysis_test, compute_sensitivity_analysis_1_parameter)
     options += "String nlp_scaling_method none\n";
     //options += "Numeric bound_relax_factor 0.0\n";
 
-    CppAD::ipopt_cppad_result<std::vector<double>> solution;
+    Optimization_result<std::vector<double>> solution;
 
     // solve the problem
-    CppAD::ipopt_cppad_solve<std::vector<double>, FG_parameter>(
+    ipopt_optimize_nlp_cppad<std::vector<double>, FG_parameter>(
         options, x0, x_lb, x_ub, c_lb, c_ub, fg, solution
     );
 
@@ -154,6 +157,7 @@ TEST(Sensitivity_analysis_test, compute_sensitivity_analysis_1_parameter)
 
 TEST(Sensitivity_analysis_test, compute_sensitivity_analysis_2_parameters)
 {
+    using namespace lioncpp;
 
     // initial value of the independent variables
     const std::vector<double> x0 = {0.0, 0.0};
@@ -176,10 +180,10 @@ TEST(Sensitivity_analysis_test, compute_sensitivity_analysis_2_parameters)
     options += "String nlp_scaling_method none\n";
     //options += "Numeric bound_relax_factor 0.0\n";
 
-    CppAD::ipopt_cppad_result<std::vector<double>> solution;
+    Optimization_result<std::vector<double>> solution;
 
     // solve the problem
-    CppAD::ipopt_cppad_solve<std::vector<double>, FG_parameter>(
+    ipopt_optimize_nlp_cppad<std::vector<double>, FG_parameter>(
         options, x0, x_lb, x_ub, c_lb, c_ub, fg, solution
     );
 
