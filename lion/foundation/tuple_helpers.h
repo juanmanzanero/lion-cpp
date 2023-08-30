@@ -3,6 +3,8 @@
 
 
 #include <tuple>
+#include <array>
+#include <algorithm>
 
 
 //
@@ -216,6 +218,7 @@ using decay_tuple = decltype(decay_types_of_a_tuple(std::declval<Tuple>()));
 // Concatenation.
 //
 
+#ifndef _MSC_VER
 template <typename Type, std::size_t... sizes>
 constexpr auto array_cat(const std::array<Type, sizes>&... arrays)
 {
@@ -224,11 +227,56 @@ constexpr auto array_cat(const std::array<Type, sizes>&... arrays)
     //
 
     std::array<Type, (sizes + ...)> result;
-    std::size_t index{};
+    std::size_t index = 0u;
 
-    ((std::copy_n(arrays.begin(), sizes, result.begin() + index), index += sizes), ...);
+    ((std::copy_n(arrays.cbegin(), sizes, std::next(result.begin(), index)), index += sizes), ...);
 
     return result;
 }
+
+#else
+
+namespace detail::tuple_helpers {
+
+template<typename... Args>
+struct add_array_sizes {};
+
+template<typename T, std::size_t size>
+struct add_array_sizes<std::array<T, size> >
+{
+    static constexpr auto value = size;
+};
+
+template<typename T, std::size_t size, typename... RestOfArrays>
+struct add_array_sizes<std::array<T, size>, RestOfArrays...>
+{
+    static constexpr std::size_t value = size + add_array_sizes<RestOfArrays...>::value;
+};
+
+} // end namespace detail::tuple_helpers
+
+template <typename Type, std::size_t... sizes>
+constexpr auto array_cat(const std::array<Type, sizes>&... arrays)
+{
+    //
+    // Concatenates the input std::arrays into a single one
+    // (implementation that works in VS2017).
+    //
+
+    std::array<Type, detail::tuple_helpers::add_array_sizes<std::array<Type, sizes>...>::value> result;
+    std::size_t index = 0u;
+
+    tuple_for(std::forward_as_tuple(arrays...),
+        [&index, &result](const auto &arr)
+        {
+            constexpr auto size = std::tuple_size_v<std::decay_t<decltype(arr)> >;
+            std::copy_n(arr.cbegin(), size, std::next(result.begin(), index));
+            index += size;
+        });
+
+    return result;
+}
+
+#endif
 
 #endif
