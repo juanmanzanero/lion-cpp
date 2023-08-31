@@ -224,7 +224,7 @@ constexpr T smooth_neg(const T &x, S eps2)
 }
 
 
-template<bool ActuallySmooth, typename T, typename S>
+template<bool ActuallySmooth, bool UseSinAtanFormula, typename T, typename S>
 constexpr T smooth_sign(const T &x, S eps)
 {
     //
@@ -235,9 +235,17 @@ constexpr T smooth_sign(const T &x, S eps)
     //
 
     if constexpr (ActuallySmooth) {
-        using std::tanh;
+        if constexpr (UseSinAtanFormula) {
+            using std::sin;
+            using std::atan;
 
-        return tanh(x / eps);
+            return sin(atan(x / eps));
+        }
+        else {
+            using std::tanh;
+
+            return tanh(x / eps);
+        }
     }
     else {
         (void)eps;
@@ -360,7 +368,7 @@ constexpr T smooth_clamp(const T &x, const T1 &lo, const T2 &hi, S eps2)
     }
 }
 
-template<bool ActuallySmooth, typename T, typename S>
+template<bool ActuallySmooth, bool UseSinAtanFormula, typename T, typename S>
 constexpr T smooth_step(const T &x, S eps)
 {
     //
@@ -371,16 +379,7 @@ constexpr T smooth_step(const T &x, S eps)
     //
 
     if constexpr (ActuallySmooth) {
-        using std::sin;
-        using std::atan;
-
-        return S{ 0.5 } * (S{ 1 } + sin(atan(x / eps)));
-
-
-        // another version that works similarly
-        //using std::tanh;
-        //
-        //return S{ 0.5 } * (S{ 1 } + tanh(x / eps));
+        return S{ 0.5 } * (S{ 1 } + smooth_sign<ActuallySmooth, UseSinAtanFormula>(x, eps));
     }
     else {
         return x >= S{ 0 } ? T{ 1 } : T{ 0 };

@@ -101,7 +101,7 @@ constexpr T smooth_pos(const T &x, S eps2);
 template<bool ActuallySmooth = true, typename T, typename S>
 constexpr T smooth_neg(const T &x, S eps2);
 
-template<bool ActuallySmooth = true, typename T, typename S>
+template<bool ActuallySmooth = true, bool UseSinAtanFormula = true, typename T, typename S>
 constexpr T smooth_sign(const T &x, S eps);
 
 template<bool ActuallySmooth = true, typename T, typename S>
@@ -119,7 +119,7 @@ constexpr T smooth_min(const T &x, const T1 &hi, S eps);
 template<bool ActuallySmooth = true, typename T, typename T1, typename T2, typename S>
 constexpr T smooth_clamp(const T &x, const T1 &lo, const T2 &hi, S eps2);
 
-template<bool ActuallySmooth = true, typename T, typename S>
+template<bool ActuallySmooth = true, bool UseSinAtanFormula = true, typename T, typename S>
 constexpr T smooth_step(const T &x, S eps);
 
 
