@@ -1172,11 +1172,7 @@ public:
         }
         solution_.obj_value = obj_value;
 
-        for (j=0; j < nx_; ++j)
-        {
-            if ( std::abs(solution_.x[j] - (dynamic_cast<const Ipopt::DenseVector*>(GetRawPtr(ip_data->curr()->x()))->Values())[j]) > 1.0e-10 )
-                throw lion_exception("x is not ip_data->curr()->x()");
-        }
+        Optimization_result<DVector>::check_solution_consistency(ip_data, solution_.x, xl_, xu_);
 
         auto slacks_data = Optimization_result<DVector>::compute_slack_variables_and_their_lagrange_multipliers(ip_data, gl_, gu_);
         solution_.s = std::move(slacks_data.s);

@@ -30,6 +30,8 @@ namespace lioncpp {
             unknown
         };
 
+        //! A function to check if the received "x" matches the one Ipopt has stored internally
+        static void check_solution_consistency(const Ipopt::IpoptData* ip_data, const double_vector_type& x, const double_vector_type& xl, const double_vector_type& xu);
 
         //! A function to retrieve Ipopt's slack variables and their bounds Lagrange multipliers
         struct Slack_and_bound_multipliers
@@ -56,6 +58,33 @@ namespace lioncpp {
         double_vector_type vl;            //! Lagrange multipliers corresponding to lower bounds on x
         double_vector_type vu;            //! Lagrange multipliers corresponding to upper bounds on x
     };
+
+    template<typename double_vector_type>
+    inline void Optimization_result<double_vector_type>::
+        check_solution_consistency(const Ipopt::IpoptData* ip_data, const double_vector_type& x, const double_vector_type& xl, const double_vector_type& xu)
+    {
+        size_t i_nz_ipopt_internal{ 0u };
+        for (size_t j = 0; j < x.size(); ++j)
+        {
+            if (std::abs(xl[j] - xu[j]) > 2.0e-16)
+            {
+                if (std::abs(x[j] - (dynamic_cast<const Ipopt::DenseVector*>(GetRawPtr(ip_data->curr()->x()))->Values())[i_nz_ipopt_internal++]) > 1.0e-10)
+                {
+                    std::cerr << "x is not ip_data->curr()->x()" << std::endl;
+                    throw lion_exception("x is not ip_data->curr()->x()");
+                }
+            }
+            else
+            {
+                if (std::abs(x[j] - xl[j]) > 2.0e-16)
+                {
+                    std::cerr << "x is expected to be xl = xu" << std::endl;
+                    throw lion_exception("x is expected to be xl = xu");
+                }
+            }
+        }
+    }
+
 
     template<typename double_vector_type>
     inline auto Optimization_result<double_vector_type>::

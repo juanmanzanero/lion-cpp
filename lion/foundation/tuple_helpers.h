@@ -263,7 +263,7 @@ constexpr auto array_cat(const std::array<Type, sizes>&... arrays)
     // (implementation that works in VS2017).
     //
 
-    std::array<Type, detail::tuple_helpers::add_array_sizes<std::array<Type, sizes>...>::value> result;
+    std::array<Type, ::detail::tuple_helpers::add_array_sizes<std::array<Type, sizes>...>::value> result;
     std::size_t index = 0u;
 
     tuple_for(std::forward_as_tuple(arrays...),
