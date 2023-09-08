@@ -17,58 +17,58 @@
 
 
 template<typename T>
-inline void matmul(T *X, const T *A, const T *B, int rows_A, int cols_A_rows_B, int cols_B)
+inline void matmul(T *X, const T *A, const T *B, int num_rows_A, int num_cols_A_rows_B, int num_cols_B)
 {
     //
     // Fills the result of multiplying two dense matrices in column-major
     // order, i.e., "X = A * B". Solution "X" must be preallocated on
-    // entry, to size "rows_A x cols_B", and is also a column-major matrix.
-    // "A" holds the first operand in column-major order and has size
-    // "rows_A x cols_A_rows_B". "B" holds the second operand in column-
-    // major order and has size "cols_A_rows_B x cols_B". Hence, the number
-    // of columns of "A" must coincide with the number of rows of "B",
-    // (equal to input "cols_A_rows_B").
+    // entry, to size "num_rows_A x num_cols_B", and is also a column-major
+    // matrix. "A" holds the first operand in column-major order and has
+    // size "num_rows_A x num_cols_A_rows_B". "B" holds the second operand
+    // in column-major order and has size "num_cols_A_rows_B x num_cols_B".
+    // Hence, the number of columns of "A" must coincide with the number of
+    // rows of "B", equal to input "num_cols_A_rows_B".
     //
 
-    if (cols_A_rows_B != 1) {
-        const auto c{ rows_A * (cols_B - 1) };
+    if (num_cols_A_rows_B != 1) {
+        const auto c{ num_rows_A * (num_cols_B - 1) };
         auto br{ 0 };
         auto cr{ 0 };
 
         while (cr <= c) {
-            const auto i0{ cr + rows_A };
+            const auto i0{ cr + num_rows_A };
             for (auto ic = cr; ic < i0; ic++) {
                 X[ic] = T{ 0 };
             }
-            cr += rows_A;
+            cr += num_rows_A;
         }
 
         cr = 0;
         while (cr <= c) {
             auto ar{ -1 };
-            const auto i0{ br + cols_A_rows_B };
+            const auto i0{ br + num_cols_A_rows_B };
             for (auto ib = br; ib < i0; ++ib) {
                 if (B[ib] != T{ 0 }) {
                     auto ia{ ar };
-                    const auto i1{ cr + rows_A };
+                    const auto i1{ cr + num_rows_A };
                     for (auto ic = cr; ic < i1; ++ic) {
                         ++ia;
                         X[ic] += B[ib] * A[ia];
                     }
                 }
-                ar += rows_A;
+                ar += num_rows_A;
             }
-            br += cols_A_rows_B;
-            cr += rows_A;
+            br += num_cols_A_rows_B;
+            cr += num_rows_A;
         }
     }
     else {
-        for (auto i0 = 0; i0 < rows_A; ++i0) {
-            for (auto i1 = 0; i1 < cols_B; ++i1) {
-                X[i0 + rows_A * i1] = T{ 0 };
-                for (auto cr = 0; cr < cols_A_rows_B; ++cr) {
-                    X[i0 + rows_A * i1] +=
-                        A[i0 + rows_A * cr] * B[cr + cols_A_rows_B * i1];
+        for (auto i0 = 0; i0 < num_rows_A; ++i0) {
+            for (auto i1 = 0; i1 < num_cols_B; ++i1) {
+                X[i0 + num_rows_A * i1] = T{ 0 };
+                for (auto cr = 0; cr < num_cols_A_rows_B; ++cr) {
+                    X[i0 + num_rows_A * i1] +=
+                        A[i0 + num_rows_A * cr] * B[cr + num_cols_A_rows_B * i1];
                 }
             }
         }
@@ -85,9 +85,9 @@ inline int plufactorize(T *A, int *ipiv_A, int n)
     // permutation matrix that can be reconstructed through "ipiv_A",
     // where the i-th row of matrix "A" is interchanged with row
     // "ipiv_A[i]". On entry, "A" should contain the square matrix
-    // of size "n x n" in column-major order, and "ipiv_A" should come
-    // preallocated to size "n". On exit, "A" will contain the LU
-    // factors of the matrix, and "ipiv_A" the necessary index
+    // of size "n x n" in column-major order, and "ipiv_A" should
+    // come preallocated to size "n". On exit, "A" will contain the
+    // LU factors of the matrix, and "ipiv_A" the necessary index
     // permutations. The function returns 0 if the factorization is
     // successful (i.e., the matrix is non-singular).
     //
@@ -173,20 +173,20 @@ inline int plufactorize(T *A, int *ipiv_A, int n)
 
 
 template<typename T>
-inline void plusolve(T *B, const T *LU_A, const int *ipiv_A, int rows_A_rows_B, int cols_B)
+inline void plusolve(T *B, const T *LU_A, const int *ipiv_A, int num_rows_A_rows_B, int num_cols_B)
 {
     //
     // Direct solve of the dense square problem "A * X = B", via LU with
     // partial pivoting (i.e., employing a decomposition "A = P * L * U").
     // Input buffers "LU_A" and "ipiv_A" should hold the PLU factorization
-    // of the problem's square matrix "A" (which has size "rows_A_rows_B x
-    // rows_A_rows_B"), as returned by function "plu_factorize". On entry,
+    // of the problem's square matrix "A" (which has size "num_rows_A_rows_B x
+    // num_rows_A_rows_B"), as returned by function "plu_factorize". On entry,
     // "B" contains the problem's RHS (which may have multiple colums) in
     // column-major order, and holds solution "X" on return (also in
-    // column-major order) both of size "rows_A_rows_B x cols_B".
+    // column-major order) both of size "num_rows_A_rows_B x num_cols_B".
     //
 
-    const auto &n = rows_A_rows_B;
+    const auto &n = num_rows_A_rows_B;
     if (n < 1) {
         return;
     }
@@ -194,7 +194,7 @@ inline void plusolve(T *B, const T *LU_A, const int *ipiv_A, int rows_A_rows_B, 
     for (std::size_t iy = 0; iy < static_cast<std::size_t>(n) - 1u; ++iy) {
         if (ipiv_A[iy] != iy + 1) {
             const auto kAcol{ ipiv_A[iy] - 1 };
-            for (auto jA = 0; jA < cols_B; ++jA) {
+            for (auto jA = 0; jA < num_cols_B; ++jA) {
                 const auto smax{ B[iy + n * jA] };
                 B[iy + n * jA] = B[kAcol + n * jA];
                 B[kAcol + n * jA] = smax;
@@ -202,7 +202,7 @@ inline void plusolve(T *B, const T *LU_A, const int *ipiv_A, int rows_A_rows_B, 
         }
     }
 
-    for (auto j = 0; j < cols_B; ++j) {
+    for (auto j = 0; j < num_cols_B; ++j) {
         const auto iy{ n * j };
         for (auto k = 0; k < n; ++k) {
             const auto kAcol{ n * k };
@@ -214,7 +214,7 @@ inline void plusolve(T *B, const T *LU_A, const int *ipiv_A, int rows_A_rows_B, 
         }
     }
 
-    for (auto j = 0; j < cols_B; ++j) {
+    for (auto j = 0; j < num_cols_B; ++j) {
         const auto iy{ n * j };
         for (auto k = n - 1; k + 1 > 0; --k) {
             const auto kAcol{ n * k };
@@ -230,25 +230,25 @@ inline void plusolve(T *B, const T *LU_A, const int *ipiv_A, int rows_A_rows_B, 
 
 
 template<typename T>
-inline int lusolve(T *B, T *A, int rows_A_rows_B, int cols_B)
+inline int lusolve(T *B, T *A, int num_rows_A_rows_B, int num_cols_B)
 {
     //
     // Direct solve of the dense square problem "A * X = B", via LU with
     // partial pivoting (i.e., applying a decomposition "A = P * L * U").
     // All matrices are in column-major order. On entry, "B" contains the
     // problem's RHS (which may have multiple colums), and holds solution
-    // "X" on return, of size "rows_A_rows_B x cols_B". Matrix "A" must
-    // hold the problem's square LHS matrix on entry, of size "rows_A_rows_B x
-    // rows_A_rows_B" and exits as the LU factors ("A = P * L * U", where
+    // "X" on return, of size "num_rows_A_rows_B x num_cols_B". Matrix "A" must
+    // hold the problem's square LHS matrix on entry, of size "num_rows_A_rows_B x
+    // num_rows_A_rows_B" and exits as the LU factors ("A = P * L * U", where
     // "P" is a permutation matrix that could be reconstructed using the "ipiv"
     // local variable, since the i-th row of matrix "A" is interchanged with
     // row "ipiv[i]"). The function returns 0 upon successful exit.
     //
 
-    auto *ipiv_A = new int[rows_A_rows_B];
+    auto *ipiv_A = new int[num_rows_A_rows_B];
 
-    auto ret = plufactorize(A, ipiv_A, rows_A_rows_B);
-    plusolve(B, A, ipiv_A, rows_A_rows_B, cols_B);
+    auto ret = plufactorize(A, ipiv_A, num_rows_A_rows_B);
+    plusolve(B, A, ipiv_A, num_rows_A_rows_B, num_cols_B);
 
     delete[] ipiv_A;
     return ret;
@@ -256,19 +256,74 @@ inline int lusolve(T *B, T *A, int rows_A_rows_B, int cols_B)
 
 
 template<typename T>
-inline void qrsolve(T *X, T *A, T *B, int rows_A_rows_B, int cols_A, int cols_B)
+inline void tridiagonalsolve(T *B_colmaj, T *A_b, const T *A_a, const T *A_c, int num_rows_A_rows_B, int num_cols_B)
+{
+    //
+    // Solves the tridiagonal system "A * x = B", in which
+    // matrix "A" (of size "num_rows_A_rows_B x num_rows_A_rows_B")
+    // comes specified via three vectors: "A_a" holding the lower
+    // diagonal (of size "num_rows_A_rows_B - 1", starting in the
+    // second row and ending in the last one), "A_b" holding the
+    // diagonal (of size "num_rows_A_rows_B"), and "A_c" holding the
+    // upper diagonal (of size "num_rows_A_rows_B - 1", starting in
+    // the first row and ending in the penultimate one):
+    //
+    //      [b0, c0,  0,  0,  0, 0, ...          0,         0,         0;
+    //       a0, b1, c1,  0,  0, 0, ...          0,         0,         0;
+    //  A =   0, a1, b2, c2,  0, 0, ...          0,         0,         0;
+    //        0,  0, a2, b3, c3, 0, ...          0,         0,         0;
+    //                              ...
+    //        0,  0,  0,  0,  0, 0, ..., a_{n - 2}, b_{n - 1}, c_{n - 1};
+    //        0,  0,  0,  0,  0, 0, ...          0, a_{n - 1},       b_n]
+    //
+    // NOTE: the "A_b" vector holding the diagonal of the matrix
+    // will get overwritten on exit by the function.
+    //
+    // The system may have multiple right-hand-sides, given as the
+    // columns of the column-major matrix "B_colmaj" (of size
+    // "num_rows_A_rows_B x num_cols_B"). On exit, the columns of this
+    // matrix will hold the solution vectors corresponding to each
+    // right-hand-side.
+    //
+
+    // forward elimination
+    const auto &n = num_rows_A_rows_B;
+    A_b[0] = T{ 1 } / A_b[0];
+    for (auto i = 1; i < n; ++i) {
+        const auto w = A_a[i - 1] * A_b[i - 1];
+        A_b[i] = T{ 1 } / (A_b[i] - w * A_c[i - 1]);
+        for (auto j = 0; j < num_cols_B; ++j) {
+            const auto col = j * n;
+            B_colmaj[i + col] -= w * B_colmaj[i - 1 + col];
+        }
+    }
+
+    // backward substitution
+    for (auto j = 0; j < num_cols_B; ++j) {
+        const auto col = j * n;
+        B_colmaj[n - 1 + col] *= A_b[n - 1];
+        for (auto i = n - 2; i >= 0; --i) {
+            B_colmaj[i + col] = (B_colmaj[i + col] -
+                A_c[i] * B_colmaj[i + 1 + col]) * A_b[i];
+        }
+    }
+}
+
+
+template<typename T>
+inline void qrsolve(T *X, T *A, T *B, int num_rows_A_rows_B, int num_cols_A, int num_cols_B)
 {
     //
     // Fills "X" with the result of non-square problem "A * X = B", which
     // may be either under or overdetermined, employing the QR algorithm
     // with column pivoting. All matrices are in column-major order. Input
     // matrix "A" should hold the problem's LHS matrix on entry, of size
-    // "rows_A_rows_B x cols_A", and gets overwritten by this function
+    // "num_rows_A_rows_B x num_cols_A", and gets overwritten by this function
     // with its QR fatorization. Input matrix "B" should contain the
-    // problem's RHS, of size "rows_A_rows_B x cols_B" (i.e., it may
+    // problem's RHS, of size "num_rows_A_rows_B x num_cols_B" (i.e., it may
     // have multiple columns), and also gets overwritten by the function.
     // The result of this function is matrix "X", which should come
-    // prealllocated on entry to size "cols_A x cols_B".
+    // prealllocated on entry to size "num_cols_A x num_cols_B".
     //
 
     // declare some helper constants and functions
@@ -576,8 +631,8 @@ inline void qrsolve(T *X, T *A, T *B, int rows_A_rows_B, int cols_A, int cols_B)
     };
 
     // perform the column-pivoting QR factorization of A
-    const auto &m{ rows_A_rows_B };
-    const auto &n{ cols_A };
+    const auto &m{ num_rows_A_rows_B };
+    const auto &n{ num_cols_A };
     const auto mn{ std::min(m, n) };
     auto *jpvt{ new int[n] };
     auto *tau{ new T[mn] };
@@ -590,13 +645,13 @@ inline void qrsolve(T *X, T *A, T *B, int rows_A_rows_B, int cols_A, int cols_B)
         ++rankR;
     }
 
-    for (auto i = 0; i < n * cols_B; ++i) {
+    for (auto i = 0; i < n * num_cols_B; ++i) {
         X[i] = T{ 0 };
     }
 
     for (auto k = 0; k < mn; ++k) {
         if (tau[k] != T{ 0 }) {
-            for (auto j = 0; j < cols_B; ++j) {
+            for (auto j = 0; j < num_cols_B; ++j) {
                 tol = B[k + m * j];
                 for (auto i = k + 1; i < m; ++i) {
                     tol += A[i + m * k] * B[i + m * j];
@@ -613,7 +668,7 @@ inline void qrsolve(T *X, T *A, T *B, int rows_A_rows_B, int cols_A, int cols_B)
         }
     }
 
-    for (auto k = 0; k < cols_B; ++k) {
+    for (auto k = 0; k < num_cols_B; ++k) {
         for (auto i = 0; i < rankR; ++i) {
             X[jpvt[i] + n * k - 1] = B[i + m * k];
         }
@@ -633,15 +688,15 @@ inline void qrsolve(T *X, T *A, T *B, int rows_A_rows_B, int cols_A, int cols_B)
 
 
 template<typename T>
-inline T rcond(const T *A, int rows_A_cols_A)
+inline T rcond(const T *A, int n)
 {
     //
     // Returns an estimate for the reciprocal condition of input
     // square matrix "A" in 1-norm. This input square matrix has
-    // size "rows_A_cols_A x rows_A_cols_A" and should be specified
-    // in column-major order. If "A" is well conditioned, then
-    // its "rcond" number will be near 1.0. when "A" is badly
-    // conditioned, its "rcond" will be near 0.
+    // size "n x n" and should be specified in column-major order.
+    // If "A" is well conditioned, then its "rcond" number will be
+    // near 1.0. When "A" is badly conditioned, its "rcond" will
+    // be near 0.
     //
 
     // define some helper functions
@@ -717,7 +772,6 @@ inline T rcond(const T *A, int rows_A_cols_A)
 
 
     // "rcond1"
-    const auto &n{ rows_A_cols_A };
     auto result = T{ 0 };
     if (n == 0) {
         result = std::numeric_limits<T>::infinity();

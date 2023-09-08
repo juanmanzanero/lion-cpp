@@ -12,10 +12,13 @@
 //
 
 
-constexpr auto tolnear = 1e3 * std::numeric_limits<double>::epsilon();
-
-
 static Xml_document reference_file("data/linear_algebra_test.xml", true);
+
+
+constexpr auto tolnear_lusolve = 1e3 * std::numeric_limits<double>::epsilon();
+constexpr auto tolnear_qrsolve = 1e3 * std::numeric_limits<double>::epsilon();
+constexpr auto tolnear_rcond = 1e3 * std::numeric_limits<double>::epsilon();
+constexpr auto tolnear_tridiagonalsolve = 1.5e-11; // a bit bigger since we'll compare against reference solutions obtained with Matlab's linsolve (i.e., with full matrices)
 
 
 inline std::vector<double> comma_separated_string2vector_of_doubles(const std::string &str)
@@ -83,7 +86,7 @@ TEST(linear_algebra_test, lusolve_test1)
 
         EXPECT_EQ(reference_x_colmaj.size(), x.size());
         for (auto i = 0u; i < reference_x_colmaj.size(); ++i) {
-            EXPECT_NEAR(x[i], reference_x_colmaj[i], tolnear);
+            EXPECT_NEAR(x[i], reference_x_colmaj[i], tolnear_lusolve);
         }
     }
 
@@ -98,7 +101,7 @@ TEST(linear_algebra_test, lusolve_test1)
 
         EXPECT_EQ(reference_x_colmaj.size(), x.size());
         for (auto i = 0u; i < reference_x_colmaj.size(); ++i) {
-            EXPECT_NEAR(x[i], reference_x_colmaj[i], tolnear);
+            EXPECT_NEAR(x[i], reference_x_colmaj[i], tolnear_lusolve);
         }
     }
 }
@@ -126,7 +129,7 @@ TEST(linear_algebra_test, lusolve_test2)
 
         EXPECT_EQ(reference_x_colmaj.size(), x.size());
         for (auto i = 0u; i < reference_x_colmaj.size(); ++i) {
-            EXPECT_NEAR(x[i], reference_x_colmaj[i], tolnear);
+            EXPECT_NEAR(x[i], reference_x_colmaj[i], tolnear_lusolve);
         }
     }
 
@@ -141,7 +144,7 @@ TEST(linear_algebra_test, lusolve_test2)
 
         EXPECT_EQ(reference_x_colmaj.size(), x.size());
         for (auto i = 0u; i < reference_x_colmaj.size(); ++i) {
-            EXPECT_NEAR(x[i], reference_x_colmaj[i], tolnear);
+            EXPECT_NEAR(x[i], reference_x_colmaj[i], tolnear_lusolve);
         }
     }
 }
@@ -169,7 +172,7 @@ TEST(linear_algebra_test, lusolve_test3)
 
         EXPECT_EQ(reference_x_colmaj.size(), x.size());
         for (auto i = 0u; i < reference_x_colmaj.size(); ++i) {
-            EXPECT_NEAR(x[i], reference_x_colmaj[i], tolnear);
+            EXPECT_NEAR(x[i], reference_x_colmaj[i], tolnear_lusolve);
         }
     }
 
@@ -184,7 +187,7 @@ TEST(linear_algebra_test, lusolve_test3)
 
         EXPECT_EQ(reference_x_colmaj.size(), x.size());
         for (auto i = 0u; i < reference_x_colmaj.size(); ++i) {
-            EXPECT_NEAR(x[i], reference_x_colmaj[i], tolnear);
+            EXPECT_NEAR(x[i], reference_x_colmaj[i], tolnear_lusolve);
         }
     }
 }
@@ -202,7 +205,7 @@ TEST(linear_algebra_test, qrsolve_test0)
     EXPECT_EQ(reference_x.size(), x_colmaj.size());
     qrsolve(x_colmaj.data(), A_colmaj.data(), b_colmaj.data(), 10, 4, 1);
     for (auto i = 0u; i < reference_x.size(); ++i) {
-        EXPECT_NEAR(x_colmaj[i], reference_x[i], tolnear);
+        EXPECT_NEAR(x_colmaj[i], reference_x[i], tolnear_qrsolve);
     }
 }
 
@@ -219,7 +222,7 @@ TEST(linear_algebra_test, qrsolve_test1)
     EXPECT_EQ(reference_x.size(), x_colmaj.size());
     qrsolve(x_colmaj.data(), A_colmaj.data(), b_colmaj.data(), 4, 10, 1);
     for (auto i = 0u; i < reference_x.size(); ++i) {
-        EXPECT_NEAR(x_colmaj[i], reference_x[i], tolnear);
+        EXPECT_NEAR(x_colmaj[i], reference_x[i], tolnear_qrsolve);
     }
 }
 
@@ -236,7 +239,7 @@ TEST(linear_algebra_test, qrsolve_test2)
     EXPECT_EQ(reference_x.size(), x_colmaj.size());
     qrsolve(x_colmaj.data(), A_colmaj.data(), b_colmaj.data(), 11, 6, 4);
     for (auto i = 0u; i < reference_x.size(); ++i) {
-        EXPECT_NEAR(x_colmaj[i], reference_x[i], tolnear);
+        EXPECT_NEAR(x_colmaj[i], reference_x[i], tolnear_qrsolve);
     }
 }
 
@@ -253,7 +256,7 @@ TEST(linear_algebra_test, qrsolve_test3)
     EXPECT_EQ(reference_x.size(), x_colmaj.size());
     qrsolve(x_colmaj.data(), A_colmaj.data(), b_colmaj.data(), 6, 11, 7);
     for (auto i = 0u; i < reference_x.size(); ++i) {
-        EXPECT_NEAR(x_colmaj[i], reference_x[i], tolnear);
+        EXPECT_NEAR(x_colmaj[i], reference_x[i], tolnear_qrsolve);
     }
 }
 
@@ -274,7 +277,7 @@ TEST(linear_algebra_test, rcond_minitest1)
     const auto A_colmaj = std::vector<double>{ 20 };
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
 
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), 1, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), 1, tolnear_rcond);
 }
 
 
@@ -284,7 +287,7 @@ TEST(linear_algebra_test, rcond_minitest2)
     const auto A_colmaj = std::vector<double>{ 0 };
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
 
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), 0, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), 0, tolnear_rcond);
 }
 
 
@@ -314,7 +317,7 @@ TEST(linear_algebra_test, rcond_minitest5)
     const auto A_colmaj = std::vector<double>{ Inf };
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
 
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), 0, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), 0, tolnear_rcond);
 }
 
 
@@ -324,7 +327,7 @@ TEST(linear_algebra_test, rcond_minitest6)
     const auto A_colmaj = std::vector<double>{ -Inf };
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
 
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), 0, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), 0, tolnear_rcond);
 }
 
 
@@ -360,7 +363,7 @@ TEST(linear_algebra_test, rcond_minitest9)
     const auto reference_rcond = reference_file.get_root_element().get_child(test_name + "/rcond").get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
 }
 
 
@@ -372,7 +375,7 @@ TEST(linear_algebra_test, rcond_minitest10)
     const auto reference_rcond = reference_file.get_root_element().get_child(test_name + "/rcond").get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
 }
 
 
@@ -384,7 +387,7 @@ TEST(linear_algebra_test, rcond_minitest11)
     const auto reference_rcond = reference_file.get_root_element().get_child(test_name + "/rcond").get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
 }
 
 
@@ -396,7 +399,7 @@ TEST(linear_algebra_test, rcond_minitest12)
     const auto reference_rcond = reference_file.get_root_element().get_child(test_name + "/rcond").get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
 }
 
 
@@ -408,7 +411,7 @@ TEST(linear_algebra_test, rcond_minitest13)
     const auto reference_rcond = reference_file.get_root_element().get_child(test_name + "/rcond").get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
 }
 
 
@@ -420,7 +423,7 @@ TEST(linear_algebra_test, rcond_minitest14)
     const auto reference_rcond = reference_file.get_root_element().get_child(test_name + "/rcond").get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
 }
 
 
@@ -432,7 +435,7 @@ TEST(linear_algebra_test, rcond_minitest15)
     const auto reference_rcond = reference_file.get_root_element().get_child(test_name + "/rcond").get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
 }
 
 
@@ -444,7 +447,7 @@ TEST(linear_algebra_test, rcond_minitest16)
     const auto reference_rcond = reference_file.get_root_element().get_child(test_name + "/rcond").get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
 }
 
 
@@ -456,7 +459,7 @@ TEST(linear_algebra_test, rcond_randtest0)
     const auto reference_rcond = reference_file.get_root_element().get_child(test_name + "/rcond").get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
 }
 
 
@@ -468,7 +471,7 @@ TEST(linear_algebra_test, rcond_randtest1)
     const auto reference_rcond = reference_file.get_root_element().get_child(test_name + "/rcond").get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
 }
 
 
@@ -480,7 +483,7 @@ TEST(linear_algebra_test, rcond_randtest2)
     const auto reference_rcond = reference_file.get_root_element().get_child(test_name + "/rcond").get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
 }
 
 
@@ -492,7 +495,7 @@ TEST(linear_algebra_test, rcond_randtest3)
     const auto reference_rcond = reference_file.get_root_element().get_child(test_name + "/rcond").get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
 }
 
 
@@ -504,7 +507,7 @@ TEST(linear_algebra_test, rcond_randtest4)
     const auto reference_rcond = reference_file.get_root_element().get_child(test_name + "/rcond").get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
 }
 
 
@@ -516,7 +519,7 @@ TEST(linear_algebra_test, rcond_gallerytest0)
     const auto reference_rcond = reference_file.get_root_element().get_child(test_name + "/rcond").get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
 }
 
 
@@ -528,7 +531,7 @@ TEST(linear_algebra_test, rcond_gallerytest1)
     const auto reference_rcond = reference_file.get_root_element().get_child(test_name + "/rcond").get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
 }
 
 
@@ -540,7 +543,7 @@ TEST(linear_algebra_test, rcond_gallerytest2)
     const auto reference_rcond = reference_file.get_root_element().get_child(test_name + "/rcond").get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
 }
 
 
@@ -552,7 +555,7 @@ TEST(linear_algebra_test, rcond_gallerytest3)
     const auto reference_rcond = reference_file.get_root_element().get_child(test_name + "/rcond").get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
 }
 
 
@@ -564,7 +567,7 @@ TEST(linear_algebra_test, rcond_gallerytest4)
     const auto reference_rcond = reference_file.get_root_element().get_child(test_name + "/rcond").get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
 }
 
 
@@ -576,7 +579,7 @@ TEST(linear_algebra_test, rcond_gallerytest5)
     const auto reference_rcond = reference_file.get_root_element().get_child(test_name + "/rcond").get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
 }
 
 
@@ -588,7 +591,7 @@ TEST(linear_algebra_test, rcond_gallerytest6)
     const auto reference_rcond = reference_file.get_root_element().get_child(test_name + "/rcond").get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
 }
 
 
@@ -600,7 +603,7 @@ TEST(linear_algebra_test, rcond_gallerytest7)
     const auto reference_rcond = reference_file.get_root_element().get_child(test_name + "/rcond").get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
 }
 
 
@@ -612,7 +615,7 @@ TEST(linear_algebra_test, rcond_gallerytest8)
     const auto reference_rcond = reference_file.get_root_element().get_child(test_name + "/rcond").get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
 }
 
 
@@ -624,5 +627,37 @@ TEST(linear_algebra_test, rcond_gallerytest9)
     const auto reference_rcond = reference_file.get_root_element().get_child(test_name + "/rcond").get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
-    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear);
+    EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
+}
+
+
+TEST(linear_algebra_test, tridiagonalsolve_tests)
+{
+    auto testcount = 0u;
+    while (true) {
+        const auto test_name = std::string{ "tridiagonalsolve_test" } + std::to_string(testcount);
+
+        if (!reference_file.get_root_element().has_child(test_name)) {
+            break;
+        }
+        else {
+            ++testcount;
+        }
+
+        const auto num_rows_A_rows_B = reference_file.get_root_element().get_child(test_name + "/num_rows_A_rows_B").get_value(int{});
+        const auto num_cols_B = reference_file.get_root_element().get_child(test_name + "/num_cols_B").get_value(int{});
+        const auto A_a = comma_separated_string2vector_of_doubles(reference_file.get_root_element().get_child(test_name + "/A_a").get_value());
+        const auto A_b = comma_separated_string2vector_of_doubles(reference_file.get_root_element().get_child(test_name + "/A_b").get_value());
+        const auto A_c = comma_separated_string2vector_of_doubles(reference_file.get_root_element().get_child(test_name + "/A_c").get_value());
+        const auto B_colmaj = comma_separated_string2vector_of_doubles(reference_file.get_root_element().get_child(test_name + "/B_colmaj").get_value());
+        const auto reference_X_colmaj = comma_separated_string2vector_of_doubles(reference_file.get_root_element().get_child(test_name + "/X_colmaj").get_value());
+
+        ASSERT_EQ(A_a.size(), static_cast<std::size_t>(num_rows_A_rows_B - 1));
+        ASSERT_EQ(A_b.size(), static_cast<std::size_t>(num_rows_A_rows_B));
+        ASSERT_EQ(A_c.size(), static_cast<std::size_t>(num_rows_A_rows_B - 1));
+        ASSERT_EQ(B_colmaj.size(), static_cast<std::size_t>(num_rows_A_rows_B * num_cols_B));
+        ASSERT_EQ(reference_X_colmaj.size(), static_cast<std::size_t>(num_rows_A_rows_B * num_cols_B));
+    }
+
+    ASSERT_EQ(testcount, 6u);
 }
