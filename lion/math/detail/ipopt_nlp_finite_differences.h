@@ -24,11 +24,14 @@ namespace lioncpp::detail {
             const std::vector<scalar>& x0,
             Fitness_type& f,
             Constraints_type& c,
-            const std::vector<double>& x_lb,
-            const std::vector<double>& x_ub,
-            const std::vector<double>& c_lb,
-            const std::vector<double>& c_ub)
-            : _n(n), _nc(nc), _x0(x0), _x(_n, 0.0), _f(&f), _c(&c), _x_lb(x_lb), _x_ub(x_ub), _c_lb(c_lb), _c_ub(c_ub)
+            const std::vector<scalar>& x_lb,
+            const std::vector<scalar>& x_ub,
+            const std::vector<scalar>& c_lb,
+            const std::vector<scalar>& c_ub,
+            scalar eps_jac,
+            scalar eps_hess)
+            : _n(n), _nc(nc), _x0(x0), _x(_n, 0.0), _f(&f), _c(&c), _x_lb(x_lb), _x_ub(x_ub), _c_lb(c_lb), _c_ub(c_ub),
+            _eps_jac{ eps_jac }, _eps_hess{ eps_hess }
         {}
 
         /**@name Overloaded from TNLP */
@@ -151,8 +154,8 @@ namespace lioncpp::detail {
         std::vector<double> _c_lb;
         std::vector<double> _c_ub;
 
-        scalar _eps_jac = sqrt(2.0e-16);
-        scalar _eps_hess = cbrt(2.0e-16);
+        scalar _eps_jac;
+        scalar _eps_hess;
     };
 
 

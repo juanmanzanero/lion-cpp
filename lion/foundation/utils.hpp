@@ -361,7 +361,7 @@ constexpr T smooth_clamp(const T &x, const T1 &lo, const T2 &hi, S eps2)
 
         const auto Dxlo = x - lo;
         const auto Dxhi = x - hi;
-        return S{ 0.5 } *(sqrt(Dxlo * Dxlo + eps2) - sqrt(Dxhi * Dxhi + eps2) + lo + hi);
+        return S{ 0.5 } * (sqrt(Dxlo * Dxlo + eps2) - sqrt(Dxhi * Dxhi + eps2) + lo + hi);
     }
     else {
         return x < hi ? (x > lo ? x : static_cast<T>(lo)) : static_cast<T>(hi);
@@ -427,7 +427,7 @@ inline T trapz(const std::vector<T>& x, const std::vector<T>& y)
 
     for (size_t i = 1; i < x.size(); ++i)
     {
-        val += 0.5 * (x[i] - x[i - 1]) * (y[i] + y[i - 1]);
+        val += T{ 0.5 } * (x[i] - x[i - 1]) * (y[i] + y[i - 1]);
     }
 
     return val;

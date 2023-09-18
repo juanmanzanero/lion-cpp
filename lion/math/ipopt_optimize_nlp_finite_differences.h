@@ -21,16 +21,20 @@ namespace lioncpp
 
     struct Ipopt_optimize_NLP_finite_differences_options
     {
-        std::string hessian_approximation = "limited-memory";
         int print_level = 0;
+        std::string linear_solver = "mumps";
         std::string mu_strategy = "monotone";
         std::string nlp_scaling_method = "none";
         double constr_viol_tol = 1.0e-09;
         double acceptable_tol = 1.0e-6;
         double tol = 1.0e-8;
         std::string derivative_test = "none";
+        std::string gradient_approximation = "exact";
         std::string jacobian_approximation = "finite-difference-values";
-        double findiff_perturbation = 1.0e-6;
+        std::string hessian_approximation = "limited-memory";
+        double ipopt_findiff_perturbation = 1.0e-6;
+        double exact_jac_findiff_perturbation = std::sqrt(2.0e-16);
+        double exact_hess_findiff_perturbation = std::cbrt(2.0e-16);
     };
 
 
@@ -72,6 +76,10 @@ namespace lioncpp
             throw lion_exception("Ipopt: error during initialization");
 
         // Configure options
+        app->Options()->SetStringValue("linear_solver", options.linear_solver);
+        app->Options()->SetStringValue("gradient_approximation", options.gradient_approximation);
+        app->Options()->SetStringValue("jacobian_approximation", options.jacobian_approximation);
+        app->Options()->SetNumericValue("findiff_perturbation", options.ipopt_findiff_perturbation);
         app->Options()->SetStringValue("hessian_approximation", options.hessian_approximation);
         app->Options()->SetIntegerValue("print_level", options.print_level);
         app->Options()->SetStringValue("mu_strategy", options.mu_strategy);
@@ -80,11 +88,13 @@ namespace lioncpp
         app->Options()->SetNumericValue("acceptable_tol", options.acceptable_tol);
         app->Options()->SetNumericValue("tol", options.tol);
         app->Options()->SetStringValue("derivative_test", options.derivative_test);
-        app->Options()->SetStringValue("jacobian_approximation", options.jacobian_approximation);
-        app->Options()->SetNumericValue("findiff_perturbation", options.findiff_perturbation);
 
 
-        Ipopt::SmartPtr<Ipopt::TNLP> nlp = new lioncpp::detail::Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>(n, nc, x0, f, c, x_lb, x_ub, c_lb, c_ub);
+        Ipopt::SmartPtr<Ipopt::TNLP> nlp =
+            new lioncpp::detail::Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>(
+                n, nc, x0, f, c, x_lb, x_ub, c_lb, c_ub,
+                options.exact_jac_findiff_perturbation, options.exact_hess_findiff_perturbation);
+
         status = app->OptimizeTNLP(nlp);
 
         Ipopt::Number dual_inf, constr_viol, complementarity, kkt_error, varbounds_viol;
