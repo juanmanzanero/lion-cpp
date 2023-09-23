@@ -724,4 +724,57 @@ constexpr std::pair<Array2Type, bool> sin_cos_solve(T lhs_s, T lhs_c, T rhs,
         false };
 }
 
+
+template<typename ContainerOfGridVectorsType,
+         typename ScalarType>
+constexpr std::vector<ScalarType> grid_vectors2points_rowmaj(const ContainerOfGridVectorsType &grid_vectors)
+{
+    //
+    // Expands a collection of "grid vectors" into a
+    // matrix of "points" (returned as an std::vector
+    // in row-major order), e.g., if
+    //
+    //   "grid_vectors = { { 0, 1 },
+    //                     { 3, 4 },
+    //                     { 5, 6 } }",
+    //
+    // then
+    //
+    //   "points = { 0, 3, 5,
+    //               1, 3, 5,
+    //               0, 4, 5,
+    //               1, 4, 5,
+    //               0, 3, 6,
+    //               1, 3, 6,
+    //               0, 4, 6,
+    //               1, 4, 6 }".
+    //
+
+    const auto num_grid_vectors = grid_vectors.size();
+
+    std::vector<std::size_t> grid_vector_sizes(num_grid_vectors);
+    std::transform(grid_vectors.cbegin(), grid_vectors.cend(), grid_vector_sizes.begin(),
+                   [](auto &gv) { return gv.size(); });
+
+    std::vector<std::size_t> grid_vectors_accumulated_sizes(num_grid_vectors);
+    std::exclusive_scan(grid_vector_sizes.cbegin(), grid_vector_sizes.cend(),
+                        grid_vectors_accumulated_sizes.begin(), 1u, std::multiplies<>{});
+
+    const auto total_num_points = (*grid_vectors_accumulated_sizes.rbegin()) *
+                                  (*grid_vector_sizes.rbegin());
+
+    std::vector<ScalarType> points_rowmaj(total_num_points * num_grid_vectors);
+    for (auto dim = 0u; dim < num_grid_vectors; ++dim) {
+        for (auto p = 0u; p < total_num_points; ) {
+            for (const auto &grid_value : grid_vectors[dim]) {
+                for (auto rep = 0u; rep < grid_vectors_accumulated_sizes[dim]; ++rep) {
+                    points_rowmaj[num_grid_vectors * (p + rep) + dim] = grid_value;
+                }
+                p += grid_vectors_accumulated_sizes[dim];
+            }
+        }
+    }
+    return points_rowmaj;
+}
+
 #endif

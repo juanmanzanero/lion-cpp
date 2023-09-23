@@ -35,9 +35,9 @@ TEST(Ipopt_optimize_NLP_finite_differences_test, sine_minimum_array)
     C c;
 
     // Perform optimisation
-    Ipopt_optimize_NLP_finite_differences_options options;
+    Ipopt_optimize_NLP_finite_differences::options options;
     options.ipopt_findiff_perturbation = 1.0e-7;
-    auto result = Ipopt_optimize_NLP_finite_differences<F,C>::optimize(2,1,{0.0,0.0},f,c,{-2.0,-2.0},{2.0,2.00},{0.0},{0.0},options);
+    auto result = Ipopt_optimize_NLP_finite_differences::optimize(2,1,{0.0,0.0},f,c,{-2.0,-2.0},{2.0,2.00},{0.0},{0.0},options);
     
     // Check results
     EXPECT_EQ(result.solved, true);
@@ -80,9 +80,9 @@ TEST(Ipopt_optimize_NLP_finite_differences_test, sine_minimum_vector)
     C c;
 
     // Perform optimisation
-    Ipopt_optimize_NLP_finite_differences_options options;
+    Ipopt_optimize_NLP_finite_differences::options options;
     options.ipopt_findiff_perturbation = 1.0e-7;
-    auto result = Ipopt_optimize_NLP_finite_differences<F,C>::optimize(2,1,{0.0,0.0},f,c,{-2.0,-2.0},{2.0,2.00},{0.0},{0.0},options);
+    auto result = Ipopt_optimize_NLP_finite_differences::optimize(2,1,{0.0,0.0},f,c,{-2.0,-2.0},{2.0,2.00},{0.0},{0.0},options);
     
     // Check results
     EXPECT_EQ(result.solved, true);
