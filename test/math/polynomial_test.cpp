@@ -5,10 +5,6 @@
 
 using namespace lioncpp;
 
-template class Polynomial<double>;
-template struct Vector3d<double>;
-template struct Matrix3x3<double>;
-
 constexpr scalar f(scalar x) { return 1.0 + x + 0.5*x*x + x*x*x/3.0 + x*x*x*x/4.0; }
 constexpr scalar df(scalar x) { return 1.0 + x + x*x + x*x*x; }
 

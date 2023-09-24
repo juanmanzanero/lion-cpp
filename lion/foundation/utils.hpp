@@ -727,7 +727,7 @@ constexpr std::pair<Array2Type, bool> sin_cos_solve(T lhs_s, T lhs_c, T rhs,
 
 template<typename ContainerOfGridVectorsType,
          typename ScalarType>
-constexpr std::vector<ScalarType> grid_vectors2points_rowmaj(const ContainerOfGridVectorsType &grid_vectors)
+std::vector<ScalarType> grid_vectors2points_rowmaj(const ContainerOfGridVectorsType &grid_vectors)
 {
     //
     // Expands a collection of "grid vectors" into a

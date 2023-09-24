@@ -87,7 +87,7 @@ struct Ipopt_optimize_NLP_finite_differences
                                          Constraints_type &&c,
                                          const std::vector<scalar> &x_lb, const std::vector<scalar> &x_ub,
                                          const std::vector<scalar> &c_lb, const std::vector<scalar> &c_ub,
-                                         const options &opts = {})
+                                         const options &opts)
     {
         //
         // Solves a nonlinear system of "nc" equations (a.k.a "constraints")
@@ -107,7 +107,7 @@ struct Ipopt_optimize_NLP_finite_differences
                            Fitness_type &&f, Constraints_type &&c,
                            const std::vector<scalar>& x_lb, const std::vector<scalar>& x_ub,
                            const std::vector<scalar>& c_lb, const std::vector<scalar>& c_ub,
-                           const options &opts = {})
+                           const options &opts)
     {
         //
         // Optimizes a nonlinear problem with "n" variables and "nc" constraints.

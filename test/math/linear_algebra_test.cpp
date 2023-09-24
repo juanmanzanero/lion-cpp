@@ -18,7 +18,6 @@ static Xml_document reference_file("data/linear_algebra_test.xml", true);
 constexpr auto tolnear_lusolve = 1e3 * std::numeric_limits<double>::epsilon();
 constexpr auto tolnear_qrsolve = 1e3 * std::numeric_limits<double>::epsilon();
 constexpr auto tolnear_rcond = 1e3 * std::numeric_limits<double>::epsilon();
-constexpr auto tolnear_tridiagonalsolve = 1.5e-11; // a bit bigger since we'll compare against reference solutions obtained with Matlab's linsolve (i.e., with full matrices)
 
 
 inline std::vector<double> comma_separated_string2vector_of_doubles(const std::string &str)
