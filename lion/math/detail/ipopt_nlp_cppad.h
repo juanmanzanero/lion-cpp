@@ -56,6 +56,7 @@ private:
     FG_eval&                        fg_eval_;
     /// should operation sequence be retaped for each new x.
     bool                            retape_;
+
     /// Should sparse methods be used to compute Jacobians and Hessians
     /// with forward mode used for Jacobian.
     bool                            sparse_forward_;
@@ -235,8 +236,10 @@ public:
             CppAD::Independent(a_x);
             fg_eval_(a_fg, a_x);
             adfun_.Dependent(a_x, a_fg);
-            // optimize because we will make repeated use of this tape
-            adfun_.optimize();
+            if (!retape_) {
+                // optimize because we will make repeated use of this tape
+                adfun_.optimize();
+            }
         }
         if( sparse_forward_ | sparse_reverse_ )
         {   //CPPAD_ASSERT_UNKNOWN( ! retape );
