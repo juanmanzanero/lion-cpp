@@ -491,7 +491,6 @@ inline bool Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>::eval_h
             for (size_t i = 0; i < _nc; ++i)
                 values[idx] += lambda[i] * hess_c[i];
         }
-        assert(idx == nele_hess);
     }
 
     return true;
