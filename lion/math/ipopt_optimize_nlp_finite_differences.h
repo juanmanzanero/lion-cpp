@@ -59,32 +59,38 @@ struct Ipopt_optimize_NLP_finite_differences
     };
 
 
-    struct no_fitness
+    template<typename ArgumentType>
+    struct no_fitness_T
     {
-        using argument_type = std::vector<scalar>;
+        using argument_type = ArgumentType;
 
-        scalar operator()(const argument_type& x) const
+        scalar operator()(const argument_type &) const
         {
             return 0.;
         }
     };
 
+    using no_fitness = no_fitness_T<std::vector<scalar> >;
 
-    struct no_constraints
+
+    template<typename ArgumentType>
+    struct no_constraints_T
     {
-        using argument_type = std::vector<scalar>;
+        using argument_type = ArgumentType;
 
         const argument_type& operator()(const argument_type &) const
         {
-            static const auto emptyvec = argument_type{};
-            return emptyvec;
+            static const auto emptyarg = argument_type{};
+            return emptyarg;
         }
     };
 
+    using no_constraints = no_constraints_T<std::vector<scalar> >;
 
-    template<typename Constraints_type>
+
+    template<typename ConstraintsType>
     static result solve_nonlinear_system(const size_t n, const size_t nc, const std::vector<scalar> &x0,
-                                         Constraints_type &&c,
+                                         ConstraintsType &&c,
                                          const std::vector<scalar> &x_lb, const std::vector<scalar> &x_ub,
                                          const std::vector<scalar> &c_lb, const std::vector<scalar> &c_ub,
                                          const options &opts)
@@ -95,16 +101,16 @@ struct Ipopt_optimize_NLP_finite_differences
         //
 
         return optimize(n, nc, x0,
-                        no_fitness{}, c,
+                        no_fitness_T<typename std::decay_t<ConstraintsType>::argument_type>{}, c,
                         x_lb, x_ub,
                         c_lb, c_ub,
                         opts);
     }
 
 
-    template<typename Fitness_type, typename Constraints_type>
+    template<typename FitnessType, typename ConstraintsType>
     static result optimize(const size_t n, const size_t nc, const std::vector<scalar>& x0,
-                           Fitness_type &&f, Constraints_type &&c,
+                           FitnessType &&f, ConstraintsType &&c,
                            const std::vector<scalar>& x_lb, const std::vector<scalar>& x_ub,
                            const std::vector<scalar>& c_lb, const std::vector<scalar>& c_ub,
                            const options &opts)
@@ -114,8 +120,8 @@ struct Ipopt_optimize_NLP_finite_differences
         //
 
         // validate inputs
-        constexpr auto without_fitness = std::is_same_v<std::decay_t<Fitness_type>, no_fitness>;
-        constexpr auto without_constraints = std::is_same_v<std::decay_t<Constraints_type>, no_constraints>;
+        constexpr auto without_fitness = is_specialization_v<std::decay_t<FitnessType>, no_fitness_T>;
+        constexpr auto without_constraints = is_specialization_v<std::decay_t<ConstraintsType>, no_constraints_T>;
 
         static_assert(!(without_fitness && without_constraints),
             "Ipopt_optimize_NLP_finite_differences::solve: will do nothing"
@@ -201,8 +207,8 @@ struct Ipopt_optimize_NLP_finite_differences
 
         // create our TNLP
         Ipopt::SmartPtr<Ipopt::TNLP> nlp =
-            new lioncpp::detail::Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>(
-                n, nc, x0, std::forward<Fitness_type>(f), std::forward<Constraints_type>(c), x_lb, x_ub, c_lb, c_ub,
+            new lioncpp::detail::Ipopt_NLP_finite_differences<FitnessType, ConstraintsType>(
+                n, nc, x0, std::forward<FitnessType>(f), std::forward<ConstraintsType>(c), x_lb, x_ub, c_lb, c_ub,
                 opts.exact_jac_findiff_perturbation, opts.exact_hess_findiff_perturbation,
                 opts.exact_central_finite_differences);
 
@@ -219,7 +225,7 @@ struct Ipopt_optimize_NLP_finite_differences
 
         // Get solution
         const std::vector<scalar> x =
-            static_cast<detail::Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>* >(GetRawPtr(nlp))->x();
+            static_cast<detail::Ipopt_NLP_finite_differences<FitnessType, ConstraintsType>* >(GetRawPtr(nlp))->x();
 
         // Check that all variables are within bounds
         for (size_t i = 0; i < n; ++i)
@@ -229,10 +235,10 @@ struct Ipopt_optimize_NLP_finite_differences
         }
 
         // Check that constraints are satisfied
-        using constraints_argument_type = typename std::decay_t<Constraints_type>::argument_type;
+        using constraints_argument_type = typename std::decay_t<ConstraintsType>::argument_type;
 
         constraints_argument_type x_c;
-        if constexpr (std::is_same_v<constraints_argument_type, std::vector<scalar> >) {
+        if constexpr (is_specialization_v<constraints_argument_type, std::vector>) {
             x_c.resize(n);
         }
 

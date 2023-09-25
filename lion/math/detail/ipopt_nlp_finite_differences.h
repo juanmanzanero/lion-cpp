@@ -10,11 +10,11 @@
 
 namespace lioncpp::detail {
 
-template<typename Fitness_type, typename Constraints_type>
+template<typename FitnessType, typename ConstraintsType>
 class Ipopt_NLP_finite_differences : public Ipopt::TNLP
 {
     //
-    // An Ipopt NLP that optimizes a fitness function of type Fitness_type with constraints of type "Constraints_type" that uses finite differences
+    // An Ipopt NLP that optimizes a fitness function of type FitnessType with constraints of type "ConstraintsType" that uses finite differences
     // to approximate the gradient of the fitness function and the Jacobian of the constraints
     //
     // All NLP matrices are considered dense in this very generic class
@@ -22,16 +22,16 @@ class Ipopt_NLP_finite_differences : public Ipopt::TNLP
 
 public:
 
-    using fitness_argument_type = typename std::decay_t<Fitness_type>::argument_type;
-    using constraints_argument_type = typename std::decay_t<Constraints_type>::argument_type;
+    using fitness_argument_type = typename std::decay_t<FitnessType>::argument_type;
+    using constraints_argument_type = typename std::decay_t<ConstraintsType>::argument_type;
 
 
     //! Constructor
     Ipopt_NLP_finite_differences(const size_t n,
         const size_t nc,
         const std::vector<scalar>& x0,
-        Fitness_type &&f,
-        Constraints_type &&c,
+        FitnessType &&f,
+        ConstraintsType &&c,
         const std::vector<scalar>& x_lb,
         const std::vector<scalar>& x_ub,
         const std::vector<scalar>& c_lb,
@@ -156,8 +156,8 @@ private:
     size_t _nc;
     std::vector<double> _x0;
     std::vector<double> _x;
-    Fitness_type &_f;
-    Constraints_type &_c;
+    FitnessType &_f;
+    ConstraintsType &_c;
     std::vector<double> _x_lb;
     std::vector<double> _x_ub;
     std::vector<double> _c_lb;
@@ -169,8 +169,8 @@ private:
 };
 
 
-template<typename Fitness_type, typename Constraints_type>
-inline bool Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>::get_nlp_info(Ipopt::Index& n, Ipopt::Index& m, Ipopt::Index& nnz_jac_g,
+template<typename FitnessType, typename ConstraintsType>
+inline bool Ipopt_NLP_finite_differences<FitnessType, ConstraintsType>::get_nlp_info(Ipopt::Index& n, Ipopt::Index& m, Ipopt::Index& nnz_jac_g,
     Ipopt::Index& nnz_h_lag, IndexStyleEnum& index_style)
 {
     // Number of problem variables
@@ -189,8 +189,8 @@ inline bool Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>::get_nl
     return true;
 }
 
-template<typename Fitness_type, typename Constraints_type>
-inline bool Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>::get_bounds_info(Ipopt::Index n, Ipopt::Number* x_l, Ipopt::Number* x_u,
+template<typename FitnessType, typename ConstraintsType>
+inline bool Ipopt_NLP_finite_differences<FitnessType, ConstraintsType>::get_bounds_info(Ipopt::Index n, Ipopt::Number* x_l, Ipopt::Number* x_u,
     Ipopt::Index m, Ipopt::Number* g_l, Ipopt::Number* g_u)
 {
     assert(n == int(_n));
@@ -212,8 +212,8 @@ inline bool Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>::get_bo
 }
 
 
-template<typename Fitness_type, typename Constraints_type>
-inline bool Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>::get_starting_point(Ipopt::Index n, bool init_x, Ipopt::Number* x, bool init_z,
+template<typename FitnessType, typename ConstraintsType>
+inline bool Ipopt_NLP_finite_differences<FitnessType, ConstraintsType>::get_starting_point(Ipopt::Index n, bool init_x, Ipopt::Number* x, bool init_z,
     Ipopt::Number* z_L, Ipopt::Number* z_U, Ipopt::Index m, bool init_lambda, Ipopt::Number* lambda)
 {
     assert(init_x == true);
@@ -228,11 +228,11 @@ inline bool Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>::get_st
 }
 
 
-template<typename Fitness_type, typename Constraints_type>
-inline bool Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>::eval_f(Ipopt::Index n, const Ipopt::Number* x, bool new_x, Ipopt::Number& obj_value)
+template<typename FitnessType, typename ConstraintsType>
+inline bool Ipopt_NLP_finite_differences<FitnessType, ConstraintsType>::eval_f(Ipopt::Index n, const Ipopt::Number* x, bool new_x, Ipopt::Number& obj_value)
 {
     fitness_argument_type x_v;
-    if constexpr (std::is_same_v<fitness_argument_type, std::vector<double> >) {
+    if constexpr (is_specialization_v<fitness_argument_type, std::vector>) {
         x_v.assign(x, x + _n);
     }
     else {
@@ -245,11 +245,11 @@ inline bool Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>::eval_f
 }
 
 
-template<typename Fitness_type, typename Constraints_type>
-inline bool Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>::eval_grad_f(Ipopt::Index n, const Ipopt::Number* x, bool new_x, Ipopt::Number* grad_f)
+template<typename FitnessType, typename ConstraintsType>
+inline bool Ipopt_NLP_finite_differences<FitnessType, ConstraintsType>::eval_grad_f(Ipopt::Index n, const Ipopt::Number* x, bool new_x, Ipopt::Number* grad_f)
 {
     fitness_argument_type x_v;
-    if constexpr (std::is_same_v<fitness_argument_type, std::vector<double> >) {
+    if constexpr (is_specialization_v<fitness_argument_type, std::vector>) {
         x_v.assign(x, x + _n);
     }
     else {
@@ -294,12 +294,12 @@ inline bool Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>::eval_g
 }
 
 
-template<typename Fitness_type, typename Constraints_type>
-inline bool Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>::eval_g(Ipopt::Index n, const Ipopt::Number* x, bool new_x, Ipopt::Index m,
+template<typename FitnessType, typename ConstraintsType>
+inline bool Ipopt_NLP_finite_differences<FitnessType, ConstraintsType>::eval_g(Ipopt::Index n, const Ipopt::Number* x, bool new_x, Ipopt::Index m,
     Ipopt::Number* g)
 {
     constraints_argument_type x_v;
-    if constexpr (std::is_same_v<constraints_argument_type, std::vector<double> >) {
+    if constexpr (is_specialization_v<constraints_argument_type, std::vector>) {
         x_v.assign(x, x + _n);
     }
     else {
@@ -315,8 +315,8 @@ inline bool Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>::eval_g
 }
 
 
-template<typename Fitness_type, typename Constraints_type>
-inline bool Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>::eval_jac_g(Ipopt::Index n, const Ipopt::Number* x, bool new_x, Ipopt::Index m,
+template<typename FitnessType, typename ConstraintsType>
+inline bool Ipopt_NLP_finite_differences<FitnessType, ConstraintsType>::eval_jac_g(Ipopt::Index n, const Ipopt::Number* x, bool new_x, Ipopt::Index m,
     Ipopt::Index nele_jac, Ipopt::Index* iRow, Ipopt::Index* jCol, Ipopt::Number* values)
 {
     if (values == NULL)
@@ -331,7 +331,7 @@ inline bool Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>::eval_j
     else
     {
         constraints_argument_type x_v;
-        if constexpr (std::is_same_v<constraints_argument_type, std::vector<double> >) {
+        if constexpr (is_specialization_v<constraints_argument_type, std::vector>) {
             x_v.assign(x, x + _n);
         }
         else {
@@ -380,8 +380,8 @@ inline bool Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>::eval_j
     return true;
 }
 
-template<typename Fitness_type, typename Constraints_type>
-inline bool Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>::eval_h(
+template<typename FitnessType, typename ConstraintsType>
+inline bool Ipopt_NLP_finite_differences<FitnessType, ConstraintsType>::eval_h(
     Ipopt::Index         n,
     const Ipopt::Number* x,
     bool                 new_x,
@@ -423,7 +423,7 @@ inline bool Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>::eval_h
         // return the values. This is a symmetric matrix, fill the lower left
         // triangle only
         fitness_argument_type x_v;
-        if constexpr (std::is_same_v<fitness_argument_type, std::vector<double> >) {
+        if constexpr (is_specialization_v<fitness_argument_type, std::vector>) {
             x_v.assign(x, x + _n);
         }
         else {
@@ -433,7 +433,6 @@ inline bool Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>::eval_h
         // evaluate fitness & constraints at "x_v"
         const auto two_f_v = scalar{ 2 } * _f(x_v);
         const auto two_c_v = scalar{ 2 } * _c(x_v);
-
 
         // calculate the Hessian of the Lagrangian
 #ifdef WITH_OPENMP
@@ -498,8 +497,8 @@ inline bool Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>::eval_h
 
 
 /** This method is called when the algorithm is complete so the TNLP can store/write the solution */
-template<typename Fitness_type, typename Constraints_type>
-inline void Ipopt_NLP_finite_differences<Fitness_type, Constraints_type>::finalize_solution(
+template<typename FitnessType, typename ConstraintsType>
+inline void Ipopt_NLP_finite_differences<FitnessType, ConstraintsType>::finalize_solution(
     Ipopt::SolverReturn               status,
     Ipopt::Index                      n,
     const Ipopt::Number* x,
