@@ -36,6 +36,7 @@ jobs:
            gcc
            mingw-w64-ucrt-x86_64-toolchain
            base-devel
+           mingw-w64-x86_64-gcc-fortran
            python
            python-pip
            cmake
