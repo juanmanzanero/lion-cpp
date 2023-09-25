@@ -18,6 +18,8 @@ static Xml_document reference_file("data/linear_algebra_test.xml", true);
 constexpr auto tolnear_lusolve = 1e3 * std::numeric_limits<double>::epsilon();
 constexpr auto tolnear_qrsolve = 1e3 * std::numeric_limits<double>::epsilon();
 constexpr auto tolnear_rcond = 1e3 * std::numeric_limits<double>::epsilon();
+constexpr auto tolnear_tridiagonalsolve = 1.5e-11; // a bit bigger since we'll compare against reference
+                                                   // solutions obtained with Matlab's "linsolve" (i.e., with full matrices)
 
 
 inline std::vector<double> comma_separated_string2vector_of_doubles(const std::string &str)
@@ -656,6 +658,16 @@ TEST(linear_algebra_test, tridiagonalsolve_tests)
         ASSERT_EQ(A_c.size(), static_cast<std::size_t>(num_rows_A_rows_B - 1));
         ASSERT_EQ(B_colmaj.size(), static_cast<std::size_t>(num_rows_A_rows_B * num_cols_B));
         ASSERT_EQ(reference_X_colmaj.size(), static_cast<std::size_t>(num_rows_A_rows_B * num_cols_B));
+
+        auto X_colmaj = B_colmaj;
+        auto A_b_copy = A_b;
+        tridiagonalsolve(X_colmaj.data(), A_b_copy.data(), A_a.data(), A_c.data(),
+                         num_rows_A_rows_B, num_cols_B);
+
+        EXPECT_EQ(X_colmaj.size(), reference_X_colmaj.size());
+        for (auto i = 0u; i < reference_X_colmaj.size(); ++i) {
+            EXPECT_NEAR(X_colmaj[i], reference_X_colmaj[i], tolnear_tridiagonalsolve);
+        }
     }
 
     ASSERT_EQ(testcount, 6u);
