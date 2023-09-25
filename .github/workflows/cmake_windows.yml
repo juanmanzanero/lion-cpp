@@ -34,7 +34,8 @@ jobs:
          install: >-
            git
            gcc
-           gcc-fortran
+           mingw-w64-ucrt-x86_64-toolchain
+           base-devel
            python
            python-pip
            cmake
