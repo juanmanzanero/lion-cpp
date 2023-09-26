@@ -149,7 +149,7 @@ constexpr void index_for(Fun &&f)
 //
 
 template<std::size_t End,
-    typename Fun>
+         typename Fun>
 constexpr void index_for(Fun &&f)
 {
     index_for<0u, End>(std::forward<Fun>(f));
@@ -206,12 +206,32 @@ constexpr void tuple_index_for(Tuple &&tuple, Fun &&f)
 // Performs std::decay on every member type of an std::tuple.
 //
 
-template <typename ... Ts>
+template<typename ... Ts>
 constexpr auto decay_types_of_a_tuple(const std::tuple<Ts...> &) ->
     std::tuple<std::remove_cv_t<std::remove_reference_t<Ts> >... >;
 
-template <typename Tuple>
+template<typename Tuple>
 using decay_tuple = decltype(decay_types_of_a_tuple(std::declval<Tuple>()));
+
+
+//
+// A type_trait to identify if a tuple type contains a given type.
+//
+
+template<typename T, typename Tuple>
+struct tuple_has_type : std::false_type {};
+
+template<typename T>
+struct tuple_has_type<T, std::tuple<> > : std::false_type {};
+
+template<typename T, typename... Ts>
+struct tuple_has_type<T, std::tuple<T, Ts...> > : std::true_type {};
+
+template<typename T, typename U, typename... Ts>
+struct tuple_has_type<T, std::tuple<U, Ts...> > : tuple_has_type<T, std::tuple<Ts...> > {};
+
+template<typename T, typename Tuple>
+constexpr bool tuple_has_type_v = tuple_has_type<T, Tuple>::type::value;
 
 
 //
@@ -219,7 +239,7 @@ using decay_tuple = decltype(decay_types_of_a_tuple(std::declval<Tuple>()));
 //
 
 #ifndef _MSC_VER
-template <typename Type, std::size_t... sizes>
+template<typename Type, std::size_t... sizes>
 constexpr auto array_cat(const std::array<Type, sizes>&... arrays)
 {
     //
@@ -255,7 +275,7 @@ struct add_array_sizes<std::array<T, size>, RestOfArrays...>
 
 } // end namespace detail::tuple_helpers
 
-template <typename Type, std::size_t... sizes>
+template<typename Type, std::size_t... sizes>
 constexpr auto array_cat(const std::array<Type, sizes>&... arrays)
 {
     //
