@@ -758,14 +758,14 @@ std::vector<ScalarType> grid_vectors2points_rowmaj(const ContainerOfGridVectorsT
 
     std::vector<std::size_t> grid_vectors_accumulated_sizes(num_grid_vectors);
     std::exclusive_scan(grid_vector_sizes.cbegin(), grid_vector_sizes.cend(),
-                        grid_vectors_accumulated_sizes.begin(), 1u, std::multiplies<>{});
+                        grid_vectors_accumulated_sizes.begin(), std::size_t{ 1u }, std::multiplies<>{});
 
     const auto total_num_points = (*grid_vectors_accumulated_sizes.rbegin()) *
                                   (*grid_vector_sizes.rbegin());
 
     std::vector<ScalarType> points_rowmaj(total_num_points * num_grid_vectors);
     for (auto dim = 0u; dim < num_grid_vectors; ++dim) {
-        for (auto p = 0u; p < total_num_points; ) {
+        for (auto p = std::size_t{ 0u }; p < total_num_points; ) {
             for (const auto &grid_value : grid_vectors[dim]) {
                 for (auto rep = 0u; rep < grid_vectors_accumulated_sizes[dim]; ++rep) {
                     points_rowmaj[num_grid_vectors * (p + rep) + dim] = grid_value;

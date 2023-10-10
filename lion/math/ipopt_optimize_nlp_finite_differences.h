@@ -7,8 +7,8 @@
 #include <vector>
 #include <iomanip>
 
+#include "coin-or/IpSolveStatistics.hpp"
 #include "lion/thirdparty/include/logger.hpp"
-#include "lion/thirdparty/include/coin-or/IpSolveStatistics.hpp"
 
 #include "lion/foundation/types.h"
 #include "lion/foundation/utils.hpp"

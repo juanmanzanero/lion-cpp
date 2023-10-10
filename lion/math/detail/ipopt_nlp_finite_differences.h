@@ -1,11 +1,12 @@
 #ifndef LIONCPP_MATH_DETAIL_IPOPT_NLP_FINITE_DIFFERENCES_H
 #define LIONCPP_MATH_DETAIL_IPOPT_NLP_FINITE_DIFFERENCES_H
 
+#include <math.h>
+
+#include "coin-or/IpIpoptApplication.hpp"
 
 #include "lion/foundation/types.h"
-#include "lion/thirdparty/include/coin-or/IpIpoptApplication.hpp"
 #include "lion/math/matrix_extensions.h"
-#include <math.h>
 
 
 namespace lioncpp::detail {
@@ -27,8 +28,9 @@ public:
 
 
     //! Constructor
-    Ipopt_NLP_finite_differences(const size_t n,
-        const size_t nc,
+    Ipopt_NLP_finite_differences(
+        const std::size_t n,
+        const std::size_t nc,
         const std::vector<scalar>& x0,
         FitnessType &&f,
         ConstraintsType &&c,
@@ -39,7 +41,8 @@ public:
         scalar eps_jac,
         scalar eps_hess,
         bool central_finite_differences)
-        : _n(n), _nc(nc), _x0(x0), _x(_n, 0.0), _f{ f }, _c{ c }, _x_lb(x_lb), _x_ub(x_ub), _c_lb(c_lb), _c_ub(c_ub),
+        : _n{ static_cast<Ipopt::Index>(n) }, _nc{ static_cast<Ipopt::Index>(nc) },
+        _x0(x0), _x(_n, 0.), _f{ f }, _c{ c }, _x_lb(x_lb), _x_ub(x_ub), _c_lb(c_lb), _c_ub(c_ub),
         _eps_jac{ eps_jac }, _eps_hess{ eps_hess }, _central_finite_differences{ central_finite_differences }
     {}
 
@@ -152,8 +155,8 @@ public:
 
 private:
 
-    size_t _n;
-    size_t _nc;
+    Ipopt::Index _n;
+    Ipopt::Index _nc;
     std::vector<double> _x0;
     std::vector<double> _x;
     FitnessType &_f;
@@ -193,16 +196,16 @@ template<typename FitnessType, typename ConstraintsType>
 inline bool Ipopt_NLP_finite_differences<FitnessType, ConstraintsType>::get_bounds_info(Ipopt::Index n, Ipopt::Number* x_l, Ipopt::Number* x_u,
     Ipopt::Index m, Ipopt::Number* g_l, Ipopt::Number* g_u)
 {
-    assert(n == int(_n));
-    assert(m == int(_nc));
+    assert(n == _n);
+    assert(m == _nc);
 
-    for (size_t i = 0; i < _n; ++i)
+    for (Ipopt::Index i = 0; i < _n; ++i)
     {
         x_l[i] = _x_lb[i];
         x_u[i] = _x_ub[i];
     }
 
-    for (size_t i = 0; i < _nc; ++i)
+    for (Ipopt::Index i = 0; i < _nc; ++i)
     {
         g_l[i] = _c_lb[i];
         g_u[i] = _c_ub[i];
@@ -220,7 +223,7 @@ inline bool Ipopt_NLP_finite_differences<FitnessType, ConstraintsType>::get_star
     assert(init_z == false);
     assert(init_lambda == false);
 
-    for (size_t i = 0; i < _n; ++i) {
+    for (Ipopt::Index i = 0; i < _n; ++i) {
         x[i] = _x0[i];
     }
 
@@ -261,7 +264,7 @@ inline bool Ipopt_NLP_finite_differences<FitnessType, ConstraintsType>::eval_gra
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-        for (size_t i = 0; i < _n; ++i) {
+        for (Ipopt::Index i = 0; i < _n; ++i) {
             const auto h = _eps_jac * (1.0 + std::abs(x_v[i]));
             auto xp = x_v;
 
@@ -279,7 +282,7 @@ inline bool Ipopt_NLP_finite_differences<FitnessType, ConstraintsType>::eval_gra
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-        for (size_t i = 0; i < _n; ++i) {
+        for (Ipopt::Index i = 0; i < _n; ++i) {
             const double h = _eps_jac * (1.0 + std::abs(x_v[i]));
             auto xp = x_v;
 
@@ -307,7 +310,7 @@ inline bool Ipopt_NLP_finite_differences<FitnessType, ConstraintsType>::eval_g(I
     }
 
     const auto c = _c(x_v);
-    for (size_t i = 0; i < _nc; ++i) {
+    for (Ipopt::Index i = 0; i < _nc; ++i) {
         g[i] = c[i];
     }
 
@@ -321,8 +324,8 @@ inline bool Ipopt_NLP_finite_differences<FitnessType, ConstraintsType>::eval_jac
 {
     if (values == NULL)
     {
-        for (size_t i = 0; i < _n; ++i)
-            for (size_t c = 0; c < _nc; ++c)
+        for (Ipopt::Index i = 0; i < _n; ++i)
+            for (Ipopt::Index c = 0; c < _nc; ++c)
             {
                 iRow[i * _nc + c] = c;
                 jCol[i * _nc + c] = i;
@@ -342,7 +345,7 @@ inline bool Ipopt_NLP_finite_differences<FitnessType, ConstraintsType>::eval_jac
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-            for (size_t i = 0; i < _n; ++i) {
+            for (Ipopt::Index i = 0; i < _n; ++i) {
                 auto xp = x_v;
 
                 xp[i] += _eps_jac;
@@ -353,7 +356,7 @@ inline bool Ipopt_NLP_finite_differences<FitnessType, ConstraintsType>::eval_jac
 
                 auto Jcol = (yi_p - yi_m) * (scalar{ 0.5 } / _eps_jac);
 
-                for (size_t c = 0; c < _nc; ++c)
+                for (Ipopt::Index c = 0; c < _nc; ++c)
                     values[i * _nc + c] = Jcol[c];
             }
         }
@@ -363,7 +366,7 @@ inline bool Ipopt_NLP_finite_differences<FitnessType, ConstraintsType>::eval_jac
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-            for (size_t i = 0; i < _n; ++i) {
+            for (Ipopt::Index i = 0; i < _n; ++i) {
                 auto xp = x_v;
 
                 xp[i] += _eps_jac;
@@ -371,7 +374,7 @@ inline bool Ipopt_NLP_finite_differences<FitnessType, ConstraintsType>::eval_jac
 
                 auto Jcol = (yi_p - yi) * (scalar{ 1 } / _eps_jac);
 
-                for (size_t c = 0; c < _nc; ++c)
+                for (Ipopt::Index c = 0; c < _nc; ++c)
                     values[i * _nc + c] = Jcol[c];
             }
         }
@@ -469,7 +472,7 @@ inline bool Ipopt_NLP_finite_differences<FitnessType, ConstraintsType>::eval_h(
                 const auto idx = col + n * row;
                 values[idx] = obj_factor * hess_f;
 
-                for (size_t i = 0; i < _nc; ++i)
+                for (Ipopt::Index i = 0; i < _nc; ++i)
                     values[idx] += lambda[i] * hess_c[i];
             }
 
@@ -487,7 +490,7 @@ inline bool Ipopt_NLP_finite_differences<FitnessType, ConstraintsType>::eval_h(
             const auto idx = row * (n + 1);
             values[idx] = obj_factor * hess_f;
 
-            for (size_t i = 0; i < _nc; ++i)
+            for (Ipopt::Index i = 0; i < _nc; ++i)
                 values[idx] += lambda[i] * hess_c[i];
         }
     }

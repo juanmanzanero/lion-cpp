@@ -142,6 +142,15 @@ template<class Class, typename SingleArg,
     typename std::enable_if_t<std::is_same_v<Class, std::decay_t<SingleArg> > >* = nullptr>
 constexpr auto is_not_copy_ctor() { return false; }
 
+#ifdef _MSC_VER
+    // In VS2017-2019 the "is_not_copy_ctor()" constexpr function does not
+    // work, we'll use a macro until the compiler catches up!
+#define WINDOWS_IS_NOT_COPY_CTOR(CLASSNAME)                                                                                                         \
+    template<typename... Args,                                                                                                                      \
+             typename std::enable_if_t<(sizeof...(Args) > 1u) ||                                                                                    \
+                                       !std::is_same_v<std::decay_t<std::tuple_element_t<0u, std::tuple<Args..., void> > >, CLASSNAME> >* = nullptr>
+#endif
+
 
 /// Helper template to declare a type that may be a dummy,
 /// empty type ("nothing") or an actual type, based on the

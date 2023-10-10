@@ -4,6 +4,7 @@
 
 
 #include <tuple>
+#include <complex>
 
 #include "lion/foundation/utils.hpp"
 
@@ -39,7 +40,8 @@ template<typename Fun,
          typename T,
          typename TolType = T>
 inline std::tuple<T, T,
-    basic_root_solvers_exitflag> fzero(Fun fun, T x0,
+    basic_root_solvers_exitflag> fzero(
+        Fun &&fun, T x0,
         std::size_t max_fun_evals = 10000u,
         TolType tolx = TolType{ 1e-12 },
         TolType tolf = TolType{ 1e-12 })
@@ -259,7 +261,8 @@ template<typename Fun,
          typename T,
          typename TolType = T>
 inline std::tuple<T, T,
-    basic_root_solvers_exitflag> fzero(Fun fun, T a, T b,
+    basic_root_solvers_exitflag> fzero(
+        Fun &&fun, T a, T b,
         std::size_t max_fun_evals = 10000u,
         TolType tolx = TolType{ 1e-12 },
         TolType tolf = TolType{ 1e-12 })
@@ -468,7 +471,8 @@ inline std::tuple<T, T,
 template<typename Fun, typename dFun_dx,
          typename T, typename TolType = T>
 constexpr std::tuple<T, T,
-    basic_root_solvers_exitflag> Newton_method1d(Fun fun, dFun_dx dfun_dx, T x0,
+    basic_root_solvers_exitflag> Newton_method1d(
+        Fun &&fun, dFun_dx &&dfun_dx, T x0,
         T alpha = T{ 1 },
         std::size_t max_fun_evals = 10000u,
         TolType tolx = TolType{ 1e-12 },
@@ -531,7 +535,8 @@ constexpr std::tuple<T, T,
 template<typename Fun,
          typename T, typename TolType = T>
 constexpr std::tuple<T,
-    basic_root_solvers_exitflag> fixed_point_iteration(Fun fun, T x0,
+    basic_root_solvers_exitflag> fixed_point_iteration(
+        Fun &&fun, T x0,
         std::size_t max_fun_evals = 10000u,
         TolType tolx = TolType{ 1e-12 })
 {
@@ -581,7 +586,8 @@ template<typename Fun2d,
          typename T, typename TolType = T>
 constexpr std::tuple<std::array<T, 2>,
     std::array<T, 2>,
-    basic_root_solvers_exitflag> numjac_Newton_method2d(Fun2d fun2d,
+    basic_root_solvers_exitflag> numjac_Newton_method2d(
+        Fun2d &&fun2d,
         std::array<T, 2> x0,
         std::array<T, 2> deltas_numjac = std::array<T, 2>{ T{ 1e-9 }, T{ 1e-9 } },
         std::array<T, 2> alphas = std::array<T, 2>{ T{ 1 }, T{ 1 } },
