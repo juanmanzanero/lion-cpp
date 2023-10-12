@@ -50,7 +50,7 @@ jobs:
     - name: Configure
       run: >-
         cmake .
-        -B build -DCMAKE_BUILD_TYPE=$BUILD_RELEASE
+        -B build -DCMAKE_BUILD_TYPE=$BUILD_RELEASE -DCMAKE_Fortran_COMPILER=mingw-w64-x86_64-gcc-fortran
         
     - name: Build
       # Execute the build.  You can specify a specific target with "--target <NAME>" 
@@ -98,7 +98,7 @@ jobs:
     - name: Configure
       run: >-
         cmake .
-        -B build -DCMAKE_BUILD_TYPE=$BUILD_DEBUG
+        -B build -DCMAKE_BUILD_TYPE=$BUILD_DEBUG -DCMAKE_Fortran_COMPILER=mingw-w64-x86_64-gcc-fortran
         
     - name: Build
       # Execute the build.  You can specify a specific target with "--target <NAME>" 
