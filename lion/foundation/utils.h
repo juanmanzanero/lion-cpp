@@ -16,19 +16,34 @@
 #include "lion/foundation/types.h"
 #include "lion/foundation/constants.h"
 #include "lion/foundation/lion_exception.h"
+#include "lion/foundation/string_helpers.h"
 #include "lion/math/vector3d.h"
 
 
 constexpr double& Value(double& val);
 constexpr const double& Value(const double& val);
 
-inline bool to_bool(std::string str)
+inline bool to_bool(const std::string &str)
 {
-    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
-    std::istringstream is(str);
-    bool b;
-    is >> std::boolalpha >> b;
-    return b;
+    if (str == "1") {
+        return true;
+    }
+    else if (str == "0") {
+        return false;
+    }
+    else {
+        const auto strlo = strtolower(strtrim(str));
+        if (strlo == "true") {
+            return true;
+        }
+        else if (strlo == "false") {
+            return false;
+        }
+        else {
+            throw std::runtime_error(
+                "to_bool: input boolean string \"" + str + "\" is invalid.");
+        }
+    }
 }
 
 

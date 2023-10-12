@@ -143,8 +143,8 @@ class Polynomial
     //! @param[in] N: the new polynomial order
     static std::vector<T> compute_coefficients(const Polynomial<T>& p, const size_t N);
 
-    inline static size_t N_smooth = 4;  //! Polynomial order used to construct and intermediate 
-                                        //! piecewise polynomial in the smooth polynomial version
+    size_t _N_smooth = 4;  //! Polynomial order used to construct and intermediate 
+                           //! piecewise polynomial in the smooth polynomial version
 
     size_t _n_blocks;       //! The number of blocks
     std::vector<size_t> _n; //! The polynomial order of each block
@@ -251,7 +251,7 @@ inline Polynomial<T>::Polynomial()
 
 template<typename T>
 inline Polynomial<T>::Polynomial(const std::vector<scalar>& x0, const std::vector<T>& y0, const size_t N, bool smooth)
-: _n_blocks(smooth ? 1 : (x0.size()-1)/(N) + ( ((x0.size()-1 % (N))!=0) ? 1.0 : 0.0 )),
+: _n_blocks(smooth ? 1 : (x0.size()-1)/(N) + ( ((x0.size()-1 % (N))!=0) ? 1 : 0 )),
   _n(_n_blocks,N),
   _a(x0.front()),
   _b(x0.back()),
@@ -318,7 +318,7 @@ inline Polynomial<T>::Polynomial(const std::vector<scalar>& x0, const std::vecto
 
         // Smooth version: construct an auxiliar piecewise polynomial of order N_smooth
         // and interpolate it to LGL points afterwards
-        Polynomial p(x0, y0, N_smooth, false);
+        Polynomial p(x0, y0, _N_smooth, false);
 
         _coeffs.front() = compute_coefficients(p, N);
     }

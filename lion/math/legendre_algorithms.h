@@ -280,7 +280,7 @@ inline std::pair<std::vector<scalar>,std::vector<scalar>> gauss_legendre_lobatto
         throw lion_exception("Order must be N>0 for GL points");
 
     else if ( N == 1 ) 
-        return std::pair(std::vector<scalar>{-1.0,1.0}, std::vector<scalar>{1.0,1.0});
+        return { std::vector<scalar>{-1.0, 1.0}, std::vector<scalar>{1.0, 1.0} };
 
     else
     {
@@ -292,7 +292,7 @@ inline std::pair<std::vector<scalar>,std::vector<scalar>> gauss_legendre_lobatto
         x[N] = 1.0;
         w[N] = w[0];
 
-        const size_t n_div_2 = (N+1.0)/2.0;
+        const size_t n_div_2 = (N + 1u) / 2u;
 
         for (size_t j = 1; j < n_div_2; ++j)
         {

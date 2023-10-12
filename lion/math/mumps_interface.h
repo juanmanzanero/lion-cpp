@@ -29,7 +29,7 @@ inline std::vector<std::vector<double>> mumps_solve_linear_system(size_type n_cp
   std::transform(cols_cpp.cbegin(), cols_cpp.cend(), jcn.begin(), [](const auto& i) -> auto { return static_cast<MUMPS_INT>(i+1); });
   auto x = rhs_cpp;
 
-  int myid = 0, ierr;
+  int myid = 0;
 
   int error = 0;
 
