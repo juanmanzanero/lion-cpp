@@ -35,4 +35,7 @@ constexpr double RAD{ 180.0 / pi };
 constexpr double psi2Pa{ 6894.757 };
 constexpr double Pa2psi{ 1.450377438972831e-04 };
 
+constexpr double radps2Hz{ 0.5 / pi };
+constexpr double Hz2radps{ 2. * pi };
+
 #endif
