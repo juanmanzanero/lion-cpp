@@ -54,6 +54,20 @@ class Xml_element
     //! @param[in] simply pass bool() to overload this function
     bool get_value(bool&&) { return to_bool(get_value()); }
 
+    //! Get value as an std::array<double, N>
+    //! @param[in] simply pass and std::array<double, N>{} to overload this function
+    template<std::size_t N>
+    std::array<double, N> get_value(std::array<double, N>&&)
+    {
+        const auto vec = get_value(std::vector<double>{});
+        if (vec.size() != N) {
+            throw std::runtime_error("Xml_element::get_value(std::array<double, N>): incorrect size.");
+        }
+        std::array<double, N> arr{};
+        std::copy_n(vec.cbegin(), N, arr.begin());
+        return arr;
+    }
+
     //! Set the value from string
     //! @param[in] val: new string value
     Xml_element& set_value(const std::string& val) { _e->SetText(val.c_str()); return *this;}
@@ -78,6 +92,28 @@ class Xml_element
 
     //! See if a child exists
     bool has_child(const std::string& name) const;
+
+    //! Try to get the value of a child, or return a default one
+    template<typename ValueType>
+    ValueType try_get_child_value(const std::string &childname, ValueType default_value,
+                                  bool warn_if_returning_default_value = true) const
+    {
+        if (has_child(childname)) {
+            return get_child(childname).get_value(ValueType{});
+        }
+        else {
+            if (warn_if_returning_default_value) {
+                std::cerr << "Xml_element::try_get_child_value: warning, xml element \""
+                    << get_name()
+                    << "\" does not contain child \""
+                    << childname << "\", returning a default value of \""
+                    << default_value
+                    << "\"."
+                    << std::endl;
+            }
+            return default_value;
+        }
+    }
 
     //! See if parent exists
     bool has_parent() const { return (_e->Parent()->ToElement() ? true : false); }
