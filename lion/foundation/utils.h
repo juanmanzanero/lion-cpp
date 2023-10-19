@@ -119,6 +119,9 @@ constexpr T smooth_neg(const T &x, S eps2);
 template<bool ActuallySmooth = true, bool UseSinAtanFormula = true, typename T, typename S>
 constexpr T smooth_sign(const T &x, S eps);
 
+template<bool ActuallySmooth = true, bool UseSinAtanFormula = true, typename T, typename S>
+constexpr T smooth_sign_derivative(const T &x, S eps);
+
 template<bool ActuallySmooth = true, typename T, typename S>
 constexpr T smooth_abs(const T &x, S eps2);
 
