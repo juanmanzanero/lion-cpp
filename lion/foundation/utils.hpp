@@ -236,10 +236,8 @@ constexpr T smooth_sign(const T &x, S eps)
 
     if constexpr (ActuallySmooth) {
         if constexpr (UseSinAtanFormula) {
-            using std::sin;
-            using std::atan;
 
-            return sin(atan(x / eps));
+            return x / smooth_abs(x, eps * eps);
         }
         else {
             using std::tanh;
@@ -253,6 +251,38 @@ constexpr T smooth_sign(const T &x, S eps)
         return sign(x);
     }
 }
+
+
+template<bool ActuallySmooth, bool UseSinAtanFormula, typename T, typename S>
+constexpr T smooth_sign_derivative(const T &x, S eps)
+{
+    //
+    // Returns the sign derivative of input "x" (where sign(0) = 0),
+    // smoothed out near 0 with parameter "eps" (unless
+    // template parameter "ActuallySmooth" is false, in that
+    // case the function is the strict sign of "x").
+    //
+
+    if constexpr (ActuallySmooth) {
+        if constexpr (UseSinAtanFormula) {
+            using std::sqrt;
+
+            return eps * eps / ((eps * eps + x * x) * sqrt(eps * eps + x * x));
+        }
+        else {
+            using std::tanh;
+
+            const auto tanh_x_div_eps = tanh(x / eps);
+            return -(tanh_x_div_eps * tanh_x_div_eps - 1.0) / eps;
+        }
+    }
+    else {
+        (void)eps;
+
+        return (x >= 0.0 ? 1.0 : -1.0);
+    }
+}
+
 
 
 template<bool ActuallySmooth, typename T, typename S>
