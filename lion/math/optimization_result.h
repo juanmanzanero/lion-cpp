@@ -148,12 +148,12 @@ namespace lioncpp {
         }
 
         // Check that all constraints were considered
-        if (i_lower_inequality != num_lower_constraint_bound)
+        if (i_lower_inequality != static_cast<std::size_t>(num_lower_constraint_bound))
         {
             throw lion_exception("[ERROR] ipopt_cppad_handler::finalize_solution() -> inconsistent number of inequalities with lower bounds");
         }
 
-        if (i_upper_inequality != num_upper_constraint_bound)
+        if (i_upper_inequality != static_cast<std::size_t>(num_upper_constraint_bound))
         {
             throw lion_exception("[ERROR] ipopt_cppad_handler::finalize_solution() -> inconsistent number of inequalities with upper bounds");
         }

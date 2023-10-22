@@ -489,7 +489,7 @@ inline typename combine_types<U,T>::type Polynomial<T>::operator()(const U& x) c
     using return_type = typename combine_types<U,T>::type;
 
     if ( _n_blocks == 0 )
-        return {};
+        return return_type{};
 
     // Check bounds
     if ( (x < _a-100*eps) || (x > _b+100.0*eps) )

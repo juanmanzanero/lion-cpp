@@ -78,6 +78,11 @@ class Xml_element
     //! Add children
     Xml_element add_child(const std::string& name); 
 
+    // ! Set children & their values from an std::(unordered)map<std::string, number or std::vector>
+    //! @param[in] m: the map holding numbers or std::vectors, whose keys are std::strings
+    template<typename MapType>
+    void add_children_and_values_from_map(const MapType &m);
+
     //! Add comment
     void add_comment(const std::string& text) { _e->InsertNewComment(text.c_str()); }
 
@@ -204,6 +209,7 @@ inline Xml_element::Xml_element(tinyxml2::XMLElement* e) : _e(e)
     if ( e == nullptr )
         throw lion_exception("Attempted to construct Xml_element from nullptr"); 
 } 
+
 
 inline std::vector<Xml_element> Xml_element::get_children() const
 {
@@ -344,6 +350,42 @@ inline Xml_element Xml_element::add_child(const std::string& name)
         }
 
         return {_e->InsertNewChildElement(name.c_str())};
+    }
+}
+
+
+template<typename MapType>
+void Xml_element::add_children_and_values_from_map(const MapType &m)
+{
+    //
+    // Saves an std::(unordered_)map<std::string, mapped_type> into the Xml_element,
+    // in which "mapped_type" can be either "std::vector<number>" or just "number".
+    //
+
+    using key_type = typename MapType::key_type;
+    using mapped_type = typename MapType::mapped_type;
+
+    constexpr auto map_key_is_string = std::is_same_v<key_type, std::string>;
+    constexpr auto map_of_vectors = is_specialization_v<mapped_type, std::vector>;
+    constexpr auto map_of_scalars = std::is_scalar_v<mapped_type>;
+
+    static_assert(map_key_is_string && (map_of_vectors || map_of_scalars),
+                  "Xml_element::add_children_and_values_from_map:: unsupported map type.");
+
+    for (const auto &mi : m) {
+        std::ostringstream ss;
+        ss << std::setprecision(17);
+
+        if constexpr (map_of_vectors) {
+            ss << mi.second.front();
+            for (auto mis = std::next(mi.second.cbegin()); mis != mi.second.cend(); ++mis) {
+                ss << ", " << *mis;
+            }
+        }
+        else {
+            ss << mi.second;
+        }
+        add_child(mi.first).set_value(ss.str());
     }
 }
 

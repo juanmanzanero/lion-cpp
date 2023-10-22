@@ -192,7 +192,7 @@ inline void plusolve(T *B, const T *LU_A, const int *ipiv_A, int num_rows_A_rows
     }
 
     for (std::size_t iy = 0; iy < static_cast<std::size_t>(n) - 1u; ++iy) {
-        if (ipiv_A[iy] != iy + 1) {
+        if (static_cast<std::size_t>(ipiv_A[iy]) != iy + 1u) {
             const auto kAcol{ ipiv_A[iy] - 1 };
             for (auto jA = 0; jA < num_cols_B; ++jA) {
                 const auto smax{ B[iy + n * jA] };

@@ -333,7 +333,6 @@ inline fsolve_trust_region_dodleg_result<Dvector>
 
                 // calculate quadratic objective at Cauchy point
                 normsqr_JACvec = scalar_type{ 0 };
-                auto dot_gradscal_dCauchy = scalar_type{ 0 };
                 for (auto i = 0u; i < n; ++i) {
                     auto row_JACvec = scalar_type{ 0 };
                     for (auto j = 0u; j < n; ++j) {

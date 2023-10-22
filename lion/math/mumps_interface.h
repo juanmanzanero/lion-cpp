@@ -16,10 +16,12 @@ inline std::vector<std::vector<double>> mumps_solve_linear_system(size_type n_cp
   assert(lhs_cpp.size()  == nnz_cpp);
   size_t n_rhs = rhs_cpp.size();
   assert(n_rhs > 0);
+#ifndef NDEBUG
   for ( const auto& rhs_i : rhs_cpp )
   {
     assert(rhs_i.size() == n_cpp);
   }
+#endif
 
   DMUMPS_STRUC_C id;
   MUMPS_INT n = static_cast<MUMPS_INT>(n_cpp);
