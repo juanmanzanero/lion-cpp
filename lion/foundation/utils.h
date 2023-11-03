@@ -176,4 +176,7 @@ template<typename ContainerOfGridVectorsType,
          typename ScalarType = typename ContainerOfGridVectorsType::value_type::value_type>
 std::vector<ScalarType> grid_vectors2points_rowmaj(const ContainerOfGridVectorsType &grid_vectors);
 
+template<typename Container, typename ValueType = typename Container::value_type>
+constexpr ValueType median(Container cont);
+
 #endif

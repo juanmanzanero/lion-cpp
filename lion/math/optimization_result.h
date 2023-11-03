@@ -12,7 +12,7 @@ namespace lioncpp {
     struct Optimization_result
     {
         //! possible values for the result status
-        enum status_type {
+        enum class status_type {
             not_defined,
             success,
             maxiter_exceeded,
@@ -46,17 +46,17 @@ namespace lioncpp {
             const double_vector_type& constraint_lower_bounds,
             const double_vector_type& constraint_upper_bounds)->Slack_and_bound_multipliers;
 
-        status_type status = not_defined; //! solution status
-        Ipopt::Number iter_count;         //! The number of iterations
-        double_vector_type x;             //! the approximation solution
-        double_vector_type zl;            //! Lagrange multipliers corresponding to lower bounds on x
-        double_vector_type zu;            //! Lagrange multipliers corresponding to upper bounds on x
-        double_vector_type g;             //! value of g(x)
-        double_vector_type lambda;        //! Lagrange multipliers correspondiing constraints on g(x)
-        double obj_value;                 //! value of f(x)
-        double_vector_type s;             //! slack variables
-        double_vector_type vl;            //! Lagrange multipliers corresponding to lower bounds on x
-        double_vector_type vu;            //! Lagrange multipliers corresponding to upper bounds on x
+        status_type status = status_type::not_defined; //! solution status
+        Ipopt::Number iter_count;                      //! The number of iterations
+        double_vector_type x;                          //! the approximation solution
+        double_vector_type zl;                         //! Lagrange multipliers corresponding to lower bounds on x
+        double_vector_type zu;                         //! Lagrange multipliers corresponding to upper bounds on x
+        double_vector_type g;                          //! value of g(x)
+        double_vector_type lambda;                     //! Lagrange multipliers correspondiing constraints on g(x)
+        double obj_value;                              //! value of f(x)
+        double_vector_type s;                          //! slack variables
+        double_vector_type vl;                         //! Lagrange multipliers corresponding to lower bounds on x
+        double_vector_type vu;                         //! Lagrange multipliers corresponding to upper bounds on x
     };
 
     template<typename double_vector_type>

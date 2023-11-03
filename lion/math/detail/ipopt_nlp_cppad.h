@@ -1101,62 +1101,62 @@ public:
         switch(status)
         {   // convert status from Ipopt enum to Optimization_result<DVector> enum
             case Ipopt::SUCCESS:
-            solution_.status = Optimization_result<DVector>::success;
+            solution_.status = Optimization_result<DVector>::status_type::success;
             break;
 
             case Ipopt::MAXITER_EXCEEDED:
             solution_.status =
-                Optimization_result<DVector>::maxiter_exceeded;
+                Optimization_result<DVector>::status_type::maxiter_exceeded;
             break;
 
             case Ipopt::STOP_AT_TINY_STEP:
             solution_.status =
-                Optimization_result<DVector>::stop_at_tiny_step;
+                Optimization_result<DVector>::status_type::stop_at_tiny_step;
             break;
 
             case Ipopt::STOP_AT_ACCEPTABLE_POINT:
             solution_.status =
-                Optimization_result<DVector>::stop_at_acceptable_point;
+                Optimization_result<DVector>::status_type::stop_at_acceptable_point;
             break;
 
             case Ipopt::LOCAL_INFEASIBILITY:
             solution_.status =
-                Optimization_result<DVector>::local_infeasibility;
+                Optimization_result<DVector>::status_type::local_infeasibility;
             break;
 
             case Ipopt::USER_REQUESTED_STOP:
             solution_.status =
-                Optimization_result<DVector>::user_requested_stop;
+                Optimization_result<DVector>::status_type::user_requested_stop;
             break;
 
             case Ipopt::DIVERGING_ITERATES:
             solution_.status =
-                Optimization_result<DVector>::diverging_iterates;
+                Optimization_result<DVector>::status_type::diverging_iterates;
             break;
 
             case Ipopt::RESTORATION_FAILURE:
             solution_.status =
-                Optimization_result<DVector>::restoration_failure;
+                Optimization_result<DVector>::status_type::restoration_failure;
             break;
 
             case Ipopt::ERROR_IN_STEP_COMPUTATION:
             solution_.status =
-                Optimization_result<DVector>::error_in_step_computation;
+                Optimization_result<DVector>::status_type::error_in_step_computation;
             break;
 
             case Ipopt::INVALID_NUMBER_DETECTED:
             solution_.status =
-                Optimization_result<DVector>::invalid_number_detected;
+                Optimization_result<DVector>::status_type::invalid_number_detected;
             break;
 
             case Ipopt::INTERNAL_ERROR:
             solution_.status =
-                Optimization_result<DVector>::internal_error;
+                Optimization_result<DVector>::status_type::internal_error;
             break;
 
             default:
             solution_.status =
-                Optimization_result<DVector>::unknown;
+                Optimization_result<DVector>::status_type::unknown;
         }
 
         solution_.x.resize(nx_);

@@ -807,4 +807,30 @@ std::vector<ScalarType> grid_vectors2points_rowmaj(const ContainerOfGridVectorsT
     return points_rowmaj;
 }
 
+
+template<typename Container, typename ValueType>
+constexpr ValueType median(Container cont)
+{
+    //
+    // Returns the median of the values stored in a container
+    // (NOTE: the container is copied in order to avoid
+    // altering its order).
+    //
+
+    const auto size = cont.size();
+    if (size == 0u) {
+      return std::numeric_limits<ValueType>::max();
+    }
+
+    const auto middle = std::next(cont.begin(), size >> 1u);
+    std::nth_element(cont.begin(), middle, cont.end());
+
+    if (size % 2u) {
+      return *middle;
+    }
+    else {
+      return (*middle + *std::max_element(cont.begin(), middle)) / ValueType{ 2 };
+    }
+}
+
 #endif

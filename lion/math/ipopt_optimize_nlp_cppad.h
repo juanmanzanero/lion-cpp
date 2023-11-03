@@ -54,7 +54,7 @@ namespace lioncpp{
         ok &= status == Ipopt::Solve_Succeeded;
         if (!ok)
         {
-            solution.status = Optimization_result<Dvector>::unknown;
+            solution.status = Optimization_result<Dvector>::status_type::unknown;
             return;
         }
 
@@ -126,7 +126,7 @@ namespace lioncpp{
         ok &= status == Ipopt::Solve_Succeeded;
         if (!ok)
         {
-            solution.status = Optimization_result<Dvector>::unknown;
+            solution.status = Optimization_result<Dvector>::status_type::unknown;
             return;
         }
 
