@@ -87,7 +87,7 @@ TEST(ipopt_optimize_nlp_cppad_test,optimize)
     //
     // Check some of the solution values
     //
-    EXPECT_TRUE(solution.status == Optimization_result<std::vector<double>>::success);
+    EXPECT_TRUE(solution.status == Optimization_result<std::vector<double>>::status_type::success);
 
     //
     double check_x[]  = { 1.000000, 4.743000, 3.82115, 1.379408 };
@@ -161,7 +161,7 @@ TEST(ipopt_optimize_nlp_cppad_test,optimize_restart)
     //
     // Check some of the solution values
     //
-    EXPECT_TRUE(solution.status == Optimization_result<std::vector<double>>::success);
+    EXPECT_TRUE(solution.status == Optimization_result<std::vector<double>>::status_type::success);
 
     //
     double check_x[]  = { 1.000000, 4.743000, 3.82115, 1.379408 };
