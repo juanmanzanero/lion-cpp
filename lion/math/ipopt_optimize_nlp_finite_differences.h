@@ -33,11 +33,17 @@ struct Ipopt_optimize_NLP_finite_differences
         bool strict_bounds = true;
 
         int max_iter = 3000;
-        scalar tol = 1.0e-8;
-        scalar constr_viol_tol = 1.0e-09;
+        scalar tol = 1e-8;
+        scalar constr_viol_tol = 1.e-09; // ipopt's default is 1e-4;
+        scalar compl_inf_tol = 1e-4;
+        scalar dual_inf_tol = 1.;
 
-        scalar acceptable_tol = 1.0e-20;
-        int acceptable_iter = 100;
+        int acceptable_iter = 100; // ipopt's default is 15;
+        scalar acceptable_tol = 1e-20; // ipopt's default is 1e-6;
+        scalar acceptable_constr_viol_tol = 1e-2;
+        scalar acceptable_compl_inf_tol = 1e-2;
+        scalar acceptable_dual_inf_tol = 1e10;
+        scalar acceptable_obj_change_tol = 1e20;
 
         scalar ipopt_findiff_perturbation = 1.0e-6;
         scalar exact_jac_findiff_perturbation = std::sqrt(2.0e-16);
@@ -180,11 +186,15 @@ struct Ipopt_optimize_NLP_finite_differences
         app->Options()->SetIntegerValue("max_iter", opts.max_iter);
         app->Options()->SetNumericValue("tol", opts.tol);
         app->Options()->SetNumericValue("constr_viol_tol", opts.constr_viol_tol);
+        app->Options()->SetNumericValue("compl_inf_tol", opts.compl_inf_tol);
+        app->Options()->SetNumericValue("dual_inf_tol", opts.dual_inf_tol);
 
-        app->Options()->SetNumericValue("acceptable_tol", opts.acceptable_tol);
-        app->Options()->SetNumericValue("acceptable_constr_viol_tol", opts.acceptable_tol);
-        app->Options()->SetNumericValue("acceptable_dual_inf_tol", opts.acceptable_tol);
         app->Options()->SetIntegerValue("acceptable_iter", opts.acceptable_iter);
+        app->Options()->SetNumericValue("acceptable_tol", opts.acceptable_tol);
+        app->Options()->SetNumericValue("acceptable_constr_viol_tol", opts.acceptable_constr_viol_tol);
+        app->Options()->SetNumericValue("acceptable_compl_inf_tol", opts.acceptable_compl_inf_tol);
+        app->Options()->SetNumericValue("acceptable_dual_inf_tol", opts.acceptable_dual_inf_tol);
+        app->Options()->SetNumericValue("acceptable_obj_change_tol", opts.acceptable_obj_change_tol);
 
         app->Options()->SetNumericValue("findiff_perturbation", opts.ipopt_findiff_perturbation);
 
