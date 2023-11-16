@@ -259,10 +259,10 @@ constexpr Vector3d<W> operator-(const Vector3d<U> &lhs, const Vector3d<V> &rhs)
         lhs.z() - rhs.z() };
 }
 
-template<typename T>
-constexpr Vector3d<T> operator*(const Vector3d<T> &lhs, const Vector3d<T> &rhs)
+template<typename U, typename V, typename W>
+constexpr Vector3d<W> operator*(const Vector3d<U> &lhs, const Vector3d<V> &rhs)
 {
-    return Vector3d<T>{ lhs.x() * rhs.x(),
+    return Vector3d<W>{ lhs.x() * rhs.x(),
         lhs.y() * rhs.y(),
         lhs.z() * rhs.z() };
 }
