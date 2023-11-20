@@ -1,7 +1,7 @@
 #ifndef __XML_DOCUMENT_H__
 #define __XML_DOCUMENT_H__
 
-#include "lion/thirdparty/include/tinyxml2.h"
+#include "tinyxml2.h"
 
 #include "Xml_element.h"
 
