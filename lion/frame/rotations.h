@@ -293,6 +293,42 @@ constexpr Array3Type angular_kinematic_relationships(T yawdot, T pitchdot, T rol
 }
 
 
+
+template<typename T,
+    typename Array3Type = std::array<T, 3u> >
+constexpr Array3Type angular_kinematic_relationships_derivative(const T& yawdotdot, const T& pitchdotdot, const T& rolldotdot, 
+    const T& yawdot, const T& pitchdot, const T& rolldot,
+    const T& yaw_rad, const T& pitch_rad, const T& roll_rad)
+{
+    //
+    // Returns an array holding the derivative of the angular velocity components
+    // "[p, q, r]" of a rotating frame (projected onto this same
+    // frame), from the time derivatives of its Euler angles in
+    // "ZYX" sequence "[yawdot, pitchdot, rolldot]" and the values
+    // of these angles "[yaw_rad, pitch_rad, roll_rad]" (given in
+    // radians). The resulting angular velocity components will
+    // share the units of the input Euler angle derivatives.
+    //
+
+    using std::cos;
+    using std::sin;
+
+    const auto spitch = sin(pitch_rad);
+    const auto cpitch = cos(pitch_rad);
+
+    const auto sroll = sin(roll_rad);
+    const auto croll = cos(roll_rad);
+
+    return Array3Type{
+        rolldotdot - yawdotdot * spitch - pitchdot * yawdot * cpitch,
+        pitchdotdot * croll - rolldot * (pitchdot * sroll - yawdot * cpitch * croll) + yawdotdot * cpitch * sroll - pitchdot * yawdot * spitch * sroll,
+        yawdotdot * cpitch * croll - pitchdotdot * sroll - rolldot * (pitchdot * croll + yawdot * cpitch * sroll) - pitchdot * yawdot * croll * spitch
+    };
+}
+
+
+
+
 template<typename T,
     typename Array3Type = std::array<T, 3u> >
 constexpr Array3Type inverse_angular_kinematic_relationships(T p, T q, T r,
