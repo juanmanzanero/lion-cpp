@@ -108,8 +108,8 @@ constexpr Vector3d<T> operator-(const Vector3d<T> &rhs);
 template<typename U, typename V, typename W = typename combine_types<U,V>::type>
 constexpr Vector3d<W> operator-(const Vector3d<U> &lhs, const Vector3d<V> &rhs);
 
-template<typename T>
-constexpr Vector3d<T> operator*(const Vector3d<T> &lhs, const Vector3d<T> &rhs);
+template<typename U, typename V, typename W = typename combine_types<U,V>::type>
+constexpr Vector3d<W> operator*(const Vector3d<U> &lhs, const Vector3d<V> &rhs);
 
 template<typename T>
 constexpr Vector3d<T> operator/(const Vector3d<T> &lhs, const Vector3d<T> &rhs);
