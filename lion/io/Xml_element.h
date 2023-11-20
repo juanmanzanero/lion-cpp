@@ -1,12 +1,13 @@
 #ifndef __XML_ELEMENT_H__
 #define __XML_ELEMENT_H__
 
-#include "lion/thirdparty/include/tinyxml2.h"
+#include "tinyxml2.h"
+
+#include "lion/thirdparty/include/logger.hpp"
 #include "lion/foundation/utils.hpp"
 #include "lion/math/vector3d.hpp"
 #include "lion/math/matrix3x3.h"
 #include "lion/math/matrix_extensions.h"
-#include "lion/thirdparty/include/logger.hpp"
 
 class Xml_element
 {

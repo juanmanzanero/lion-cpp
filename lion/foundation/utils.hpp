@@ -449,6 +449,25 @@ constexpr std::vector<T> linspace(T lo, T hi, std::size_t num_points)
 
 
 template<typename T>
+constexpr std::vector<T> iota(T lo, std::size_t num_points, T increment)
+{
+    //
+    // Returns a vector of size "num_points" whose first
+    // element is equal to "lo" and its rest of elements
+    // are sequentially increased by "increment".
+    //
+
+    std::vector<T> ret(num_points);
+    for (auto &&r : ret) {
+        r = lo;
+        lo += increment;
+    }
+
+    return ret;
+}
+
+
+template<typename T>
 inline T trapz(const std::vector<T>& x, const std::vector<T>& y)
 {
     assert(x.size() == y.size());

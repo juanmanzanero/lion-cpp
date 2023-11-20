@@ -145,6 +145,10 @@ template <typename T>
 constexpr std::vector<T> linspace(T lo, T hi, std::size_t num_points);
 
 template<typename T>
+constexpr std::vector<T> iota(T lo, std::size_t num_points, T increment = T{ 1 });
+
+
+template<typename T>
 inline T trapz(const std::vector<T>& x, const std::vector<T>& y);
 
 template<typename ArrayType,
