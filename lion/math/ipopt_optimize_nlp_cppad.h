@@ -22,7 +22,7 @@ namespace detail::ipopt_optimize_nlp_cppad {
 template<class FG_eval>
 struct ADvector_type
 {
-    using type = FG_eval::ADvector;
+    using type = typename FG_eval::ADvector;
 };
 
 template<typename T>
