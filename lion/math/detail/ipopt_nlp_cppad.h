@@ -134,19 +134,26 @@ private:
     */
     void cache_new_x(const Number* x)
     {   size_t i;
-        if( retape_ )
-        {   // make adfun_, as well as x0_ and fg0_ correspond to this x
-            ADVector a_x(nx_), a_fg(nf_ + ng_);
-            for(i = 0; i < nx_; i++)
-            {   x0_[i] = x[i];
-                a_x[i] = x[i];
+        if constexpr (!std::is_same_v<std::decay_t<FG_eval>, decltype(adfun_)>) {
+            if (retape_)
+            {   // make adfun_, as well as x0_ and fg0_ correspond to this x
+                ADVector a_x(nx_), a_fg(nf_ + ng_);
+                for(i = 0; i < nx_; i++)
+                {   x0_[i] = x[i];
+                    a_x[i] = x[i];
+                }
+                CppAD::Independent(a_x);
+                fg_eval_(a_fg, a_x);
+                adfun_.Dependent(a_x, a_fg);
             }
-            CppAD::Independent(a_x);
-            fg_eval_(a_fg, a_x);
-            adfun_.Dependent(a_x, a_fg);
+            else
+            {   // make x0_ and fg0_ correspond to this x
+                for (i = 0; i < nx_; i++)
+                    x0_[i] = x[i];
+            }
         }
-        else
-        {   // make x0_ and fg0_ correspond to this x
+        else {
+            // make x0_ and fg0_ correspond to this x
             for(i = 0; i < nx_; i++)
                 x0_[i] = x[i];
         }
@@ -228,8 +235,8 @@ public:
         for(i = 0; i < nfg; i++)
             fg0_[i] = std::numeric_limits<double>::quiet_NaN();
 
-//      if( ! retape_ )
-        {   // make adfun_ correspond to x -> [ f(x), g(x) ]
+        if constexpr (!std::is_same_v<std::decay_t<FG_eval>, decltype(adfun_)>) {
+            // make adfun_ correspond to x -> [ f(x), g(x) ]
             ADVector a_x(nx_), a_fg(nfg);
             for(i = 0; i < nx_; i++)
                 a_x[i] = xi_[i];
@@ -241,6 +248,14 @@ public:
                 adfun_.optimize();
             }
         }
+        else {
+            if (retape_) {
+                throw std::runtime_error("Ipopt_NLP_CppAD::Ipopt_NLP_CppAD:"
+                    " \"retape\" option cannot be true when the input \"fg\" is already an ADFun.");
+            }
+            adfun_ = fg_eval_;
+        }
+
         if( sparse_forward_ | sparse_reverse_ )
         {   //CPPAD_ASSERT_UNKNOWN( ! retape );
             size_t m = nf_ + ng_;

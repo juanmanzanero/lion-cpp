@@ -28,7 +28,7 @@ struct fsolve_trust_region_dodleg_result
     // results attempts to mimick that of "CppAD::ipopt::solve()".
     //
 
-    enum status_type
+    enum class status_type
     {
         not_defined = -100,             // initial status, before calling the function
 
@@ -44,7 +44,7 @@ struct fsolve_trust_region_dodleg_result
     };
 
     // possible values for solution status
-    status_type status{ not_defined };
+    status_type status{ status_type::not_defined };
 
     // the approximation solution
     Dvector x;
