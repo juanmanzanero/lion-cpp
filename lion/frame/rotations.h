@@ -244,7 +244,7 @@ constexpr Matrix3x3Type sic2rotmat(T steer_rad, T inclination_rad, T castor_rad)
     // Converts the input Euler angles (in radians and in "steer-inclination-castor"
     // "ZXY" sequence) to a rotation matrix. This rotation matrix
     // transforms from the rotated frame onto the original one, i.e.,
-    // "x_original = scs2rotmat(steer_rad, inclination_rad, castor_rad) * x_rotated".
+    // "x_original = sic2rotmat(steer_rad, inclination_rad, castor_rad) * x_rotated".
     //
 
     using std::cos;
