@@ -8,6 +8,7 @@
 #include "coin-or/IpIpoptApplication.hpp"
 #include "cppad/cppad.hpp"
 
+#include "lion/foundation/types.h"
 #include "lion/foundation/lion_exception.h"
 #include "lion/math/matrix_extensions.h"
 #include "lion/math/optimization_result.h"
@@ -60,7 +61,7 @@ struct ADvector_type<CppAD::ADFun<Base> >
 };
 
 template<class FG_eval>
-using ADvector_type = typename ADvector_type<FG_eval>::type;
+using ADvector_type_t = typename ADvector_type<FG_eval>::type;
 
 } // end namespace detail::ipopt_optimize_nlp_cppad
 
