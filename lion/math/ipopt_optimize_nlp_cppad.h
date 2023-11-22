@@ -1,50 +1,94 @@
-#ifndef IPOPT_OPTIMIZE_NLP_CPPAD_H
-#define IPOPT_OPTIMIZE_NLP_CPPAD_H
+#ifndef LION_MATH_IPOPT_OPTIMIZE_NLP_CPPAD_H
+#define LION_MATH_IPOPT_OPTIMIZE_NLP_CPPAD_H
+#pragma once
 
 #include <string>
-#include <coin-or/IpSmartPtr.hpp>
-#include <coin-or/IpIpoptApplication.hpp>
-#include <cppad/cppad.hpp>
+
+#include "coin-or/IpSmartPtr.hpp"
+#include "coin-or/IpIpoptApplication.hpp"
+#include "cppad/cppad.hpp"
 
 #include "lion/foundation/lion_exception.h"
+#include "lion/math/matrix_extensions.h"
+#include "lion/math/optimization_result.h"
+#include "lion/math/ipopt_nlp_complete_output.h"
+#include "lion/math/detail/ipopt_nlp_cppad.h"
 
-#include "matrix_extensions.h"
-#include "optimization_result.h"
-#include "ipopt_nlp_complete_output.h"
 
-#include "detail/ipopt_nlp_cppad.h"
-
+//
+// Defines functions to optimize, via Ipopt + CppAD, NLP's represented by
+// either:
+//
+//  a) Function objects that must define a member operator
+//    "void operator()(ADvector &fg, const ADvector &x)", in which "x"
+//    represents the optimization variables and "fg" is the resulting
+//    concatenation of "[scalar_cost; vector_of_constraints]".
+//
+//  b) Instances of class "CppAD::ADFun<Base>", which have been
+//    taped adequately so that their "Forward(0, x)" call returns
+//    the said "[scalar_cost; vector_of_constraints]".
+//
 
 namespace lioncpp {
 
 namespace detail::ipopt_optimize_nlp_cppad {
 
-template<class FG_eval>
+//
+// A type_trait to deduce the "ADvector" type that "ipopt_optimize_nlp_cppad"
+// will use to solve the NLP represented by the "FG_eval" functor. If "FG_eval"
+// declares a member "ADvector" typedef, then it will use that one. When the
+// "FG_eval" is a "CppAD::ADFun<Base>", it will use "std::vector<CppAD::AD<Base> >".
+// Else, it will use "std::vector<CppAD::AD<scalar> >".
+//
+
+template<class FG_eval, typename = void>
 struct ADvector_type
+{
+    using type = std::vector<CppAD::AD<scalar> >;
+};
+
+template<class FG_eval>
+struct ADvector_type<FG_eval, std::void_t<typename FG_eval::ADvector> >
 {
     using type = typename FG_eval::ADvector;
 };
 
-template<typename T>
-struct ADvector_type<CppAD::ADFun<T> >
+template<typename Base>
+struct ADvector_type<CppAD::ADFun<Base> >
 {
-    using type = std::vector<CppAD::AD<T> >;
+    using type = std::vector<CppAD::AD<Base> >;
 };
 
 template<class FG_eval>
-using ADvector_type_t = typename ADvector_type<FG_eval>::type;
+using ADvector_type = typename ADvector_type<FG_eval>::type;
 
 } // end namespace detail::ipopt_optimize_nlp_cppad
 
 
-//! Helper function to set several options from a string into an Ipopt Application
-void set_ipopt_app_options_from_string(Ipopt::SmartPtr<Ipopt::IpoptApplication>& app, const std::string& options, bool& retape, bool& sparse_forward, bool& sparse_reverse);
+// fwd. decl. of a helper function to set several options from a string into an Ipopt Application
+void set_ipopt_app_options_from_string(Ipopt::SmartPtr<Ipopt::IpoptApplication> &app,
+                                       const std::string &options,
+                                       bool &retape,
+                                       bool &sparse_forward,
+                                       bool &sparse_reverse);
 
-//! Optimize a NLP computed from the functor fg_eval
-template<typename ADvector = detail::ipopt_optimize_nlp_cppad::ADvector_type_t<FG_eval>, class Dvector, class FG_eval>
-void ipopt_optimize_nlp_cppad(const std::string& options, const Dvector& xi, const Dvector& xl, const Dvector& xu, const Dvector& gl, const Dvector& gu,
-    FG_eval& fg_eval, Optimization_result<Dvector>& solution)
+
+template<typename Dvector,
+         class FG_eval,
+         typename ADvector = detail::ipopt_optimize_nlp_cppad::ADvector_type_t<FG_eval> >
+void ipopt_optimize_nlp_cppad(const std::string &options,
+                              const Dvector &xi,
+                              const Dvector &xl,
+                              const Dvector &xu,
+                              const Dvector &gl,
+                              const Dvector &gu,
+                              FG_eval &fg_eval,
+                              Optimization_result<Dvector> &solution)
 {
+    //
+    // Optimizes an NLP represented by functor "fg_eval".
+    //
+
     bool ok = true;
 
     CPPAD_ASSERT_KNOWN(
@@ -92,8 +136,7 @@ void ipopt_optimize_nlp_cppad(const std::string& options, const Dvector& xi, con
             retape,
             sparse_forward,
             sparse_reverse,
-            solution
-            );
+            solution);
 
     // Run the IpoptApplication
     app->OptimizeTNLP(cppad_nlp);
@@ -104,11 +147,25 @@ void ipopt_optimize_nlp_cppad(const std::string& options, const Dvector& xi, con
 }
 
 
-template <class Dvector, class FG_eval>
-void ipopt_optimize_nlp_cppad(const std::string& options, const Dvector& xi, const Dvector& xl, const Dvector& xu, const Dvector& gl, const Dvector& gu,
-    const Dvector& lambda_i, const Dvector& zl_i, const Dvector& zu_i, FG_eval& fg_eval, Optimization_result<Dvector>& solution)
+template<typename Dvector,
+         class FG_eval,
+         typename ADvector = detail::ipopt_optimize_nlp_cppad::ADvector_type_t<FG_eval> >
+void ipopt_optimize_nlp_cppad(const std::string &options,
+                              const Dvector &xi,
+                              const Dvector &xl,
+                              const Dvector &xu,
+                              const Dvector &gl,
+                              const Dvector &gu,
+                              const Dvector &lambda_i,
+                              const Dvector &zl_i,
+                              const Dvector &zu_i,
+                              FG_eval &fg_eval,
+                              Optimization_result<Dvector> &solution)
 {
-    typedef typename FG_eval::ADvector ADvector;
+    //
+    // Optimizes an NLP represented by functor "fg_eval",
+    // with warm-start.
+    //
 
     bool ok = true;
 
@@ -180,7 +237,11 @@ void ipopt_optimize_nlp_cppad(const std::string& options, const Dvector& xi, con
 }
 
 
-inline void set_ipopt_app_options_from_string(Ipopt::SmartPtr<Ipopt::IpoptApplication>& app, const std::string& options, bool& retape, bool& sparse_forward, bool& sparse_reverse)
+inline void set_ipopt_app_options_from_string(Ipopt::SmartPtr<Ipopt::IpoptApplication> &app,
+                                              const std::string &options,
+                                              bool &retape,
+                                              bool &sparse_forward,
+                                              bool &sparse_reverse)
 {
     // process the options argument
     size_t begin_1, end_1, begin_2, end_2, begin_3, end_3;
@@ -299,17 +360,22 @@ inline void set_ipopt_app_options_from_string(Ipopt::SmartPtr<Ipopt::IpoptApplic
 }
 
 
-template <class Dvector, class FG_eval>
-NLP_complete_output ipopt_compute_complete_nlp_cppad(
-    const size_t nx,
-    const size_t ng,
-    FG_eval& fg_eval,
-    const std::vector<double>& x,
-    const std::vector<double>& lambda)
+template<typename Dvector,
+         class FG_eval,
+         typename ADvector = detail::ipopt_optimize_nlp_cppad::ADvector_type_t<FG_eval> >
+NLP_complete_output ipopt_compute_complete_nlp_cppad(std::size_t nx,
+                                                     std::size_t ng,
+                                                     FG_eval &fg_eval,
+                                                     const std::vector<scalar> &x,
+                                                     const std::vector<scalar> &lambda)
 {
+    //
+    // Completely characterizes the NLP represented by functor "fg_eval",
+    // at point "x" with Lagrange multipliers "lambda"
+    //
+
     bool ok = true;
 
-    typedef typename FG_eval::ADvector ADvector;
     Optimization_result<Dvector> solution;
 
     bool retape = false, sparse_forward = true, sparse_reverse = false;
@@ -330,8 +396,7 @@ NLP_complete_output ipopt_compute_complete_nlp_cppad(
         retape,
         sparse_forward,
         sparse_reverse,
-        solution
-        );
+        solution);
 
     NLP_complete_output output;
 
