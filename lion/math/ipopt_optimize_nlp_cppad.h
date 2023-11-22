@@ -32,7 +32,7 @@ struct ADvector_type<CppAD::ADFun<T> >
 };
 
 template<class FG_eval>
-using ADvector_type_t = ADvector_type<FG_eval>::type;
+using ADvector_type_t = typename ADvector_type<FG_eval>::type;
 
 } // end namespace detail::ipopt_optimize_nlp_cppad
 
@@ -41,7 +41,7 @@ using ADvector_type_t = ADvector_type<FG_eval>::type;
 void set_ipopt_app_options_from_string(Ipopt::SmartPtr<Ipopt::IpoptApplication>& app, const std::string& options, bool& retape, bool& sparse_forward, bool& sparse_reverse);
 
 //! Optimize a NLP computed from the functor fg_eval
-template <class Dvector, class FG_eval, typename ADvector = detail::ipopt_optimize_nlp_cppad::ADvector_type_t<FG_eval> >
+template<typename ADvector = detail::ipopt_optimize_nlp_cppad::ADvector_type_t<FG_eval>, class Dvector, class FG_eval>
 void ipopt_optimize_nlp_cppad(const std::string& options, const Dvector& xi, const Dvector& xl, const Dvector& xu, const Dvector& gl, const Dvector& gu,
     FG_eval& fg_eval, Optimization_result<Dvector>& solution)
 {
