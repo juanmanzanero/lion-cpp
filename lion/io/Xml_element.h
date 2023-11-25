@@ -121,6 +121,30 @@ class Xml_element
         }
     }
 
+
+    //! Try to get the value of an attribute, or return a default one
+    template<typename ValueType>
+    ValueType try_get_attribute(const std::string &attributename, ValueType default_value,
+                                  bool warn_if_returning_default_value = true) const
+    {
+        if (has_attribute(attributename)) {
+            return get_attribute(attributename, ValueType{});
+        }
+        else {
+            if (warn_if_returning_default_value) {
+                std::cerr << "Xml_element::try_get_attribute_value: warning, xml element \""
+                    << get_name()
+                    << "\" does not contain attribute \""
+                    << attributename << "\", returning a default value of \""
+                    << default_value
+                    << "\"."
+                    << std::endl;
+            }
+            return default_value;
+        }
+    }
+
+
     //! See if parent exists
     bool has_parent() const { return (_e->Parent()->ToElement() ? true : false); }
 
@@ -139,7 +163,7 @@ class Xml_element
 
     //! Get attribute by name
     //! @param[in] attribute: name of the attribute
-    std::string get_attribute(const std::string& attribute) const;
+    std::string get_attribute(const std::string& attribute, std::string&& = "") const;
 
     //! Get attribute as double
     //! @param[in] attribute: name of the attribute
@@ -438,7 +462,7 @@ inline bool Xml_element::has_child(const std::string& name) const
         return child.has_child(the_rest);
 }
 
-inline std::string Xml_element::get_attribute(const std::string& attribute) const 
+inline std::string Xml_element::get_attribute(const std::string& attribute, std::string&&) const 
 { 
     if ( has_attribute(attribute) )
         return _e->Attribute(attribute.c_str()); 
