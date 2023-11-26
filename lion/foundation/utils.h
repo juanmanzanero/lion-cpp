@@ -183,4 +183,7 @@ std::vector<ScalarType> grid_vectors2points_rowmaj(const ContainerOfGridVectorsT
 template<typename Container, typename ValueType = typename Container::value_type>
 constexpr ValueType median(Container cont);
 
+template<typename It, typename ValueType>
+constexpr It nearest_in_sorted_range(It first, It last, ValueType val);
+
 #endif

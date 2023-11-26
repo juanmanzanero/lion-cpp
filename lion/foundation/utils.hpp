@@ -852,4 +852,30 @@ constexpr ValueType median(Container cont)
     }
 }
 
+
+template<typename It, typename ValueType>
+constexpr It nearest_in_sorted_range(It first, It last, ValueType val)
+{
+    //
+    // Returns an iterator to the element in the SORTED
+    // range "[first, last)" that is closest to the input
+    // value "val", calculated with a binary search.
+    // Distance ties are rounded up. The result is undefined
+    // if the range is empty, and incoprrect if it is not
+    // sorted.
+    //
+
+    using std::abs;
+
+    const auto nearest = std::lower_bound(first, last, val);
+    if (nearest == last ||
+        (nearest != first && abs(*std::prev(nearest) - val) < abs(*nearest - val))) {
+
+        return std::prev(nearest);
+    }
+    else {
+        return nearest;
+    }
+}
+
 #endif
