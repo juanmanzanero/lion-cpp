@@ -52,7 +52,7 @@ template<typename T>
 constexpr Matrix3x3<T> rotation_matrix_y(const T phi)
 {
     return Matrix3x3<T>(  cos(phi), 0.0, sin(phi),
-		                 0.0, 1.0,           0.0,
+                         0.0, 1.0,           0.0,
                       -sin(phi), 0.0, cos(phi) ); 
 }
 
@@ -168,17 +168,17 @@ constexpr Array3Type rotmat2ea(const Matrix3x3Type &M)
     using std::asin;
 
     // gymbal lock tolerance
-    //constexpr auto gymbal_lock_tol_deg = T{ 0.001 };
+    //constexpr auto gymbal_lock_tol_deg = T{ 1e-3 };
     //constexpr auto gymbal_lock_zone = std::clamp(
     //    std::cos(gymbal_lock_tol_deg * DEG), T{ 0 }, T{ 1 });
     constexpr auto gymbal_lock_zone = T{ 0.99999999984769128 };
 
-    const auto sinp = -M[2];
+    const auto spitch = -M[2];
     T pitch_rad;
-    if (abs(sinp) <= gymbal_lock_zone) {
-        pitch_rad = asin(sinp);
+    if (abs(spitch) <= gymbal_lock_zone) {
+        pitch_rad = asin(spitch);
     }
-    else if (sinp >= T{ 0 }) {
+    else if (spitch >= T{ 0 }) {
         pitch_rad = T{ 0.5 } * pi_T<T>;
     }
     else {
@@ -238,13 +238,13 @@ constexpr Matrix3x3Type angax2rotmat(T angle_rad, const Vector3dType &axis)
 
 template<typename T,
     typename Matrix3x3Type = Matrix3x3<T> >
-constexpr Matrix3x3Type sic2rotmat(T steer_rad, T inclination_rad, T castor_rad)
+constexpr Matrix3x3Type sis2rotmat(T steer_rad, T inclination_rad, T spin_rad)
 {
     //
-    // Converts the input Euler angles (in radians and in "steer-inclination-castor"
+    // Converts the input Euler angles (in radians and in "steer-inclination-spin"
     // "ZXY" sequence) to a rotation matrix. This rotation matrix
     // transforms from the rotated frame onto the original one, i.e.,
-    // "x_original = sic2rotmat(steer_rad, inclination_rad, castor_rad) * x_rotated".
+    // "x_original = sis2rotmat(steer_rad, inclination_rad, spin_rad) * x_rotated".
     //
 
     using std::cos;
@@ -254,13 +254,58 @@ constexpr Matrix3x3Type sic2rotmat(T steer_rad, T inclination_rad, T castor_rad)
     const auto ssteer = sin(steer_rad);
     const auto cinclination = cos(inclination_rad);
     const auto sinclination = sin(inclination_rad);
-    const auto ccastor = cos(castor_rad);
-    const auto scastor = sin(castor_rad);
+    const auto cspin = cos(spin_rad);
+    const auto sspin = sin(spin_rad);
 
     return Matrix3x3Type{
-        ccastor * csteer - sinclination * scastor * ssteer, -cinclination * ssteer, csteer * scastor + ccastor * sinclination * ssteer,
-        ccastor * ssteer + csteer * sinclination * scastor, cinclination * csteer, scastor * ssteer - ccastor * csteer * sinclination,
-        -cinclination * scastor, sinclination, cinclination * ccastor };
+        cspin * csteer - sinclination * sspin * ssteer, -cinclination * ssteer, csteer * sspin + cspin * sinclination * ssteer,
+        cspin * ssteer + csteer * sinclination * sspin, cinclination * csteer, sspin * ssteer - cspin * csteer * sinclination,
+        -cinclination * sspin, sinclination, cinclination * cspin };
+}
+
+
+template<typename Matrix3x3Type,
+    typename Array3Type = std::array<typename Matrix3x3Type::value_type, 3u> >
+constexpr Array3Type rotmat2sis(const Matrix3x3Type &M)
+{
+    //
+    // Returns an std::array holding the Euler angles in "ZXY" sequence
+    // "[steer, inclination, spin]", in rad, from the input rotation matrix
+    // (specified as an array in column-major order). This input rotation
+    // matrix should transform from the rotated frame onto the original
+    // one, i.e., "x_original = M * x_rotated".
+    //
+
+    using T = typename Array3Type::value_type;
+    using std::abs;
+    using std::atan2;
+    using std::asin;
+
+    // gymbal lock tolerance
+    //constexpr auto gymbal_lock_tol_deg = T{ 1e-3 };
+    //constexpr auto gymbal_lock_zone = std::clamp(
+    //    std::cos(gymbal_lock_tol_deg * DEG), T{ 0 }, T{ 1 });
+    constexpr auto gymbal_lock_zone = T{ 0.99999999984769128 };
+
+    const auto sinclination = M[5];
+    T inclination_rad;
+    if (abs(sinclination) <= gymbal_lock_zone) {
+        inclination_rad = asin(sinclination);
+    }
+    else if (sinclination >= T{ 0 }) {
+        inclination_rad = T{ 0.5 } * pi_T<T>;
+    }
+    else {
+        inclination_rad = -T{ 0.5 } * pi_T<T>;
+    }
+
+    const auto steer_rad = atan2(-M[3], M[4]);
+    const auto spin_rad = atan2(-M[2], M[8]);
+
+    return Array3Type{
+        wrap_to_pi(steer_rad),
+        wrap_to_pi(inclination_rad),
+        wrap_to_pi(spin_rad) };
 }
 
 
