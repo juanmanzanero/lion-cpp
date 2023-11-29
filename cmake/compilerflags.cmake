@@ -1,4 +1,4 @@
-add_compile_options(-Wfatal-errors -Werror -Wall)
+add_compile_options(-Wfatal-errors -Werror -Wall -DCPPAD_DEBUG_AND_RELEASE)
 
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
 	add_compile_options(-O0 -gdwarf-2)
