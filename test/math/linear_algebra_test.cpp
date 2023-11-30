@@ -115,7 +115,7 @@ TEST(linear_algebra_test, lusolve_test2)
     auto A_colmaj = reference_file.get_root_element().get_child(test_name + "/A").get_value(std::vector<double>{});
     auto b_colmaj = reference_file.get_root_element().get_child(test_name + "/b").get_value(std::vector<double>{});
 
-    const auto n = static_cast<int>(b_colmaj.size()) / 3u;
+    const auto n = static_cast<int>(b_colmaj.size()) / 3;
     EXPECT_EQ(n, 10);
     EXPECT_EQ(std::sqrt(A_colmaj.size()), n);
 
@@ -158,7 +158,7 @@ TEST(linear_algebra_test, lusolve_test3)
     auto A_colmaj = reference_file.get_root_element().get_child(test_name + "/A").get_value(std::vector<double>{});
     auto b_colmaj = reference_file.get_root_element().get_child(test_name + "/b").get_value(std::vector<double>{});
 
-    const auto n = static_cast<int>(b_colmaj.size()) / 7u;
+    const auto n = static_cast<int>(b_colmaj.size()) / 7;
     EXPECT_EQ(n, 20);
     EXPECT_EQ(std::sqrt(A_colmaj.size()), n);
 

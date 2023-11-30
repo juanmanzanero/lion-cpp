@@ -257,4 +257,12 @@ constexpr auto&& ternary_constexpr(T &&val_if_true, F &&val_if_false)
     }
 }
 
+
+//
+// Just "std::integral_constant" specialized for type std::size_t .
+//
+
+template<std::size_t Value>
+using size_t_constant = std::integral_constant<std::size_t, Value>;
+
 #endif
