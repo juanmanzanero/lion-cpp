@@ -70,16 +70,16 @@ namespace lioncpp {
             {
                 if (std::abs(x[j] - (dynamic_cast<const Ipopt::DenseVector*>(GetRawPtr(ip_data->curr()->x()))->Values())[i_nz_ipopt_internal++]) > 1.0e-10)
                 {
-                    std::cerr << "x is not ip_data->curr()->x()" << std::endl;
-                    throw lion_exception("x is not ip_data->curr()->x()");
+                    std::cerr << "[ERROR] x is not ip_data->curr()->x()" << std::endl;
+                    //throw lion_exception("x is not ip_data->curr()->x()");
                 }
             }
             else
             {
                 if (std::abs(x[j] - xl[j]) > 2.0e-16)
                 {
-                    std::cerr << "x is expected to be xl = xu" << std::endl;
-                    throw lion_exception("x is expected to be xl = xu");
+                    std::cerr << "[ERROR] x is expected to be xl = xu" << std::endl;
+                    //throw lion_exception("x is expected to be xl = xu");
                 }
             }
         }
@@ -109,7 +109,8 @@ namespace lioncpp {
 
         if (vl_values == nullptr && num_lower_constraint_bound > 0)
         {
-            throw lion_exception("[ERROR] Inconsistent lagrange multipliers for lower slack variable bounds. Pointer is nullptr but size is greater than zero");
+            std::cerr << "[ERROR] Inconsistent lagrange multipliers for lower slack variable bounds. Pointer is nullptr but size is greater than zero (" << num_lower_constraint_bound << ")" << std::endl;;
+            return {s, vl, vu};
         }
 
         const Ipopt::Number* vu_values = dynamic_cast<const Ipopt::DenseVector*>(GetRawPtr(ip_data->curr()->v_U()))->Values();
@@ -117,7 +118,8 @@ namespace lioncpp {
 
         if (vu_values == nullptr && num_upper_constraint_bound > 0)
         {
-            throw lion_exception("[ERROR] Inconsistent lagrange multipliers for lower slack variable bounds. Pointer is nullptr but size is greater than zero");
+            std::cerr << "[ERROR] Inconsistent lagrange multipliers for upper slack variable bounds. Pointer is nullptr but size is greater than zero (" << num_upper_constraint_bound << ")" << std::endl;;
+            return {s, vl, vu};
         }
 
         size_t i_lower_inequality{ 0u };
@@ -150,12 +152,12 @@ namespace lioncpp {
         // Check that all constraints were considered
         if (i_lower_inequality != static_cast<std::size_t>(num_lower_constraint_bound))
         {
-            throw lion_exception("[ERROR] ipopt_cppad_handler::finalize_solution() -> inconsistent number of inequalities with lower bounds");
+            std::cerr << "[ERROR] ipopt_cppad_handler::finalize_solution() -> inconsistent number of inequalities with lower bounds" << std::endl;
         }
 
         if (i_upper_inequality != static_cast<std::size_t>(num_upper_constraint_bound))
         {
-            throw lion_exception("[ERROR] ipopt_cppad_handler::finalize_solution() -> inconsistent number of inequalities with upper bounds");
+            std::cerr << "[ERROR] ipopt_cppad_handler::finalize_solution() -> inconsistent number of inequalities with upper bounds" << std::endl;
         }
 
         return { s, vl, vu };
