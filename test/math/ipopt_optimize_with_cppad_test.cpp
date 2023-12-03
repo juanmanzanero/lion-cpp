@@ -1,4 +1,4 @@
-#include "lion/thirdparty/include/cppad/ipopt/solve.hpp"
+#include "cppad/ipopt/solve.hpp"
 #include "lion/math/matrix_extensions.h"
 #include "gtest/gtest.h"
 

@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <algorithm>
 #include "coin-or/mumps/dmumps_c.h"
 #include "lion/foundation/lion_exception.h"
 #define USE_COMM_WORLD -987654

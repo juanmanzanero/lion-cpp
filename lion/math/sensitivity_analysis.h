@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "lion/foundation/types.h"
-#include "lion/thirdparty/include/cppad/cppad.hpp"
+#include "cppad/cppad.hpp"
 #include "lion/math/matrix_extensions.h"
 #include "lion/thirdparty/include/logger.hpp"
 #include "lion/foundation/lion_exception.h"
