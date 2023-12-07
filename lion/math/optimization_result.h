@@ -64,6 +64,7 @@ namespace lioncpp {
         check_solution_consistency(const Ipopt::IpoptData* ip_data, const double_vector_type& x, const double_vector_type& xl, const double_vector_type& xu)
     {
         size_t i_nz_ipopt_internal{ 0u };
+
         for (size_t j = 0; j < x.size(); ++j)
         {
             if (std::abs(xl[j] - xu[j]) > 2.0e-16)
@@ -71,6 +72,7 @@ namespace lioncpp {
                 if (std::abs(x[j] - (dynamic_cast<const Ipopt::DenseVector*>(GetRawPtr(ip_data->curr()->x()))->Values())[i_nz_ipopt_internal++]) > 1.0e-10)
                 {
                     std::cerr << "[ERROR] x is not ip_data->curr()->x()" << std::endl;
+                    return;
                     //throw lion_exception("x is not ip_data->curr()->x()");
                 }
             }
@@ -79,6 +81,7 @@ namespace lioncpp {
                 if (std::abs(x[j] - xl[j]) > 2.0e-16)
                 {
                     std::cerr << "[ERROR] x is expected to be xl = xu" << std::endl;
+                    return;
                     //throw lion_exception("x is expected to be xl = xu");
                 }
             }

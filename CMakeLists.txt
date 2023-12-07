@@ -38,6 +38,10 @@ include_directories(./)
 
 include(compilerflags)
 
+if (WITH_HSL)
+    add_compile_options(-DWITH_HSL)
+endif()
+
 if ( ${ENABLE_TEST} )
 	# Google tests
 	enable_testing()
@@ -58,6 +62,12 @@ target_include_directories(lion SYSTEM INTERFACE
 	"$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>"
 	"$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}/lion/thirdparty/include>"
 )
+
+
+if(WITH_HSL)
+    target_compile_definitions(lion INTERFACE WITH_HSL)
+endif()
+
 
 target_link_libraries(lion INTERFACE ipopt blaslapack tinyxml2 fortran_libraries cppad)
 
