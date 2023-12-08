@@ -517,7 +517,7 @@ inline Polynomial<T> Polynomial<T>::derivative() const
     {
         coeffs[n] = std::vector<T>(_n[n],T());
         for (size_t i = 0; i <= _n[n]; ++i)
-            for (int j = i-1 ; j >= 0; j -= 2)
+            for (std::ptrdiff_t j = static_cast<std::ptrdiff_t>(i) - 1 ; j >= 0; j -= 2)
                 coeffs[n][j] += _coeffs[n][i]*(2.0*(j+1.0)-1.0);
     
         for (size_t i = 0; i < _n[n]; ++i)

@@ -798,6 +798,11 @@ std::vector<ScalarType> grid_vectors2points_rowmaj(const ContainerOfGridVectorsT
     //               0, 4, 6,
     //               1, 4, 6 }".
     //
+    // Note that the "rows" of points are ordered in
+    // column-major order w.r.t. to the grid (i.e.,
+    // first dimension advances first, then the second,
+    // etc).
+    //
 
     const auto num_grid_vectors = grid_vectors.size();
 

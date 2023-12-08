@@ -10,4 +10,11 @@ using std::size_t;
 using std::max;
 using std::min;
 
+
+#ifdef _MSC_VER
+#define windows_local_constexpr_auto static constexpr auto
+#else
+#define windows_local_constexpr_auto constexpr auto
+#endif
+
 #endif
