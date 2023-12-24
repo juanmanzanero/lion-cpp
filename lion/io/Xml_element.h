@@ -399,15 +399,18 @@ void Xml_element::add_children_and_values_from_map(const MapType &m)
 
     for (const auto &mi : m) {
         std::ostringstream ss;
-        ss << std::setprecision(17);
 
         if constexpr (map_of_vectors) {
+            ss << std::setprecision(std::numeric_limits<typename mapped_type::value_type>::max_digits10);
+
             ss << mi.second.front();
             for (auto mis = std::next(mi.second.cbegin()); mis != mi.second.cend(); ++mis) {
                 ss << ", " << *mis;
             }
         }
         else {
+            ss << std::setprecision(std::numeric_limits<mapped_type>::max_digits10);
+
             ss << mi.second;
         }
         add_child(mi.first).set_value(ss.str());

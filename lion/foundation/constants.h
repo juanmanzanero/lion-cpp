@@ -9,6 +9,9 @@ template<typename T = double>
 constexpr T pi_T = T{ 3.1415926535897932385L };
 
 template<typename T = double>
+constexpr T pi_div_2_T = T{ 1.570796326794896558L };
+
+template<typename T = double>
 constexpr T eps_T = std::numeric_limits<T>::epsilon();
 
 template<typename T = double>
@@ -20,6 +23,7 @@ constexpr T nan_T = std::numeric_limits<T>::quiet_NaN();
 
 // handy names when using double, our usual case
 constexpr auto pi{ pi_T<double> };
+constexpr auto pi_div_2{ pi_div_2_T<double> };
 constexpr auto eps{ eps_T<double> };
 constexpr auto inf{ inf_T<double> };
 constexpr auto Inf{ inf };

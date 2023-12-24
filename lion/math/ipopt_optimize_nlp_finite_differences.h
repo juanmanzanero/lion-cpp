@@ -156,6 +156,7 @@ struct Ipopt_optimize_NLP_finite_differences
 
 
         // configure ipopt's options
+        app->Options()->SetStringValue("sb", "yes");
         app->Options()->SetStringValue("linear_solver", opts.linear_solver);
         if (opts.linear_solver == "ma97") {
             app->Options()->SetStringValue("ma97_order", "metis");
