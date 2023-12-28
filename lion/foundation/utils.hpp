@@ -804,6 +804,22 @@ std::vector<ScalarType> grid_vectors2points_rowmaj(const ContainerOfGridVectorsT
     // etc).
     //
 
+    // VS2017 doesn't have std::exclusive_scan...
+    const auto std__exclusive_scan = [](auto first, auto last, auto d_first, auto init, auto &&binary_op)
+    {
+#if defined(_MSC_VER) && _MSC_VER <= 1916
+        while (first != last) {
+            auto v = init;
+            init = binary_op(init, *first);
+            ++first;
+            *d_first++ = std::move(v);
+        }
+        return d_first;
+#else
+        return std::exclusive_scan(first, last, d_first, init, binary_op);
+#endif
+    };
+
     const auto num_grid_vectors = grid_vectors.size();
 
     std::vector<std::size_t> grid_vector_sizes(num_grid_vectors);
@@ -811,7 +827,7 @@ std::vector<ScalarType> grid_vectors2points_rowmaj(const ContainerOfGridVectorsT
                    [](auto &gv) { return gv.size(); });
 
     std::vector<std::size_t> grid_vectors_accumulated_sizes(num_grid_vectors);
-    std::exclusive_scan(grid_vector_sizes.cbegin(), grid_vector_sizes.cend(),
+    std__exclusive_scan(grid_vector_sizes.cbegin(), grid_vector_sizes.cend(),
                         grid_vectors_accumulated_sizes.begin(), std::size_t{ 1u }, std::multiplies<>{});
 
     const auto total_num_points = (*grid_vectors_accumulated_sizes.rbegin()) *

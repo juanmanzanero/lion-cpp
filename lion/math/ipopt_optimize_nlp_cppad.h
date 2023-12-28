@@ -375,7 +375,7 @@ NLP_complete_output ipopt_compute_complete_nlp_cppad(std::size_t nx,
     // at point "x" with Lagrange multipliers "lambda"
     //
 
-    bool ok = true;
+    //bool ok = true;
 
     Optimization_result<Dvector> solution;
 

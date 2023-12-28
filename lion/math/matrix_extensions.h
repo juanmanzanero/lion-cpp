@@ -493,11 +493,16 @@ std::ostream& operator<<(std::ostream &os, const std::array<T,N>& v)
 template <typename T>
 std::ostream& operator<<(std::ostream &os, const std::vector<T>& v)
 {
-    os << "{" ;
-    for (auto it = v.cbegin(); it < v.cend()-1; ++it)
-        os << *it << ", " ;
-    
-    os << v.back() << "}" ;
+    if (v.empty()) {
+        os << "{}";
+    }
+    else {
+        os << "{" ;
+        for (auto it = v.cbegin(); it < std::prev(v.cend()); ++it) {
+            os << *it << ", " ;
+        }
+        os << v.back() << "}" ;
+    }
 
     return os;
 }

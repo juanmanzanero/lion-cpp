@@ -15,7 +15,7 @@
 
 #ifndef _MSC_VER
 
-namespace detail::tuple_helpers {
+namespace lioncpp::detail::tuple_helpers {
 
 template<typename IndexType, IndexType Offset, typename IntegerSequence>
 struct offset_integer_sequence {};
@@ -51,7 +51,7 @@ constexpr void tuple_index_for_impl(Tuple &&tuple, Fun &&f, std::integer_sequenc
     (f(std::get<Is>(std::forward<Tuple>(tuple)), std::integral_constant<IndexType, Is>{}), ...);
 }
 
-} // end namespace detail::tuple_helpers
+} // end namespace lioncpp::detail::tuple_helpers
 
 
 //
@@ -64,8 +64,9 @@ template<std::size_t Begin, std::size_t End,
     typename std::enable_if_t<Begin < End>* = nullptr>
 constexpr void index_for(Fun &&f)
 {
-    detail::tuple_helpers::index_for_impl(std::forward<Fun>(f),
-        detail::tuple_helpers::offset_integer_sequence_t<std::size_t, Begin,
+    lioncpp::detail::tuple_helpers::index_for_impl(
+        std::forward<Fun>(f),
+        lioncpp::detail::tuple_helpers::offset_integer_sequence_t<std::size_t, Begin,
             std::make_integer_sequence<std::size_t, End - Begin> >{});
 }
 
@@ -84,7 +85,8 @@ template<std::size_t End,
     typename Fun>
 constexpr void index_for(Fun &&f)
 {
-    detail::tuple_helpers::index_for_impl(std::forward<Fun>(f),
+    lioncpp::detail::tuple_helpers::index_for_impl(
+        std::forward<Fun>(f),
         std::make_integer_sequence<std::size_t, End>{});
 }
 
@@ -98,7 +100,8 @@ constexpr void index_for(Fun &&f)
 template<typename Tuple, typename Fun>
 constexpr void tuple_for(Tuple &&tuple, Fun &&f)
 {
-    detail::tuple_helpers::tuple_for_impl(std::forward<Tuple>(tuple),
+    lioncpp::detail::tuple_helpers::tuple_for_impl(
+        std::forward<Tuple>(tuple),
         std::forward<Fun>(f),
         std::make_integer_sequence<std::size_t, std::tuple_size_v<std::decay_t<Tuple> > >{});
 }
@@ -113,7 +116,8 @@ constexpr void tuple_for(Tuple &&tuple, Fun &&f)
 template<typename Tuple, typename Fun>
 constexpr void tuple_index_for(Tuple &&tuple, Fun &&f)
 {
-    detail::tuple_helpers::tuple_index_for_impl(std::forward<Tuple>(tuple),
+    lioncpp::detail::tuple_helpers::tuple_index_for_impl(
+        std::forward<Tuple>(tuple),
         std::forward<Fun>(f),
         std::make_integer_sequence<std::size_t, std::tuple_size_v<std::decay_t<Tuple> > >{});
 }
@@ -256,7 +260,7 @@ constexpr auto array_cat(const std::array<Type, sizes>&... arrays)
 
 #else
 
-namespace detail::tuple_helpers {
+namespace lioncpp::detail::tuple_helpers {
 
 template<typename... Args>
 struct add_array_sizes {};
@@ -273,7 +277,7 @@ struct add_array_sizes<std::array<T, size>, RestOfArrays...>
     static constexpr std::size_t value = size + add_array_sizes<RestOfArrays...>::value;
 };
 
-} // end namespace detail::tuple_helpers
+} // end namespace lioncpp::detail::tuple_helpers
 
 template<typename Type, std::size_t... sizes>
 constexpr auto array_cat(const std::array<Type, sizes>&... arrays)
@@ -283,7 +287,7 @@ constexpr auto array_cat(const std::array<Type, sizes>&... arrays)
     // (implementation that works in VS2017).
     //
 
-    std::array<Type, ::detail::tuple_helpers::add_array_sizes<std::array<Type, sizes>...>::value> result;
+    std::array<Type, lioncpp::detail::tuple_helpers::add_array_sizes<std::array<Type, sizes>...>::value> result;
     std::size_t index = 0u;
 
     tuple_for(std::forward_as_tuple(arrays...),
