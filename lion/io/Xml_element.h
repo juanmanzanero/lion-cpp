@@ -71,7 +71,20 @@ class Xml_element
 
     //! Set the value from string
     //! @param[in] val: new string value
-    Xml_element& set_value(const std::string& val) { _e->SetText(val.c_str()); return *this;}
+    Xml_element& set_value(const std::string& val) { _e->SetText(val.c_str()); return *this; }
+
+
+    //! Set the value from numbers (scalars, std::vector, std::array)
+    template<typename T,
+             typename std::enable_if_t<std::is_arithmetic_v<T> >* = nullptr>
+    Xml_element& set_value(const T &num) { return set_value(num2str(num)); }
+
+    template<typename T>
+    Xml_element& set_value(const std::vector<T> &vec) { return set_value(vec2str(vec)); }
+
+    template<typename T, std::size_t N>
+    Xml_element& set_value(const std::array<T, N> &arr) { return set_value(vec2str(arr)); }
+
 
     //! Get all children to a std::vector
     std::vector<Xml_element> get_children() const;
@@ -98,6 +111,7 @@ class Xml_element
 
     //! See if a child exists
     bool has_child(const std::string& name) const;
+
 
     //! Try to get the value of a child, or return a default one
     template<typename ValueType>
@@ -384,7 +398,7 @@ void Xml_element::add_children_and_values_from_map(const MapType &m)
 {
     //
     // Saves an std::(unordered_)map<std::string, mapped_type> into the Xml_element,
-    // in which "mapped_type" can be either "std::vector<number>" or just "number".
+    // in which "mapped_type" can be either "std::vector", "std::array" or a number.
     //
 
     using key_type = typename MapType::key_type;
@@ -392,28 +406,14 @@ void Xml_element::add_children_and_values_from_map(const MapType &m)
 
     constexpr auto map_key_is_string = std::is_same_v<key_type, std::string>;
     constexpr auto map_of_vectors = is_specialization_v<mapped_type, std::vector>;
+    constexpr auto map_of_arrays = is_std_array_v<mapped_type>;
     constexpr auto map_of_scalars = std::is_scalar_v<mapped_type>;
 
-    static_assert(map_key_is_string && (map_of_vectors || map_of_scalars),
+    static_assert(map_key_is_string && (map_of_vectors || map_of_arrays || map_of_scalars),
                   "Xml_element::add_children_and_values_from_map:: unsupported map type.");
 
     for (const auto &mi : m) {
-        std::ostringstream ss;
-
-        if constexpr (map_of_vectors) {
-            ss << std::setprecision(std::numeric_limits<typename mapped_type::value_type>::max_digits10);
-
-            ss << mi.second.front();
-            for (auto mis = std::next(mi.second.cbegin()); mis != mi.second.cend(); ++mis) {
-                ss << ", " << *mis;
-            }
-        }
-        else {
-            ss << std::setprecision(std::numeric_limits<mapped_type>::max_digits10);
-
-            ss << mi.second;
-        }
-        add_child(mi.first).set_value(ss.str());
+        add_child(mi.first).set_value(mi.second);
     }
 }
 

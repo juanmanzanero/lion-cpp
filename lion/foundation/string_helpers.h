@@ -5,6 +5,9 @@
 
 #include <cctype>
 #include <string>
+#include <sstream>
+#include <limits>
+#include <type_traits>
 
 
 //
@@ -26,7 +29,6 @@ inline std::string strtolower(std::string str)
                      });
     return str;
 }
-
 
 inline std::string strtoupper(std::string str)
 {
@@ -57,7 +59,6 @@ inline std::string& strleft_trim_in_place(std::string &str)
     return str;
 }
 
-
 inline std::string& strright_trim_in_place(std::string &str)
 {
     //
@@ -71,7 +72,6 @@ inline std::string& strright_trim_in_place(std::string &str)
     return str;
 }
 
-
 inline std::string& strtrim_in_place(std::string &str)
 {
     //
@@ -84,7 +84,6 @@ inline std::string& strtrim_in_place(std::string &str)
     return str;
 }
 
-
 inline std::string strtrim(std::string str)
 {
     //
@@ -95,6 +94,7 @@ inline std::string strtrim(std::string str)
     strtrim_in_place(str);
     return str;
 }
+
 
 inline std::string& strrep_in_place(std::string& str,
                                     const std::string& from,
@@ -128,6 +128,60 @@ inline std::string strrep(std::string str,
 
     strrep_in_place(str, from, to);
     return str;
+}
+
+
+template<typename T,
+         typename std::enable_if_t<std::is_arithmetic_v<T> >* = nullptr>
+inline std::string num2str(const T &num)
+{
+    //
+    // Does the "number -> std::string" conversion,
+    // maintaining the precision of the number's type.
+    //
+
+    std::ostringstream ss;
+    ss.precision(std::numeric_limits<T>::max_digits10);
+    ss << num;
+    return ss.str();
+}
+
+template<typename It>
+inline std::string range2str(It first, It last,
+                             const std::string &separator = ", ")
+{
+    //
+    // Does the "[first, last) -> std::string" conversion,
+    // maintaining the precision of the range's value_type,
+    // with an optional custom separator.
+    //
+
+    if (first == last) {
+        return std::string{};
+    }
+    else {
+        std::ostringstream ss;
+        ss.precision(std::numeric_limits<typename std::iterator_traits<It>::value_type>::max_digits10);
+        ss << *first++;
+        while (first != last) {
+            ss << separator << *first++;
+        }
+        return ss.str();
+    }
+}
+
+template<typename Vec>
+inline std::string vec2str(const Vec &vec,
+                           const std::string &separator = ", ")
+{
+    //
+    // Does the "vector -> std::string" conversion,
+    // maintaining the precision of the vector's value_type,
+    // with an optional custom separator. This vector
+    // may be an std::vector, an std::array, etc.
+    //
+
+    return range2str(vec.cbegin(), vec.cend(), separator);
 }
 
 #endif
