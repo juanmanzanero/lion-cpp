@@ -23,6 +23,7 @@
 constexpr double& Value(double& val);
 constexpr const double& Value(const double& val);
 
+
 inline bool to_bool(const std::string &str)
 {
     if (str == "1") {
@@ -89,24 +90,34 @@ constexpr T wrap_to_180(T ang);
 template<typename T>
 constexpr T wrap_to_360(T ang);
 
-template<typename scalar_type = double>
-inline std::vector<scalar_type> string_to_double_vector(std::string s)
-{
-    std::vector<scalar_type> result;
-    s = std::regex_replace(s, std::regex(","), " ");
-    s = std::regex_replace(s, std::regex("\n"), " ");
-    std::string::size_type sz;
-    while ( s.find_first_of("0123456789") != std::string::npos )
-    {
-        if constexpr (std::is_same_v<scalar_type,double>)
-            result.push_back(std::stod(s,&sz));
-        else if constexpr (std::is_same_v<scalar_type,float>)
-            result.push_back(std::stof(s,&sz));
 
-        s = s.substr(sz);
+template<typename T = double,
+         typename std::enable_if_t<std::is_floating_point_v<T> >* = nullptr>
+inline std::vector<T> string_to_double_vector(std::string str)
+{
+    std::vector<T> ret;
+    while (true) {
+        const auto str_length = str.length();
+        if (str_length == 0u) {
+            break;
+        }
+
+        std::size_t pos;
+        if constexpr (std::is_same_v<T, double>) {
+            ret.push_back(std::stod(str, &pos));
+        }
+        else {
+            static_assert(std::is_same_v<T, float>);
+            ret.push_back(std::stof(str, &pos));
+        }
+
+        while (pos != str_length && (str[pos] == ',' || str[pos] == ';' || str[pos] == '\n')) {
+            ++pos;
+        }
+        str = str.substr(pos);
     }
 
-    return result;
+    return ret;
 }
 
 

@@ -224,7 +224,7 @@ constexpr T smooth_neg(const T &x, S eps2)
 }
 
 
-template<bool ActuallySmooth, bool UseSinAtanFormula, typename T, typename S>
+template<bool ActuallySmooth, bool UseSmoothAbsFormula, typename T, typename S>
 constexpr T smooth_sign(const T &x, S eps)
 {
     //
@@ -235,7 +235,7 @@ constexpr T smooth_sign(const T &x, S eps)
     //
 
     if constexpr (ActuallySmooth) {
-        if constexpr (UseSinAtanFormula) {
+        if constexpr (UseSmoothAbsFormula) {
 
             return x / smooth_abs(x, eps * eps);
         }
@@ -244,6 +244,13 @@ constexpr T smooth_sign(const T &x, S eps)
 
             return tanh(x / eps);
         }
+
+        // another one that we used before, "sinatan", I leave it
+        // commented here to not lose it
+        //using std::sin;
+        //using std::atan;
+        //return sin(atan(x / eps));
+
     }
     else {
         (void)eps;
@@ -253,7 +260,7 @@ constexpr T smooth_sign(const T &x, S eps)
 }
 
 
-template<bool ActuallySmooth, bool UseSinAtanFormula, typename T, typename S>
+template<bool ActuallySmooth, bool UseSmoothAbsFormula, typename T, typename S>
 constexpr T smooth_sign_derivative(const T &x, S eps)
 {
     //
@@ -264,7 +271,7 @@ constexpr T smooth_sign_derivative(const T &x, S eps)
     //
 
     if constexpr (ActuallySmooth) {
-        if constexpr (UseSinAtanFormula) {
+        if constexpr (UseSmoothAbsFormula) {
             using std::sqrt;
 
             return eps * eps / ((eps * eps + x * x) * sqrt(eps * eps + x * x));
@@ -398,7 +405,7 @@ constexpr T smooth_clamp(const T &x, const T1 &lo, const T2 &hi, S eps2)
     }
 }
 
-template<bool ActuallySmooth, bool UseSinAtanFormula, typename T, typename S>
+template<bool ActuallySmooth, bool UseSmoothAbsFormula, typename T, typename S>
 constexpr T smooth_step(const T &x, S eps)
 {
     //
@@ -409,7 +416,7 @@ constexpr T smooth_step(const T &x, S eps)
     //
 
     if constexpr (ActuallySmooth) {
-        return S{ 0.5 } * (S{ 1 } + smooth_sign<ActuallySmooth, UseSinAtanFormula>(x, eps));
+        return S{ 0.5 } * (S{ 1 } + smooth_sign<ActuallySmooth, UseSmoothAbsFormula>(x, eps));
     }
     else {
         return x >= S{ 0 } ? T{ 1 } : T{ 0 };

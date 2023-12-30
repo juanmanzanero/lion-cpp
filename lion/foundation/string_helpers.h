@@ -140,10 +140,19 @@ inline std::string num2str(const T &num)
     // maintaining the precision of the number's type.
     //
 
-    std::ostringstream ss;
-    ss.precision(std::numeric_limits<T>::max_digits10);
-    ss << num;
-    return ss.str();
+    if constexpr (std::is_integral_v<T>) {
+        // integral types don't have decimal places
+        return std::to_string(num);
+    }
+    else {
+        // floating-point types go with their max. decimal precision
+        static_assert(std::is_floating_point_v<T>);
+
+        std::ostringstream ss;
+        ss.precision(std::numeric_limits<T>::max_digits10);
+        ss << num;
+        return ss.str();
+    }
 }
 
 template<typename It>

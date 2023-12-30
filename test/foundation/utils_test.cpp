@@ -7,17 +7,34 @@
 
 TEST(utils_test, string_to_double_vector)
 {
-    const std::string s = "1.02324355, 5.0624692 \n -7.354634, \n 5.23035234392, 243.242532425";
+    {
+        const std::string s = "1.02324355, 5.0624692 \n -7.354634, \n 5.23035234392, 243.242532425";
+        std::vector<double> v = string_to_double_vector(s);
+        std::vector<double> v_expected = { 1.02324355,5.0624692,-7.354634,5.23035234392,243.242532425 };
+        EXPECT_EQ(v.size(), v_expected.size());
+        for (size_t i = 0; i < v.size(); ++i)
+            EXPECT_DOUBLE_EQ(v[i], v_expected[i]);
+    }
 
-    std::vector<double> v = string_to_double_vector(s);
-  
-    std::vector<double> v_expected = { 1.02324355,5.0624692,-7.354634,5.23035234392,243.242532425 };
-
-    EXPECT_EQ(v.size(), v_expected.size());
-    
-    for (size_t i = 0; i < v.size(); ++i)
-        EXPECT_DOUBLE_EQ(v[i], v_expected[i]);
-
+    {
+        const std::string s = "nan 1.02324355; \n INF, NAN, Inf, Nan, \n 1.897989, 33, inf";
+        std::vector<double> v = string_to_double_vector(s);
+        const auto nan = std::numeric_limits<double>::quiet_NaN();
+        const auto inf = std::numeric_limits<double>::infinity();
+        std::vector<double> v_expected = { nan, 1.02324355, inf, nan, inf, nan, 1.897989, 33, inf };
+        ASSERT_EQ(v.size(), v_expected.size());
+        for (size_t i = 0; i < v.size(); ++i) {
+            if (std::isnan(v_expected[i])) {
+                EXPECT_TRUE(std::isnan(v[i]));
+            }
+            else if (std::isinf(v_expected[i])) {
+                EXPECT_TRUE(std::isinf(v[i]));
+            }
+            else {
+                EXPECT_EQ(v[i], v_expected[i]);
+            }
+        }
+    }
 }
 
 TEST(utils_test, linspace)
