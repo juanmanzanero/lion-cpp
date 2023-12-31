@@ -111,7 +111,11 @@ inline std::vector<T> string_to_double_vector(std::string str)
             ret.push_back(std::stof(str, &pos));
         }
 
-        while (pos != str_length && (str[pos] == ',' || str[pos] == ';' || str[pos] == '\n')) {
+        while (pos != str_length && (std::isspace(str[pos]) ||
+                                     str[pos] == ',' ||
+                                     str[pos] == ';' ||
+                                     str[pos] == '\n')) {
+
             ++pos;
         }
         str = str.substr(pos);
