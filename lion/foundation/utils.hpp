@@ -783,12 +783,12 @@ constexpr std::pair<Array2Type, bool> sin_cos_solve(T lhs_s, T lhs_c, T rhs,
 
 template<typename ContainerOfGridVectorsType,
          typename ScalarType>
-std::vector<ScalarType> grid_vectors2points_rowmaj(const ContainerOfGridVectorsType &grid_vectors)
+std::vector<ScalarType> grid_vectors2points_flat(const ContainerOfGridVectorsType &grid_vectors)
 {
     //
     // Expands a collection of "grid vectors" into a
-    // matrix of "points" (returned as an std::vector
-    // in row-major order), e.g., if
+    // "flat" matrix of "points" (returned as an std::vector),
+    // e.g., if
     //
     //   "grid_vectors = { { 0, 1 },
     //                     { 3, 4 },
@@ -827,11 +827,28 @@ std::vector<ScalarType> grid_vectors2points_rowmaj(const ContainerOfGridVectorsT
 #endif
     };
 
+    // support for an std::map of grid vectors (NOTE: never use std::unordered_map
+    // to define a grid! A grid must have an order!!!") or for an std::vector
+    // of "std::pair<std::string, std::vector>" elements
+    const auto get_grid_vector = [](const auto &element_of_grid_vectors) -> const auto&
+    {
+        if constexpr (is_specialization_v<std::decay_t<decltype(element_of_grid_vectors)>, std::pair>) {
+            return element_of_grid_vectors.second;
+        }
+        else {
+            return element_of_grid_vectors;
+        }
+    };
+
     const auto num_grid_vectors = grid_vectors.size();
 
     std::vector<std::size_t> grid_vector_sizes(num_grid_vectors);
-    std::transform(grid_vectors.cbegin(), grid_vectors.cend(), grid_vector_sizes.begin(),
-                   [](auto &gv) { return gv.size(); });
+    std::transform(std::cbegin(grid_vectors), std::cend(grid_vectors),
+                   grid_vector_sizes.begin(),
+                   [&](const auto &gv)
+                   {
+                       return get_grid_vector(gv).size();
+                   });
 
     std::vector<std::size_t> grid_vectors_accumulated_sizes(num_grid_vectors);
     std__exclusive_scan(grid_vector_sizes.cbegin(), grid_vector_sizes.cend(),
@@ -840,18 +857,21 @@ std::vector<ScalarType> grid_vectors2points_rowmaj(const ContainerOfGridVectorsT
     const auto total_num_points = (*grid_vectors_accumulated_sizes.rbegin()) *
                                   (*grid_vector_sizes.rbegin());
 
-    std::vector<ScalarType> points_rowmaj(total_num_points * num_grid_vectors);
-    for (auto dim = 0u; dim < num_grid_vectors; ++dim) {
+    std::vector<ScalarType> points_flat(total_num_points * num_grid_vectors);
+    std::size_t dim = 0u;
+    for (const auto &gv : grid_vectors) {
         for (auto p = std::size_t{ 0u }; p < total_num_points; ) {
-            for (const auto &grid_value : grid_vectors[dim]) {
+            for (const auto &grid_value : get_grid_vector(gv)) {
                 for (auto rep = 0u; rep < grid_vectors_accumulated_sizes[dim]; ++rep) {
-                    points_rowmaj[num_grid_vectors * (p + rep) + dim] = grid_value;
+                    points_flat[num_grid_vectors * (p + rep) + dim] = grid_value;
                 }
                 p += grid_vectors_accumulated_sizes[dim];
             }
         }
+        ++dim;
     }
-    return points_rowmaj;
+
+    return points_flat;
 }
 
 

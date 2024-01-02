@@ -17,7 +17,7 @@ TEST(utils_test, string_to_double_vector)
     }
 
     {
-        const std::string s = "nan 1.02324355; \n INF, NAN, Inf, Nan, \n 1.897989, 33, inf";
+        const std::string s = "  nan 1.02324355; \n INF, NAN, Inf, Nan, \n 1.897989, 33, inf    ";
         std::vector<double> v = string_to_double_vector(s);
         const auto nan = std::numeric_limits<double>::quiet_NaN();
         const auto inf = std::numeric_limits<double>::infinity();
@@ -723,6 +723,68 @@ TEST(utils_test, smooth_min_test)
         EXPECT_NEAR(smooth_min(xi, ub, 1.0e-6), (xi < ub ? xi : ub), 4.0e-4);
     }
 }
+
+
+TEST(utils_test, grid_vectors2points_flat)
+{
+    //
+    // Tests the "grid_vectors2points_flat" function.
+    //
+
+    const auto reference_points_flat = std::vector<double>{
+        0., 3., 6.,
+        1., 3., 6.,
+        2., 3., 6.,
+        0., 4., 6.,
+        1., 4., 6.,
+        2., 4., 6.,
+        0., 3., 7.,
+        1., 3., 7.,
+        2., 3., 7.,
+        0., 4., 7.,
+        1., 4., 7.,
+        2., 4., 7.,
+        0., 3., 8.,
+        1., 3., 8.,
+        2., 3., 8.,
+        0., 4., 8.,
+        1., 4., 8.,
+        2., 4., 8.,
+        0., 3., 9.,
+        1., 3., 9.,
+        2., 3., 9.,
+        0., 4., 9.,
+        1., 4., 9.,
+        2., 4., 9. };
+
+    const auto compare_results = [&](const auto &grid_vectors)
+    {
+        const auto points_flat = grid_vectors2points_flat(grid_vectors);
+        ASSERT_EQ(points_flat.size(), reference_points_flat.size());
+        for (auto i = 0u; i < reference_points_flat.size(); ++i) {
+            EXPECT_EQ(points_flat[i], reference_points_flat[i]);
+        }
+    };
+
+    const auto grid_vectors_as_vector_of_vectors = std::vector<std::vector<double> >{
+        { 0., 1., 2. },
+        { 3., 4. },
+        { 6., 7., 8., 9. } };
+    compare_results(grid_vectors_as_vector_of_vectors);
+
+    const auto grid_vectors_as_map_of_vectors = std::map<std::string, std::vector<double> >{
+        { "grid0_x", grid_vectors_as_vector_of_vectors[0] },
+        { "grid1_y", grid_vectors_as_vector_of_vectors[1] },
+        { "grid2_z", grid_vectors_as_vector_of_vectors[2] } };
+    compare_results(grid_vectors_as_map_of_vectors);
+
+    const auto grid_vectors_as_vector_of_pairs = std::vector<std::pair<std::string, std::vector<double> > >{
+        { "blabla", grid_vectors_as_vector_of_vectors[0] },
+        { "aablabla", grid_vectors_as_vector_of_vectors[1] },
+        { "ablabla", grid_vectors_as_vector_of_vectors[2] } };
+    compare_results(grid_vectors_as_map_of_vectors);
+}
+
 
 
 TEST(utils_test, nearest_in_sorted_range_test)

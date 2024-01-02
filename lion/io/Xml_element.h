@@ -86,16 +86,27 @@ class Xml_element
     Xml_element& set_value(const std::array<T, N> &arr) { return set_value(vec2str(arr)); }
 
 
+    // ! Set children & their values from an "std::(unordered)map<std::string, number_or_vector_or_array>"
+    //! @param[in] m: the map holding numbers or std::vectors or std::arrays, whose keys are std::strings
+    template<typename MapType>
+    void add_children_and_values_from_map(const MapType &m);
+
+    // ! Get children & their values and emplace them in an "std::(unordered)map<std::string, number_or_vector_or_array>"
+    //! @param[inout] m: the map holding numbers or std::vectors or std::arrays, whose keys are std::strings
+    template<typename MapType>
+    void emplace_children_and_values_in_map(MapType &m);
+
+    // ! Get children & their values and emplace_back them in an "std::vector<std::pair<std::string, number_or_vector_or_array> >"
+    //! @param[inout] vp: the vector of pairs holding numbers or std::vectors or std::arrays, whose keys are std::strings
+    template<typename T>
+    void emplace_back_children_and_values_in_vector_of_pairs(std::vector<std::pair<std::string, T> > &vp);
+
+
     //! Get all children to a std::vector
     std::vector<Xml_element> get_children() const;
 
     //! Add children
     Xml_element add_child(const std::string& name); 
-
-    // ! Set children & their values from an std::(unordered)map<std::string, number or std::vector>
-    //! @param[in] m: the map holding numbers or std::vectors, whose keys are std::strings
-    template<typename MapType>
-    void add_children_and_values_from_map(const MapType &m);
 
     //! Add comment
     void add_comment(const std::string& text) { _e->InsertNewComment(text.c_str()); }
@@ -254,7 +265,7 @@ inline std::vector<Xml_element> Xml_element::get_children() const
 {
     std::vector<Xml_element> output;
 
-    tinyxml2::XMLElement* element = _e->FirstChildElement(); 
+    tinyxml2::XMLElement* element = _e->FirstChildElement();
 
     while (element != nullptr)
     {
@@ -397,7 +408,7 @@ template<typename MapType>
 void Xml_element::add_children_and_values_from_map(const MapType &m)
 {
     //
-    // Saves an std::(unordered_)map<std::string, mapped_type> into the Xml_element,
+    // Saves an "std::(unordered_)map<std::string, mapped_type>" into the Xml_element,
     // in which "mapped_type" can be either "std::vector", "std::array" or a number.
     //
 
@@ -414,6 +425,64 @@ void Xml_element::add_children_and_values_from_map(const MapType &m)
 
     for (const auto &mi : m) {
         add_child(mi.first).set_value(mi.second);
+    }
+}
+
+
+template<typename MapType>
+void Xml_element::emplace_children_and_values_in_map(MapType &m)
+{
+    //
+    // Emplaces the children and values of *this Xml_element
+    // in the given map. This map must be an
+    // "std::(unordered_)map<std::string, mapped_type>" in which
+    // "mapped_type" can be either "std::vector", "std::array" or a number.
+    // If a child cannot be emplaced, the function throws an
+    // std::runtime_error.
+    //
+
+    using key_type = typename MapType::key_type;
+    using mapped_type = typename MapType::mapped_type;
+
+    constexpr auto map_key_is_string = std::is_same_v<key_type, std::string>;
+    constexpr auto map_of_vectors = is_specialization_v<mapped_type, std::vector>;
+    constexpr auto map_of_arrays = is_std_array_v<mapped_type>;
+    constexpr auto map_of_scalars = std::is_scalar_v<mapped_type>;
+
+    static_assert(map_key_is_string && (map_of_vectors || map_of_arrays || map_of_scalars),
+                  "Xml_element::emplace_children_and_values_in_map:: unsupported map type.");
+
+    for (auto c : get_children()) {
+        const auto [_, did_emplace] = m.emplace(c.get_name(), c.get_value(mapped_type{}));
+
+        if (!did_emplace) {
+            throw std::runtime_error(
+                std::string{ "Xml_element::emplace_children_and_values_in_map:"
+                             " could not emplace child \"" } +
+                c.get_name() + "\" in the given map.");
+        }
+    }
+}
+
+template<typename T>
+void Xml_element::emplace_back_children_and_values_in_vector_of_pairs(std::vector<std::pair<std::string, T> > &vp)
+{
+    //
+    // Emplaces the children and values of *this Xml_element
+    // in the given std::vector of std::pairs. These pairs must be
+    // "std::pair<std::string, T>" in which "T" can be either
+    // "std::vector", "std::array" or a number.
+    //
+
+    constexpr auto pairs_of_vectors = is_specialization_v<T, std::vector>;
+    constexpr auto pairs_of_arrays = is_std_array_v<T>;
+    constexpr auto pairs_of_scalars = std::is_scalar_v<T>;
+
+    static_assert(pairs_of_vectors || pairs_of_arrays || pairs_of_scalars,
+                  "Xml_element::emplace_back_children_and_values_in_vector_of_pairs:: unsupported value type.");
+
+    for (auto c : get_children()) {
+        vp.emplace_back(c.get_name(), c.get_value(T{}));
     }
 }
 

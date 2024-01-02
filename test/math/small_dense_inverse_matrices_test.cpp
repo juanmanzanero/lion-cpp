@@ -11,7 +11,7 @@
 //
 
 
-static Xml_document reference_file("data/small_dense_inverse_matrices.xml", true);
+static Xml_document small_dense_inverse_matrices_test_reference_file("data/small_dense_inverse_matrices.xml", true);
 
 
 template<typename DetAndInverseMatrixFun>
@@ -41,10 +41,10 @@ void test_matrices(const Xml_element &reference_xml_element, DetAndInverseMatrix
 
 TEST(small_dense_inverse_matrices, inv2x2)
 {
-    test_matrices(reference_file.get_root_element().get_child("inv2x2"),
+    test_matrices(small_dense_inverse_matrices_test_reference_file.get_root_element().get_child("inv2x2"),
         [](const auto &mat)
         {
-            EXPECT_EQ(mat.size(), 4);
+            EXPECT_EQ(mat.size(), 4u);
             return std::make_pair(det2x2(mat), inv2x2(mat));
         });
 }
@@ -52,10 +52,10 @@ TEST(small_dense_inverse_matrices, inv2x2)
 
 TEST(small_dense_inverse_matrices, inv3x3)
 {
-    test_matrices(reference_file.get_root_element().get_child("inv3x3"),
+    test_matrices(small_dense_inverse_matrices_test_reference_file.get_root_element().get_child("inv3x3"),
         [](const auto &mat)
         {
-            EXPECT_EQ(mat.size(), 9);
+            EXPECT_EQ(mat.size(), 9u);
             return std::make_pair(det3x3(mat), inv3x3(mat));
         });
 }
@@ -63,10 +63,10 @@ TEST(small_dense_inverse_matrices, inv3x3)
 
 TEST(small_dense_inverse_matrices, inv4x4)
 {
-    test_matrices(reference_file.get_root_element().get_child("inv4x4"),
+    test_matrices(small_dense_inverse_matrices_test_reference_file.get_root_element().get_child("inv4x4"),
         [](const auto &mat)
         {
-            EXPECT_EQ(mat.size(), 16);
+            EXPECT_EQ(mat.size(), 16u);
             return std::make_pair(det4x4(mat), inv4x4(mat));
         });
 }
@@ -74,10 +74,10 @@ TEST(small_dense_inverse_matrices, inv4x4)
 
 TEST(small_dense_inverse_matrices, inv5x5)
 {
-    test_matrices(reference_file.get_root_element().get_child("inv5x5"),
+    test_matrices(small_dense_inverse_matrices_test_reference_file.get_root_element().get_child("inv5x5"),
         [](const auto &mat)
         {
-            EXPECT_EQ(mat.size(), 25);
+            EXPECT_EQ(mat.size(), 25u);
             return std::make_pair(det5x5(mat), inv5x5(mat));
         });
 }
@@ -85,10 +85,10 @@ TEST(small_dense_inverse_matrices, inv5x5)
 
 TEST(small_dense_inverse_matrices, inv6x6)
 {
-    test_matrices(reference_file.get_root_element().get_child("inv6x6"),
+    test_matrices(small_dense_inverse_matrices_test_reference_file.get_root_element().get_child("inv6x6"),
         [](const auto &mat)
         {
-            EXPECT_EQ(mat.size(), 36);
+            EXPECT_EQ(mat.size(), 36u);
             return std::make_pair(det6x6(mat), inv6x6(mat));
         });
 }
