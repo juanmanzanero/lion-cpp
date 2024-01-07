@@ -96,6 +96,59 @@ inline std::string strtrim(std::string str)
 }
 
 
+inline std::string& strleft_unquote_in_place(std::string &str)
+{
+    //
+    // Removes the leftmost quotation marks (") from an
+    // std::string, in-place. Returns a reference to the
+    // input string.
+    //
+
+    str.erase(str.begin(), std::find_if(str.begin(), str.end(),
+        [](unsigned char ch)
+        { return ch != '"'; }));
+    return str;
+}
+
+inline std::string& strright_unquote_in_place(std::string &str)
+{
+    //
+    // Removes the rightmost quotation marks (") from an
+    // std::string, in-place. Returns a reference to the
+    // input string.
+    //
+
+    str.erase(std::find_if(str.rbegin(), str.rend(),
+        [](unsigned char ch)
+        { return ch != '"'; }).base(), str.end());
+    return str;
+}
+
+inline std::string& strunquote_in_place(std::string &str)
+{
+    //
+    // Removes the leftmost and rightmost quotation marks (")
+    // from an std::string, in-place. Returns a reference to
+    // the input string.
+    //
+
+    strleft_unquote_in_place(str);
+    strright_unquote_in_place(str);
+    return str;
+}
+
+inline std::string strunquote(std::string str)
+{
+    //
+    // Returns the input std::string without its
+    // leftmost and rightmost quotation marks.
+    //
+
+    strunquote_in_place(str);
+    return str;
+}
+
+
 inline std::string& strrep_in_place(std::string& str,
                                     const std::string& from,
                                     const std::string& to)
