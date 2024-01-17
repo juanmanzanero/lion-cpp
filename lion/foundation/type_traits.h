@@ -108,13 +108,34 @@ struct combine_types<T,CppAD::AD<T>>
 };
 
 template<typename T, size_t N>
-struct combine_types<T, std::array<T, N>>
+struct combine_types<T, std::array<T, N> >
 {
     using type = std::array<T, N>;
 };
 
+template<typename T0, typename T1, typename... Ts>
+struct combine_N_types
+{
+    using type = typename combine_N_types<typename combine_types<T0, T1>::type, Ts...>::type;
+};
+
+template<typename T0, typename T1>
+struct combine_N_types<T0, T1>
+{
+    using type = typename combine_types<T0, T1>::type;
+};
+
+template<typename T0>
+struct combine_N_types<T0, T0>
+{
+    using type = typename combine_types<T0, T0>::type;
+};
+
 template<typename T, typename U>
 using combine_types_t = typename combine_types<T, U>::type;
+
+template<typename... Ts>
+using combine_N_types_t = typename combine_N_types<Ts...>::type;
 
 
 /// Type-trait style function to eliminate copy constructors (via std::enable_if) from a class constructor template that
