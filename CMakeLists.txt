@@ -69,7 +69,7 @@ if(WITH_HSL)
 endif()
 
 
-target_link_libraries(lion INTERFACE ipopt blaslapack tinyxml2 fortran_libraries cppad)
+target_link_libraries(lion INTERFACE ipopt blaslapack tinyxml2 fortran_libraries cppad hdf5)
 
 # Create a lion header only
 add_library(header_only INTERFACE)
@@ -114,7 +114,7 @@ install(FILES ${version_file} ${config_file}
   DESTINATION ${cmake_files_install_dir})
 
 # Export the targets
-install(TARGETS lion ipopt blaslapack tinyxml2 header_only fortran_libraries cppad
+install(TARGETS lion ipopt blaslapack tinyxml2 header_only fortran_libraries cppad hdf5
   EXPORT ${targets_export_name}
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
   ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"

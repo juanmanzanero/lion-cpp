@@ -45,6 +45,17 @@ if (NOT ${cppad_FOUND})
     set(BUILD_CPPAD YES)
 endif()
 
+
+# HDF5
+find_package(hdf5)
+
+if (NOT ${hdf5_FOUND})
+    set(BUILD_HDF5 YES)
+endif()
+
+
+
+
 #######################################################################
 
 ##### BUILD ALL REQUIRED THIRD PARTY LIBRARIES ##########
@@ -70,6 +81,7 @@ find_package(tinyxml2 REQUIRED)
 find_package(ipopt REQUIRED)
 find_package(loggercpp REQUIRED)
 find_package(cppad REQUIRED)
+find_package(hdf5 REQUIRED)
 
 if (MSYS)
 	file(COPY ${CMAKE_BINARY_DIR}/lion/thirdparty/bin/msys-tinyxml2-9.dll DESTINATION ${CMAKE_BINARY_DIR}/lion/thirdparty/lib)
