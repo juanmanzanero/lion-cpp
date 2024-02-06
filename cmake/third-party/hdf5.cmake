@@ -9,7 +9,6 @@ if ( ${BUILD_HDF5} )
       SOURCE_DIR ${THIRD_PARTY_DIR}/hdf5/source
       BINARY_DIR ${THIRD_PARTY_DIR}/hdf5/build 
       INSTALL_DIR ${THIRD_PARTY_DIR}/lion/thirdparty
-      DEPENDS zlib
     )
 
 endif()
