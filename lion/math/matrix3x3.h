@@ -343,9 +343,9 @@ constexpr bool Matrix3x3<T>::is_eye() const
 template<typename T>
 constexpr Matrix3x3<T> Matrix3x3<T>::eye()
 {
-    return Matrix3x3<T>{ 1., 0., 0.,
-                      0., 1., 0.,
-                      0., 0., 1. };
+    return Matrix3x3<T>{ T{ 1 }, T{ 0 }, T{ 0 },
+                      T{ 0 }, T{ 1 }, T{ 0 },
+                      T{ 0 }, T{ 0 }, T{ 1 } };
 }
 
 template<typename T>

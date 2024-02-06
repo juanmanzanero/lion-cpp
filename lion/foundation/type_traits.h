@@ -113,6 +113,13 @@ struct combine_types<T, std::array<T, N> >
     using type = std::array<T, N>;
 };
 
+
+template<typename T, size_t N>
+struct combine_types<std::array<T,N>, T >
+{
+    using type = std::array<T, N>;
+};
+
 template<typename T0, typename T1, typename... Ts>
 struct combine_N_types
 {
