@@ -291,7 +291,6 @@ constexpr T smooth_sign_derivative(const T &x, S eps)
 }
 
 
-
 template<bool ActuallySmooth, typename T, typename S>
 constexpr T smooth_abs(const T &x, S eps2)
 {
@@ -344,6 +343,7 @@ constexpr T smooth_hypot(const T &x, const T &y, S eps2)
     }
 }
 
+
 template<bool ActuallySmooth, typename T, typename T1, typename S>
 constexpr T smooth_max(const T& x, const T1 &lo, S eps2)
 {
@@ -364,6 +364,7 @@ constexpr T smooth_max(const T& x, const T1 &lo, S eps2)
     }
 }
 
+
 template<bool ActuallySmooth, typename T, typename T1, typename S>
 constexpr T smooth_min(const T& x, const T1 &hi, S eps2)
 {
@@ -383,6 +384,7 @@ constexpr T smooth_min(const T& x, const T1 &hi, S eps2)
         return x < hi ? x : static_cast<T>(hi);
     }
 }
+
 
 template<bool ActuallySmooth, typename T, typename T1, typename T2, typename S>
 constexpr T smooth_clamp(const T &x, const T1 &lo, const T2 &hi, S eps2)
@@ -405,6 +407,7 @@ constexpr T smooth_clamp(const T &x, const T1 &lo, const T2 &hi, S eps2)
     }
 }
 
+
 template<bool ActuallySmooth, bool UseSmoothAbsFormula, typename T, typename S>
 constexpr T smooth_step(const T &x, S eps)
 {
@@ -421,6 +424,21 @@ constexpr T smooth_step(const T &x, S eps)
     else {
         return x >= S{ 0 } ? T{ 1 } : T{ 0 };
     }
+}
+
+
+template<bool ActuallySmooth, typename T, typename T1, typename T2, typename S>
+constexpr T smooth_deadzone(const T &x, const T1 &lo, const T2 &hi, S eps2)
+{
+    //
+    // Implements the "smooth deadzone" function, in which the output
+    // is zero for x in "[lo, hi]", equal to "x - lo" if x < lo, and
+    // equal to "x - hi" if x > hi. When template parameter "ActuallySmooth"
+    // is true, the deadzone's sharpness is smoothed out with parameter
+    // "eps2", else, it is the strict deadzone function.
+    //
+
+    return smooth_pos<ActuallySmooth>(x - hi, eps2) + smooth_neg<ActuallySmooth>(x - lo, eps2);
 }
 
 
@@ -498,9 +516,14 @@ constexpr ValueType sumabs(const ArrayType &x)
     // elements in the input array.
     //
 
+    using std::abs;
+
     return std::accumulate(x.cbegin(), x.cend(),
-        ValueType{ 0 },
-        [](auto accum, auto xi) { return accum + std::abs(xi); });
+                           ValueType{ 0 },
+                           [](auto accum, auto xi)
+                           {
+                               return accum + abs(xi);
+                           });
 }
 
 
@@ -619,7 +642,6 @@ inline std::tuple<Vector3d<T>,T,std::array<size_t,2>> find_closest_point(const s
 
     return {x_closest,d2_closest,i_closest};
 }
-
 
 template<typename T>
 inline std::tuple<Vector3d<T>,T,std::array<size_t,2>> find_intersection(const std::vector<sVector3d>& xy_polygon, const Vector3d<T>& x0, const Vector3d<T>& p0, bool closed)
