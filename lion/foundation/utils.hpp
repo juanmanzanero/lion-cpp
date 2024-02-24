@@ -236,7 +236,6 @@ constexpr T smooth_sign(const T &x, S eps)
 
     if constexpr (ActuallySmooth) {
         if constexpr (UseSmoothAbsFormula) {
-
             return x / smooth_abs(x, eps * eps);
         }
         else {
@@ -431,14 +430,29 @@ template<bool ActuallySmooth, typename T, typename T1, typename T2, typename S>
 constexpr T smooth_deadzone(const T &x, const T1 &lo, const T2 &hi, S eps2)
 {
     //
-    // Implements the "smooth deadzone" function, in which the output
-    // is zero for x in "[lo, hi]", equal to "x - lo" if x < lo, and
-    // equal to "x - hi" if x > hi. When template parameter "ActuallySmooth"
-    // is true, the deadzone's sharpness is smoothed out with parameter
+    // Implements the "smooth deadzone" function, whose output is zero
+    // for x in "[lo, hi]", equal to "x - lo" if x < lo, and equal to
+    // "x - hi" if x > hi. When template parameter "ActuallySmooth" is
+    // true, the deadzone's sharpness is smoothed out with parameter
     // "eps2", else, it is the strict deadzone function.
     //
 
     return smooth_pos<ActuallySmooth>(x - hi, eps2) + smooth_neg<ActuallySmooth>(x - lo, eps2);
+}
+
+
+template<bool ActuallySmooth, typename T, typename T1, typename T2, typename S>
+constexpr T smooth_antipulse(const T &x, const T1 &lo, const T2 &hi, S eps)
+{
+    //
+    // Implements the "smooth antipulse" function, whose output is zero
+    // for x in "[lo, hi]", and equal to 1 otherwise. When template
+    // parameter "ActuallySmooth" is true, the pulse's sharpness is
+    // smoothed out with parameter "eps", else, it is the strict
+    // antipulse function.
+    //
+
+    return smooth_step<ActuallySmooth>(x - hi, eps) + smooth_step<ActuallySmooth>(lo - x, eps);
 }
 
 
