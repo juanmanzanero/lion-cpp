@@ -519,7 +519,7 @@ inline bool Xml_element::has_child(const std::string& name) const
         else
             child = _e->FirstChildElement(child_name.c_str());
 
-    if (_e->NextSiblingElement(child_name.c_str()) != nullptr ) 
+    if (child._e->NextSiblingElement(child_name.c_str()) != nullptr ) 
     {
         std::ostringstream s_out;
         s_out << "[ERROR] Xml_element::has_child -> There are several children with name \"" + child_name + "\"" << std::endl;
