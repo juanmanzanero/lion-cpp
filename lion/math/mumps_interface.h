@@ -8,19 +8,19 @@
 #include "lion/foundation/lion_exception.h"
 #define USE_COMM_WORLD -987654
 
-template<typename size_type>
-inline std::vector<std::vector<double>> mumps_solve_linear_system(size_type n_cpp, size_type nnz_cpp, std::vector<size_type>& rows_cpp, std::vector<size_type>& cols_cpp, 
+template<typename SizeType>
+inline std::vector<std::vector<double>> mumps_solve_linear_system(SizeType n_cpp, SizeType nnz_cpp, std::vector<SizeType>& rows_cpp, std::vector<SizeType>& cols_cpp,
     std::vector<double>& lhs_cpp, const std::vector<std::vector<double>>& rhs_cpp, bool symmetric)
 {
-    assert(rows_cpp.size() == nnz_cpp);
-    assert(cols_cpp.size() == nnz_cpp);
-    assert(lhs_cpp.size()  == nnz_cpp);
+    assert(rows_cpp.size() == static_cast<std::size_t>(nnz_cpp));
+    assert(cols_cpp.size() == static_cast<std::size_t>(nnz_cpp));
+    assert(lhs_cpp.size()  == static_cast<std::size_t>(nnz_cpp));
     size_t n_rhs = rhs_cpp.size();
 
     assert(n_rhs > 0);
 #ifndef NDEBUG
     for (const auto &rhs_i : rhs_cpp) {
-      assert(rhs_i.size() == n_cpp);
+      assert(rhs_i.size() == static_cast<std::size_t>(n_cpp));
     }
 #endif
   
