@@ -15,8 +15,9 @@ ExternalProject_Add(lapack
                 -DCMAKE_INSTALL_PREFIX:PATH=${THIRD_PARTY_DIR}/lion/thirdparty
                 -DCMAKE_INSTALL_LIBDIR=lib
                 -DCMAKE_POSITION_INDEPENDENT_CODE=ON
-        	    -DBUILD_SHARED_LIBS:BOOL=NO
+                -DBUILD_SHARED_LIBS:BOOL=NO
                 -DCMAKE_BUILD_TYPE=Release
+                -DCMAKE_Fortran_FLAGS="-cpp"
                 ${THIRD_PARTY_DIR}/lapack/source
 )
 
