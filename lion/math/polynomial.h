@@ -475,6 +475,13 @@ inline typename combine_types<U,T>::type Polynomial<T>::operator[](const U& x) c
 
     auto result = return_type{};
 
+    if constexpr (is_specialization_v<T, std::vector>) {
+        if (!_coeffs.empty() && !_coeffs.front().empty()) {
+            result.resize(_coeffs.front().front().size(), typename T::value_type{ 0 });
+        }
+    }
+
+
     for (size_t i = 0; i <= _n[block]; ++i)
         result += _coeffs[block][i]*Lk[i];
 
@@ -610,6 +617,12 @@ inline std::vector<T> Polynomial<T>::compute_coefficients(const typename std::ve
 {
     std::vector<T> coeffs(N+1,T());
 
+
+    // support T as std::vector<U>
+    if constexpr (is_specialization_v<T, std::vector>) {
+        std::for_each(coeffs.begin(), coeffs.end(), [&](auto& coeff) { coeff.resize(iy0->size(), typename T::value_type{ 0 }); });
+    }
+
     // Get quadrature nodes and weights
     auto [xj, wj] = gauss_legendre_lobatto_nodes_and_weights(N);
 
@@ -621,6 +634,9 @@ inline std::vector<T> Polynomial<T>::compute_coefficients(const typename std::ve
 
     // Get y evaluated at the interpolation points
     std::vector<T> yj(N+1,T());
+    if constexpr (is_specialization_v<T, std::vector>) {
+        std::for_each(yj.begin(), yj.end(), [&](auto& coeff) { coeff.resize(iy0->size(), typename T::value_type{ 0 }); });
+    }
 
     for (size_t i = 0; i <= N; ++i)
         for (size_t j = 0; j <= N; ++j)
