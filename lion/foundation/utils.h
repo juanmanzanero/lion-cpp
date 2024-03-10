@@ -197,8 +197,8 @@ template<typename T,
 constexpr std::pair<Array2Type, bool> sin_cos_solve(T lhs_s, T lhs_c, T rhs,
     T tolzero = 1e3 * std::numeric_limits<T>::epsilon());
 
-template<typename ContainerOfGridVectorsType,
-         typename ScalarType = scalar>
+template<typename ScalarType = scalar,
+         typename ContainerOfGridVectorsType>
 std::vector<ScalarType> grid_vectors2points_flat(const ContainerOfGridVectorsType &grid_vectors);
 
 template<typename Container, typename ValueType = typename Container::value_type>

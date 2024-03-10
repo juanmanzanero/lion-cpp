@@ -817,8 +817,8 @@ constexpr std::pair<Array2Type, bool> sin_cos_solve(T lhs_s, T lhs_c, T rhs,
 }
 
 
-template<typename ContainerOfGridVectorsType,
-         typename ScalarType>
+template<typename ScalarType,
+         typename ContainerOfGridVectorsType>
 std::vector<ScalarType> grid_vectors2points_flat(const ContainerOfGridVectorsType &grid_vectors)
 {
     //
