@@ -24,8 +24,8 @@ class Xml_element
     void set_name(const std::string& name) { _e->SetName(name.c_str()); }
 
     //! Get value as string
-    std::string get_value()              { return (_e->GetText() == nullptr) ? "" : _e->GetText(); }
-    std::string get_value(std::string&&) { return get_value(); }
+    std::string get_value()             const { return (_e->GetText() == nullptr) ? "" : _e->GetText(); }
+    std::string get_value(std::string&&) const { return get_value(); }
 
     //! Get value as double
     //! @param[in] simply pass int() to overload this version
@@ -217,6 +217,15 @@ class Xml_element
             throw lion_exception("[ERROR] delete_attribute -> attribute does not exist");
     } 
 
+
+    //! Check if this element and its childs have any attribute
+    bool this_and_childs_have_attributes() const;
+
+
+    //! Check if this element and its childs have value and children
+    bool this_and_childs_have_both_value_and_children() const;
+
+
  private:
     tinyxml2::XMLElement* _e;
 };
@@ -229,11 +238,13 @@ inline void Xml_element::print(std::ostream& os) const
     os << printer.CStr();
 }
 
+
 inline std::ostream& operator<<(std::ostream& os, const Xml_element& e)
 {
     e.print(os);
     return os;
 }
+
 
 inline void Xml_element::copy_contents(Xml_element other)
 {
@@ -464,6 +475,7 @@ void Xml_element::emplace_children_and_values_in_map(MapType &m)
     }
 }
 
+
 template<typename T>
 void Xml_element::emplace_back_children_and_values_in_vector_of_pairs(std::vector<std::pair<std::string, T> > &vp)
 {
@@ -534,6 +546,7 @@ inline bool Xml_element::has_child(const std::string& name) const
         return child.has_child(the_rest);
 }
 
+
 inline std::string Xml_element::get_attribute(const std::string& attribute, std::string&&) const 
 { 
     if ( has_attribute(attribute) )
@@ -545,6 +558,47 @@ inline std::string Xml_element::get_attribute(const std::string& attribute, std:
         print(s_out);
         throw lion_exception(s_out.str());
     }
+}
+
+
+inline bool Xml_element::this_and_childs_have_attributes() const
+{
+    // check if this element has attributes
+    if (_e -> FirstAttribute() != nullptr) {
+        return true;
+    }
+    else {
+
+        // check if children have attributes
+        for (const auto& child : get_children()) {
+            if (child.this_and_childs_have_attributes()) {
+                return true;
+            }
+        }
+
+    }
+
+    return false;
+}
+
+
+inline bool Xml_element::this_and_childs_have_both_value_and_children() const
+{
+    if (!(get_value().empty()) && (get_children().size() > 0u)) {
+        return true;
+    }
+    else {
+
+        // check if children have attributes
+        for (const auto& child : get_children()) {
+            if (child.this_and_childs_have_both_value_and_children()) {
+                return true;
+            }
+        }
+
+    }
+
+    return false;
 }
 
 #endif

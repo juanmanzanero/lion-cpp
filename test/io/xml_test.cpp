@@ -258,3 +258,51 @@ TEST_F(Xml_test, deep_copy)
     EXPECT_EQ(s_out.str(), s_out_ref.str());
     
 }
+
+
+TEST_F(Xml_test, this_and_child_have_attributes)
+{
+    auto xmldef = "<test>"
+        "<abc>"
+            "<dfg>"
+                "<qwer aaaa=\"\"/>"
+            "</dfg>"
+        "</abc>"
+        "<qwe abc=\"auuu\">"
+        "</qwe>"
+    "</test>";
+
+    Xml_document doc;
+    doc.parse(xmldef);
+
+    ASSERT_TRUE(doc.get_root_element().this_and_childs_have_attributes());
+
+    doc.get_element("test/abc/dfg/qwer").delete_attribute("aaaa");
+    ASSERT_TRUE(doc.get_root_element().this_and_childs_have_attributes());
+
+    doc.get_element("test/qwe").delete_attribute("abc");
+    ASSERT_FALSE(doc.get_root_element().this_and_childs_have_attributes());
+}
+
+
+TEST_F(Xml_test, this_and_childs_have_both_value_and_children)
+{
+
+    auto xmldef = "<test>"
+            "<abc>"
+                "<auu>"
+                "  valueee "
+                "  <childd/>"
+                "</auu>"
+            "</abc>"
+        "</test>";
+
+    Xml_document doc;
+    doc.parse(xmldef);
+
+    ASSERT_TRUE(doc.get_root_element().this_and_childs_have_both_value_and_children());
+
+    doc.get_element("test/abc/auu").set_value("");
+    ASSERT_FALSE(doc.get_root_element().this_and_childs_have_both_value_and_children());
+
+}
