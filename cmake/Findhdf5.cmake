@@ -7,6 +7,8 @@ if (NOT hdf5_FOUND)
     find_library(HDF5_CPP_LIBRARY NAMES hdf5_cpp PATHS ${CMAKE_BINARY_DIR}/lion/thirdparty/lib HINTS ${CMAKE_BINARY_DIR}/lion/thirdparty/lib NO_DEFAULT_PATH) 
     find_library(HDF5_CPP_HL_LIBRARY NAMES hdf5_hl_cpp PATHS ${CMAKE_BINARY_DIR}/lion/thirdparty/lib HINTS ${CMAKE_BINARY_DIR}/lion/thirdparty/lib NO_DEFAULT_PATH) 
 
+    find_package(ZLIB)
+    find_package(SZIP)
 
     if (HDF5_INCLUDE_DIR AND HDF5_LIBRARY)
         set(hdf5_FOUND YES)
@@ -57,6 +59,8 @@ if (NOT hdf5_FOUND)
         target_link_libraries(hdf5 INTERFACE 
                "$<BUILD_INTERFACE:${HDF5_LIBRARY}>"
                "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_LIBDIR}/${HDF5_LIB_NAME}>")
+
+        target_link_libraries(hdf5 INTERFACE ZLIB::ZLIB SZIP::SZIP)
 
 
         foreach(t ${HDF5_LIB_ALL_FILES})

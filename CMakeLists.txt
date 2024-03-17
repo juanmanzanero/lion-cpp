@@ -68,8 +68,7 @@ if(WITH_HSL)
     target_compile_definitions(lion INTERFACE WITH_HSL)
 endif()
 
-
-target_link_libraries(lion INTERFACE ipopt blaslapack tinyxml2 fortran_libraries cppad hdf5)
+target_link_libraries(lion INTERFACE ipopt blaslapack tinyxml2 fortran_libraries cppad hdf5 ZLIB::ZLIB SZIP::SZIP)
 
 # Create a lion header only
 add_library(header_only INTERFACE)
