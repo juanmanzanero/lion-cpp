@@ -210,6 +210,30 @@ constexpr T smooth_pos(const T &x, S eps2)
 
 
 template<bool ActuallySmooth, typename T, typename S>
+constexpr T smooth_pos_derivative(const T &x, S eps2)
+{
+    //
+    // Returns the positive part of input "x", smoothed
+    // out near 0 with parameter "eps2" (unless template
+    // parameter "ActuallySmooth" is false, in that case
+    // the function returns the strict positive part
+    // of "x").
+    //
+
+    if constexpr (ActuallySmooth) {
+        using std::sqrt;
+
+        return scalar{0.5} * (scalar{1} + x/sqrt(eps2+x*x));
+    }
+    else {
+        (void)eps2;
+
+        return x > T{ 0 } ? T{ 1 } : T{ 0 };
+    }
+}
+
+
+template<bool ActuallySmooth, typename T, typename S>
 constexpr T smooth_neg(const T &x, S eps2)
 {
     //
@@ -221,6 +245,21 @@ constexpr T smooth_neg(const T &x, S eps2)
     //
 
     return -smooth_pos<ActuallySmooth>(-x, eps2);
+}
+
+
+template<bool ActuallySmooth, typename T, typename S>
+constexpr T smooth_neg_derivative(const T &x, S eps2)
+{
+    //
+    // Returns the negative part of input "x", smoothed
+    // out near 0 with parameter "eps2" (unless template
+    // parameter "ActuallySmooth" is false, in that case
+    // the function returns the strict negative part
+    // of "x").
+    //
+
+    return smooth_pos_derivative<ActuallySmooth>(-x, eps2);
 }
 
 
@@ -403,6 +442,28 @@ constexpr T smooth_clamp(const T &x, const T1 &lo, const T2 &hi, S eps2)
     }
     else {
         return x < hi ? (x > lo ? x : static_cast<T>(lo)) : static_cast<T>(hi);
+    }
+}
+
+
+template<bool ActuallySmooth, typename T, typename T1, typename T2, typename S>
+constexpr T smooth_clamp_derivative(const T &x, const T1 &lo, const T2 &hi, S eps2)
+{
+    //
+    // Clamps "x" to "[x_lower, x_upper]", using a squared root smooth modulation,
+    // unless template parameter "ActuallySmooth" is false, in
+    // that case we strictly clamp the value.
+    //
+
+    if constexpr (ActuallySmooth) {
+        using std::sqrt;
+
+        const auto Dxlo = x - lo;
+        const auto Dxhi = x - hi;
+        return S{ 0.5 } * (Dxlo / sqrt(Dxlo * Dxlo + eps2) - Dxhi / sqrt(Dxhi * Dxhi + eps2));
+    }
+    else {
+        return x < hi ? (x > lo ? T{ 1 } : T{ 0 }) : T{ 0 };
     }
 }
 
