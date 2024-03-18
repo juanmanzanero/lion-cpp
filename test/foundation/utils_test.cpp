@@ -5,7 +5,7 @@
 #include "gtest/gtest.h"
 
 
-TEST(utils_test, string_to_double_vector)
+TEST(Utils_test, string_to_double_vector)
 {
     {
         const std::string s = "1.02324355, 5.0624692 \n -7.354634, \n 5.23035234392, 243.242532425";
@@ -37,7 +37,8 @@ TEST(utils_test, string_to_double_vector)
     }
 }
 
-TEST(utils_test, linspace)
+
+TEST(Utils_test, linspace)
 {
     const auto x = linspace<scalar>(0,1,11);
 
@@ -48,7 +49,7 @@ TEST(utils_test, linspace)
 }   
 
 
-TEST(utils_test, find_closest_point)
+TEST(Utils_test, find_closest_point)
 {
 
     // Define a polygon with its (x,y) coordinates
@@ -459,7 +460,7 @@ TEST(utils_test, find_closest_point)
 }
 
 
-TEST(utils_test, nchoosek_test)
+TEST(Utils_test, nchoosek_test)
 {
     // for invalid inputs (negative, or n < k),
     // the result is 0
@@ -590,7 +591,7 @@ TEST(utils_test, nchoosek_test)
 }
 
 
-TEST(utils_test, sin_cos_solve_test)
+TEST(Utils_test, sin_cos_solve_test)
 {
     {
         const auto [_, valid] = sin_cos_solve(0., 0., 1.); (void)_;
@@ -651,7 +652,7 @@ TEST(utils_test, sin_cos_solve_test)
 }
 
 
-TEST(utils_test, sumabs_test)
+TEST(Utils_test, sumabs_test)
 {
     constexpr auto n = 20000;
     std::vector<double> v(n);
@@ -664,7 +665,7 @@ TEST(utils_test, sumabs_test)
 }
 
 
-TEST(utils_test, sumsqr_test)
+TEST(Utils_test, sumsqr_test)
 {
     constexpr auto n = 20000;
     std::vector<double> v(n);
@@ -677,7 +678,7 @@ TEST(utils_test, sumsqr_test)
 }
 
 
-TEST(utils_test, smooth_clamp_test)
+TEST(Utils_test, smooth_clamp_test)
 {
     const auto lb = 0.123456;
     const auto ub = 0.98523;
@@ -693,7 +694,7 @@ TEST(utils_test, smooth_clamp_test)
 }
 
 
-TEST(utils_test, smooth_max_test)
+TEST(Utils_test, smooth_max_test)
 {
     const auto lb = 0.123456;
     const auto ub = 0.98523;
@@ -709,7 +710,7 @@ TEST(utils_test, smooth_max_test)
 }
 
 
-TEST(utils_test, smooth_min_test)
+TEST(Utils_test, smooth_min_test)
 {
     const auto lb = 0.123456;
     const auto ub = 0.98523;
@@ -725,7 +726,7 @@ TEST(utils_test, smooth_min_test)
 }
 
 
-TEST(utils_test, grid_vectors2points_flat)
+TEST(Utils_test, grid_vectors2points_flat)
 {
     //
     // Tests the "grid_vectors2points_flat" function.
@@ -786,8 +787,7 @@ TEST(utils_test, grid_vectors2points_flat)
 }
 
 
-
-TEST(utils_test, nearest_in_sorted_range_test)
+TEST(Utils_test, nearest_in_sorted_range_test)
 {
     //
     // Tests the "nearest_in_sorted_range" function
@@ -850,5 +850,113 @@ TEST(utils_test, nearest_in_sorted_range_test)
             const auto i_alt = index_of_closest_element_in_grid_vector(range, val);
             EXPECT_EQ(static_cast<std::size_t>(i), i_alt);
         }
+    }
+}
+
+
+TEST(Utils_test, smooth_pos_derivatives)
+{
+    //
+    // Check that the derivatives of the smooth_pos_function
+    // are correct
+    //
+
+    using AD = CppAD::AD<scalar>;
+
+
+    // tape the smooth_pos function
+    auto a_x = std::vector<AD>{AD{ 0 }};
+    CppAD::Independent(a_x);
+
+    auto a_y = std::vector<AD>{smooth_pos(a_x[0], scalar{ 0.01 })};
+
+    auto f = CppAD::ADFun<scalar>{};
+    f.Dependent(a_x, a_y);
+
+    const auto x_values = linspace(-10.0, 10.0, 200);
+
+    for (auto& x : x_values) {
+        
+        // first derivative
+        const auto dydx_analytical = smooth_pos_derivative(x, scalar{ 0.01 });
+        const auto dydx_ad = f.Jacobian(std::vector<scalar>{x})[0];
+        EXPECT_DOUBLE_EQ(dydx_analytical, dydx_ad);
+
+        // second derivative
+        const auto d2ydx2_analytical = smooth_pos_second_derivative(x, scalar{ 0.01 });;
+        const auto d2ydx2_ad = f.Hessian(std::vector<scalar>{x}, std::vector<scalar>{scalar{1}})[0];
+        EXPECT_NEAR(d2ydx2_analytical, d2ydx2_ad, 2.0e-15);
+    }
+}
+
+
+TEST(Utils_test, smooth_neg_derivatives)
+{
+    //
+    // Check that the derivatives of the smooth_neg_function
+    // are correct
+    //
+
+    using AD = CppAD::AD<scalar>;
+
+
+    // tape the smooth_neg function
+    auto a_x = std::vector<AD>{AD{ 0 }};
+    CppAD::Independent(a_x);
+
+    auto a_y = std::vector<AD>{smooth_neg(a_x[0], scalar{ 0.01 })};
+
+    auto f = CppAD::ADFun<scalar>{};
+    f.Dependent(a_x, a_y);
+
+    const auto x_values = linspace(-10.0, 10.0, 200);
+
+    for (auto& x : x_values) {
+        
+        // first derivative
+        const auto dydx_analytical = smooth_neg_derivative(x, scalar{ 0.01 });
+        const auto dydx_ad = f.Jacobian(std::vector<scalar>{x})[0];
+        EXPECT_DOUBLE_EQ(dydx_analytical, dydx_ad);
+
+        // second derivative
+        const auto d2ydx2_analytical = smooth_neg_second_derivative(x, scalar{ 0.01 });;
+        const auto d2ydx2_ad = f.Hessian(std::vector<scalar>{x}, std::vector<scalar>{scalar{1}})[0];
+        EXPECT_NEAR(d2ydx2_analytical, d2ydx2_ad, 2.0e-15);
+    }
+}
+
+
+TEST(Utils_test, smooth_clamp_derivatives)
+{
+    //
+    // Check that the derivatives of the smooth_clamp_function
+    // are correct
+    //
+
+    using AD = CppAD::AD<scalar>;
+
+
+    // tape the smooth_clamp function
+    auto a_x = std::vector<AD>{AD{ 0 }};
+    CppAD::Independent(a_x);
+
+    auto a_y = std::vector<AD>{smooth_clamp(a_x[0], scalar{-3}, scalar{5}, scalar{ 0.01 })};
+
+    auto f = CppAD::ADFun<scalar>{};
+    f.Dependent(a_x, a_y);
+
+    const auto x_values = linspace(-10.0, 10.0, 200);
+
+    for (auto& x : x_values) {
+        
+        // first derivative
+        const auto dydx_analytical = smooth_clamp_derivative(x, scalar{-3}, scalar{5}, scalar{ 0.01 });
+        const auto dydx_ad = f.Jacobian(std::vector<scalar>{x})[0];
+        EXPECT_DOUBLE_EQ(dydx_analytical, dydx_ad);
+
+        // second derivative
+        const auto d2ydx2_analytical = smooth_clamp_second_derivative(x, scalar{-3}, scalar{5}, scalar{ 0.01 });;
+        const auto d2ydx2_ad = f.Hessian(std::vector<scalar>{x}, std::vector<scalar>{scalar{1}})[0];
+        EXPECT_NEAR(d2ydx2_analytical, d2ydx2_ad, 2.0e-15);
     }
 }

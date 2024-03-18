@@ -132,10 +132,16 @@ template<bool ActuallySmooth = true, typename T, typename S>
 constexpr T smooth_pos_derivative(const T &x, S eps2);
 
 template<bool ActuallySmooth = true, typename T, typename S>
+constexpr T smooth_pos_second_derivative(const T &x, S eps2);
+
+template<bool ActuallySmooth = true, typename T, typename S>
 constexpr T smooth_neg(const T &x, S eps2);
 
 template<bool ActuallySmooth = true, typename T, typename S>
 constexpr T smooth_neg_derivative(const T &x, S eps2);
+
+template<bool ActuallySmooth = true, typename T, typename S>
+constexpr T smooth_neg_second_derivative(const T &x, S eps2);
 
 template<bool ActuallySmooth = true, bool UseSinAtanFormula = true, typename T, typename S>
 constexpr T smooth_sign(const T &x, S eps);
@@ -160,6 +166,9 @@ constexpr T smooth_clamp(const T &x, const T1 &lo, const T2 &hi, S eps2);
 
 template<bool ActuallySmooth = true, typename T, typename T1, typename T2, typename S>
 constexpr T smooth_clamp_derivative(const T &x, const T1 &lo, const T2 &hi, S eps2);
+
+template<bool ActuallySmooth = true, typename T, typename T1, typename T2, typename S>
+constexpr T smooth_clamp_second_derivative(const T &x, const T1 &lo, const T2 &hi, S eps2);
 
 template<bool ActuallySmooth = true, bool UseSinAtanFormula = true, typename T, typename S>
 constexpr T smooth_step(const T &x, S eps);
