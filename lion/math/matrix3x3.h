@@ -67,6 +67,7 @@ struct Matrix3x3 : std::array<T, 9>
     constexpr bool is_orthogonal() const;
     constexpr bool is_rotmat() const;
     constexpr bool is_eye() const;
+    constexpr bool is_symmetric() const;
 
     constexpr static Matrix3x3 eye();
     constexpr static Matrix3x3 zeros();
@@ -111,6 +112,8 @@ constexpr bool is_rotmat(const Matrix3x3<T> &arg);
 template <typename T>
 constexpr bool is_eye(const Matrix3x3<T> &arg);
 
+template <typename T>
+constexpr bool is_symmetric(const Matrix3x3<T> &arg);
 
 template <typename T>
 constexpr Matrix3x3<T> inv(const Matrix3x3<T> &arg);
@@ -341,6 +344,15 @@ constexpr bool Matrix3x3<T>::is_eye() const
 }
 
 template<typename T>
+constexpr bool Matrix3x3<T>::is_symmetric() const
+{
+    constexpr auto tol{ 1e3 };
+    return eq_fp<T>(xy(), yx(), tol) &&
+           eq_fp<T>(xz(), zx(), tol) &&
+           eq_fp<T>(yz(), zy(), tol);
+}
+
+template<typename T>
 constexpr Matrix3x3<T> Matrix3x3<T>::eye()
 {
     return Matrix3x3<T>{ T{ 1 }, T{ 0 }, T{ 0 },
@@ -502,6 +514,12 @@ template<typename T>
 constexpr bool is_eye(const Matrix3x3<T> &arg)
 {
     return arg.is_eye();
+}
+
+template<typename T>
+constexpr bool is_symmetric(const Matrix3x3<T> &arg)
+{
+    return arg.is_symmetric();
 }
 
 template<typename T>
