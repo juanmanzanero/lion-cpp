@@ -180,14 +180,14 @@ constexpr Matrix3x3Type ea2rotmat(const T &yaw_rad, const T &pitch_rad, const T 
     const auto cyaw = cos(yaw_rad);
     const auto syaw = sin(yaw_rad);
     const auto cpitch = cos(pitch_rad);
-    const auto stheta = sin(pitch_rad);
+    const auto spitch = sin(pitch_rad);
     const auto croll = cos(roll_rad);
     const auto sroll = sin(roll_rad);
 
     return Matrix3x3Type{
-        cpitch * cyaw, sroll * stheta * cyaw - syaw * croll, croll * cyaw * stheta + sroll * syaw,
-        cpitch * syaw, sroll * stheta * syaw + cyaw * croll, croll * syaw * stheta - sroll * cyaw,
-        -stheta, sroll * cpitch, croll * cpitch };
+        cpitch * cyaw, sroll * spitch * cyaw - syaw * croll, croll * cyaw * spitch + sroll * syaw,
+        cpitch * syaw, sroll * spitch * syaw + cyaw * croll, croll * syaw * spitch - sroll * cyaw,
+        -spitch, sroll * cpitch, croll * cpitch };
 }
 
 
