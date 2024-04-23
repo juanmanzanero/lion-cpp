@@ -68,6 +68,7 @@ struct Matrix3x3 : std::array<T, 9>
     constexpr bool is_rotmat() const;
     constexpr bool is_eye() const;
     constexpr bool is_symmetric() const;
+    constexpr bool is_symmetric_and_positive_definite() const;
 
     constexpr static Matrix3x3 eye();
     constexpr static Matrix3x3 zeros();
@@ -116,6 +117,9 @@ template <typename T>
 constexpr bool is_symmetric(const Matrix3x3<T> &arg);
 
 template <typename T>
+constexpr bool is_symmetric_and_positive_definite(const Matrix3x3<T> &arg);
+
+template <typename T>
 constexpr Matrix3x3<T> inv(const Matrix3x3<T> &arg);
 
 template <typename T>
@@ -144,7 +148,6 @@ constexpr Matrix3x3<T> operator-(const Matrix3x3<T> &lhs, const Matrix3x3<T> &rh
 
 template <typename T, typename U>
 constexpr Matrix3x3<combine_types_t<T, U> > operator*(const Matrix3x3<T> &lhs, const Matrix3x3<U> &rhs);
-
 
 template <typename T>
 constexpr Matrix3x3<T> operator+(const Matrix3x3<T> &lhs, T val);
@@ -228,8 +231,8 @@ constexpr Matrix3x3<T>::Matrix3x3(T val) :
 template<typename T>
 constexpr Matrix3x3<T>::Matrix3x3(const Vector3d<T> &row_x, const Vector3d<T> &row_y, const Vector3d<T> &row_z) :
     Matrix3x3<T>{ row_x.x(), row_x.y(), row_x.z(),
-               row_y.x(), row_y.y(), row_y.z(),
-               row_z.x(), row_z.y(), row_z.z() } {}
+                  row_y.x(), row_y.y(), row_y.z(),
+                  row_z.x(), row_z.y(), row_z.z() } {}
 
 template<typename T>
 constexpr Matrix3x3<T>::Matrix3x3(const base_type &arr) : base_type(arr) {}
@@ -353,11 +356,20 @@ constexpr bool Matrix3x3<T>::is_symmetric() const
 }
 
 template<typename T>
+constexpr bool Matrix3x3<T>::is_symmetric_and_positive_definite() const
+{
+    return is_symmetric() &&
+           xx() > T{ 0 } &&
+           xx() * yy() - xy() * yx() > T{ 0 } &&
+           det() > T{ 0 };
+}
+
+template<typename T>
 constexpr Matrix3x3<T> Matrix3x3<T>::eye()
 {
     return Matrix3x3<T>{ T{ 1 }, T{ 0 }, T{ 0 },
-                      T{ 0 }, T{ 1 }, T{ 0 },
-                      T{ 0 }, T{ 0 }, T{ 1 } };
+                         T{ 0 }, T{ 1 }, T{ 0 },
+                         T{ 0 }, T{ 0 }, T{ 1 } };
 }
 
 template<typename T>
@@ -378,8 +390,8 @@ constexpr Matrix3x3<T> Matrix3x3<T>::columns(const Vector3d<T> &col_x,
                                               const Vector3d<T> &col_z)
 {
     return Matrix3x3<T>{ col_x.x(), col_y.x(), col_z.x(),
-        col_x.y(), col_y.y(), col_z.y(),
-        col_x.z(), col_y.z(), col_z.z(), };
+                         col_x.y(), col_y.y(), col_z.y(),
+                         col_x.z(), col_y.z(), col_z.z(), };
 }
 
 template<typename T>
@@ -520,6 +532,12 @@ template<typename T>
 constexpr bool is_symmetric(const Matrix3x3<T> &arg)
 {
     return arg.is_symmetric();
+}
+
+template<typename T>
+constexpr bool is_symmetric_and_positive_definite(const Matrix3x3<T> &arg)
+{
+    return arg.is_symmetric_and_positive_definite();
 }
 
 template<typename T>
