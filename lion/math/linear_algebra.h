@@ -1011,4 +1011,74 @@ inline T rcond(const T *A, int n)
     return result;
 }
 
+
+template<typename T, typename SizeType>
+inline void lufactorize_Doolittle(T *A, SizeType n)
+{
+    //
+    // Does a raw LU factorization of the dense & square column-major
+    // matrix "A", of size "n x n". Unsafer than "plufactorize" since
+    // it doesn't do pivoting, so use it with caution, preferably with
+    // small and trusty matrices... however, this algorithm doesn't have
+    // "ifs", which makes it more adequate to tape CppAD::ADFuns. On
+    // entry, "A" should contain the square matrix of size "n x n" in
+    // column-major order. On exit, "A" will contain the LU factors of
+    // the matrix, also in column-major order.
+    //
+
+    for (auto i = decltype(n){ 0 }; i < n; ++i) {
+        for (auto j = decltype(i){ 0 }; j < i; ++j) {
+            const auto jn = j * n;
+            const auto ij = i + jn;
+            for (auto k = decltype(j){ 0 }; k < j; ++k) {
+                A[ij] -= A[i + k * n] * A[k + jn];
+            }
+            A[ij] /= A[j + jn];
+        }
+
+        for (auto j = i; j < n; ++j) {
+            const auto jn = j * n;
+            const auto ij = i + jn;
+            for (auto k = decltype(i){ 0 }; k < i; ++k) {
+                A[ij] -= A[i + k * n] * A[k + jn];
+            }
+        }
+    }
+}
+
+
+template<typename T, typename SizeType0, typename SizeType1>
+inline void lusolve_Doolittle(T *B, T *LU_A, SizeType0 num_rows_A_rows_B, SizeType1 num_cols_B)
+{
+    //
+    // Direct solve of the dense square problem "A * X = B", with
+    // "A = L * U" (i.e., raw LU decomposition without pivoting). Input
+    // buffer "LU_A" should hold the column-major LU factorization of the
+    // problem's square matrix "A" (which has size "num_rows_A_rows_B x
+    // num_rows_A_rows_B"), e.g. as returned by function "lufactorize_Doolittle".
+    // On entry, "B" contains the problem's RHS (which may have multiple colums)
+    // in column-major order, and holds solution "X" on return (also in
+    // column-major order) both of size "num_rows_A_rows_B x num_cols_B".
+    //
+
+    for (auto j = decltype(num_cols_B){ 0 }; j < num_cols_B; ++j) {
+        const auto jn = j * num_rows_A_rows_B;
+        for (auto i = decltype(num_rows_A_rows_B){ 0 }; i < num_rows_A_rows_B; ++i) {
+            const auto ij = i + jn;
+            for (auto k = decltype(i){ 0 }; k < i; ++k) {
+                B[ij] -= LU_A[i + k * num_rows_A_rows_B] * B[k + jn];
+            }
+        }
+
+        for (auto i1 = num_rows_A_rows_B; i1 > decltype(num_rows_A_rows_B){ 0 }; --i1) {
+            const auto i = i1 - decltype(num_rows_A_rows_B){ 1 };
+            const auto ij = i + jn;
+            for (auto k = i1; k < num_rows_A_rows_B; ++k) {
+                B[ij] -= LU_A[i + k * num_rows_A_rows_B] * B[k + jn];
+            }
+            B[ij] /= LU_A[i + i * num_rows_A_rows_B];
+        }
+    }
+}
+
 #endif
