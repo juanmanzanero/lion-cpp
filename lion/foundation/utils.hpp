@@ -1035,6 +1035,37 @@ std::vector<ScalarType> grid_vectors2points_flat(const ContainerOfGridVectorsTyp
 }
 
 
+template<typename ScalarType,
+         typename ContainerOfGridVectorsType>
+std::vector<std::vector<ScalarType> > grid_vectors2points(const ContainerOfGridVectorsType &grid_vectors)
+{
+    //
+    // Expands a grid into points like "grid_vectors2points_flat",
+    // but returns the points separated into containers by dimensions,
+    // instead of putting them into a matrix, i.e., it is like returning
+    // the separate columns of the matrix.
+    //
+
+    // get the "flat" expansion of the grid
+    const auto points_flat = grid_vectors2points_flat(grid_vectors);
+
+    // separate it into containers per dimension
+    const auto num_dimensions = grid_vectors.size();
+    const auto num_points = points_flat.size() / num_dimensions;
+
+    std::vector<std::vector<ScalarType> > points_per_dimension(num_dimensions,
+                                                               std::vector<ScalarType>(num_points));
+
+    for (auto d = 0u; d < num_dimensions; ++d) {
+        for (auto p = 0u; p < num_points; ++p) {
+            points_per_dimension[d][p] = points_flat[p * num_dimensions + d];
+        }
+    }
+
+    return points_per_dimension;
+}
+
+
 template<typename Container, typename ValueType>
 constexpr ValueType median(Container cont)
 {

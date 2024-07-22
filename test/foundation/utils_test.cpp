@@ -729,7 +729,7 @@ TEST(Utils_test, smooth_min_test)
 TEST(Utils_test, grid_vectors2points_flat)
 {
     //
-    // Tests the "grid_vectors2points_flat" function.
+    // Tests the "grid_vectors2points_flat" & "grid_vectors2points" functions.
     //
 
     const auto reference_points_flat = std::vector<double>{
@@ -764,6 +764,17 @@ TEST(Utils_test, grid_vectors2points_flat)
         ASSERT_EQ(points_flat.size(), reference_points_flat.size());
         for (auto i = 0u; i < reference_points_flat.size(); ++i) {
             EXPECT_EQ(points_flat[i], reference_points_flat[i]);
+        }
+
+        const auto points_per_dimension = grid_vectors2points(grid_vectors);
+        const auto num_grid_vectors = grid_vectors.size();
+        const auto num_points = reference_points_flat.size() / num_grid_vectors;
+        ASSERT_EQ(points_per_dimension.size(), num_grid_vectors);
+        for (auto dim = 0u; dim < num_grid_vectors; ++dim) {
+            ASSERT_EQ(points_per_dimension[dim].size(), num_points);
+            for (auto p = 0u; p < num_points; ++p) {
+                EXPECT_EQ(points_per_dimension[dim][p], reference_points_flat[num_grid_vectors * p + dim]);
+            }
         }
     };
 

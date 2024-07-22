@@ -219,6 +219,10 @@ template<typename ScalarType = scalar,
          typename ContainerOfGridVectorsType>
 std::vector<ScalarType> grid_vectors2points_flat(const ContainerOfGridVectorsType &grid_vectors);
 
+template<typename ScalarType = scalar,
+         typename ContainerOfGridVectorsType>
+std::vector<std::vector<ScalarType> > grid_vectors2points(const ContainerOfGridVectorsType &grid_vectors);
+
 template<typename Container, typename ValueType = typename Container::value_type>
 constexpr ValueType median(Container cont);
 
