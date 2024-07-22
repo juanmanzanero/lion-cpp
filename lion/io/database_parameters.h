@@ -47,7 +47,7 @@ using Database_parameter_const   = Database_parameter<const void>;
     std::vector<bool> __used_parameters = std::vector<bool>(__get_parameters().size(),false); 
 
 
-inline void read_parameters(Xml_element &root_element,
+inline void read_parameters(Document_element_ptr root_element,
                             const std::vector<Database_parameter_mutable>& p,
                             std::vector<bool>& used_parameters)
 {
@@ -55,57 +55,63 @@ inline void read_parameters(Xml_element &root_element,
 
     for (size_t i = 0; i < p.size(); ++i)
     {
-        auto element = root_element.get_child(p[i].name);
+        auto element = root_element->get_child(p[i].name);
 
         switch (p[i].type)
         {
          case(Database_parameter_mutable::DOUBLE): 
-            *static_cast<scalar*>(p[i].address) = element.get_value(scalar());
+            *static_cast<scalar*>(p[i].address) = element->get_value(scalar());
             break;
 
          case(Database_parameter_mutable::INT): 
-            *static_cast<int*>(p[i].address) = element.get_value(int());
+            *static_cast<int*>(p[i].address) = element->get_value(int());
             break;
 
          case(Database_parameter_mutable::STD_VECTOR_DOUBLE): 
-            *static_cast<std::vector<scalar>*>(p[i].address) = element.get_value(std::vector<scalar>());
+            *static_cast<std::vector<scalar>*>(p[i].address) = element->get_value(std::vector<scalar>());
             break;
 
          case(Database_parameter_mutable::VECTOR3): 
-            *static_cast<sVector3d*>(p[i].address) = element.get_value(sVector3d());
+            *static_cast<sVector3d*>(p[i].address) = element->get_value(sVector3d());
             break;
 
          case(Database_parameter_mutable::MATRIX3X3): 
-            *static_cast<sMatrix3x3*>(p[i].address) = element.get_value(sMatrix3x3());
+            *static_cast<sMatrix3x3*>(p[i].address) = element->get_value(sMatrix3x3());
             break;
 
          case(Database_parameter_mutable::AD): 
-            *static_cast<CppAD::AD<scalar>*>(p[i].address) = element.get_value(scalar());
+            *static_cast<CppAD::AD<scalar>*>(p[i].address) = element->get_value(scalar());
             break;
 
          case(Database_parameter_mutable::BOOL): 
-            *static_cast<bool*>(p[i].address) = element.get_value(bool());
+            *static_cast<bool*>(p[i].address) = element->get_value(bool());
             break;
 
          case(Database_parameter_mutable::STRING): 
-            *static_cast<std::string*>(p[i].address) = element.get_value();
+            *static_cast<std::string*>(p[i].address) = element->get_value();
             break;
 
          default:
             throw lion_exception("[ERROR] read_parameters -> parameter type was not recognized");
             break;
         }
-        used_parameters[i] = true;
-        element.set_attribute<bool>("__unused__", false);
 
-        while(element.has_parent())
-        {
-            element = element.get_parent();
 
-            if(element.has_attribute("__unused__"))
-                break;
-            else
-                element.set_attribute<bool>("__unused__", false);
+        if (element.can_cast<Xml_element>()) {
+            auto& element_xml = element.cast<Xml_element>();
+
+            used_parameters[i] = true;
+            element_xml.set_attribute<bool>("__unused__", false);
+
+            while (element_xml.has_parent())
+            {
+                element_xml = element_xml.get_parent();
+
+                if (element_xml.has_attribute("__unused__"))
+                    break;
+                else
+                    element_xml.set_attribute<bool>("__unused__", false);
+            }
         }
     }
 }
@@ -117,7 +123,8 @@ inline void read_parameters(Xml_document &doc,
                             std::vector<bool>& used_parameters)
 {
     auto elem = doc.get_element(path);
-    read_parameters(elem, p, used_parameters);
+    auto e = Document_element_ptr(std::make_shared<Xml_element>(elem.e_xml_ptr()));
+    read_parameters(std::move(e), p, used_parameters);
 }
 
 
@@ -315,7 +322,7 @@ inline void write_parameters(Xml_document& doc, const std::string& path, const s
 }
 
 
-inline bool database_parameters_all_used(const Xml_element& element)
+inline bool database_parameters_all_used(Xml_element& element)
 {
     if( !element.has_attribute("__unused__") )
         return false;
@@ -323,8 +330,8 @@ inline bool database_parameters_all_used(const Xml_element& element)
     if ( !element.has_children() )
         return true;
 
-    for (auto child : element.get_children() )
-        if ( !database_parameters_all_used(child) )
+    for (auto& child : element.get_children() )
+        if ( !database_parameters_all_used(child.cast<Xml_element>()) )
             return false;
 
     return true;

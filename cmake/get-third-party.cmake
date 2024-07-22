@@ -24,6 +24,14 @@ if (NOT ${tinyxml2_FOUND})
     set(BUILD_TINYXML YES)
 endif()
 
+# nlohmann-json
+find_package(nlohmann_json)
+
+if (NOT ${nlohmann_json_FOUND})
+    set(BUILD_NLOHMANNJSON YES)
+endif()
+
+
 # Ipopt + dependencies
 find_package(ipopt)
 
@@ -78,6 +86,7 @@ endif()
 
 find_package(blaslapack REQUIRED)
 find_package(tinyxml2 REQUIRED)
+find_package(nlohmann_json REQUIRED)
 find_package(ipopt REQUIRED)
 find_package(loggercpp REQUIRED)
 find_package(cppad REQUIRED)

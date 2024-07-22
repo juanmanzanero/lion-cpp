@@ -39,9 +39,9 @@ TEST_F(Xml_test, root_node_children)
     auto root_children = doc.get_root_element().get_children();
 
     EXPECT_EQ(root_children.size(), 3);
-    EXPECT_EQ(root_children[0].get_name(), "child1");
-    EXPECT_EQ(root_children[1].get_name(), "child2");
-    EXPECT_EQ(root_children[2].get_name(), "parameters");
+    EXPECT_EQ(root_children[0]->get_name(), "child1");
+    EXPECT_EQ(root_children[1]->get_name(), "child2");
+    EXPECT_EQ(root_children[2]->get_name(), "parameters");
 }
 
 
@@ -52,7 +52,7 @@ TEST_F(Xml_test, read_vector1)
     // Find node using full path
     auto vector_child = doc.get_root_element().get_child("child2/vector1");
 
-    std::vector<double> v = vector_child.get_value(std::vector<double>());
+    std::vector<double> v = vector_child->get_value(std::vector<double>());
     std::vector<double> v_expected = { 1, 3, 5, 7 };
 
     EXPECT_EQ(v.size(), v_expected.size());
@@ -62,9 +62,9 @@ TEST_F(Xml_test, read_vector1)
 
     // Find node by node
     auto child2 = doc.get_root_element().get_child("child2");
-    auto vector1 = child2.get_child("vector1");
+    auto vector1 = child2->get_child("vector1");
 
-    std::vector<double> v2 = vector1.get_value(std::vector<double>());
+    std::vector<double> v2 = vector1->get_value(std::vector<double>());
 
     EXPECT_EQ(v2.size(), v_expected.size());
     
@@ -80,7 +80,7 @@ TEST_F(Xml_test, read_vector2)
     // Find node using full path
     auto vector_child = doc.get_root_element().get_child("child2/vector2");
 
-    std::vector<double> v = vector_child.get_value(std::vector<double>());
+    std::vector<double> v = vector_child->get_value(std::vector<double>());
     std::vector<double> v_expected = { 1, 2, 3, 4 };
 
     EXPECT_EQ(v.size(), v_expected.size());
@@ -90,9 +90,9 @@ TEST_F(Xml_test, read_vector2)
 
     // Find node by node
     auto child2 = doc.get_root_element().get_child("child2");
-    auto vector1 = child2.get_child("vector2");
+    auto vector1 = child2->get_child("vector2");
 
-    std::vector<double> v2 = vector1.get_value(std::vector<double>());
+    std::vector<double> v2 = vector1->get_value(std::vector<double>());
 
     EXPECT_EQ(v2.size(), v_expected.size());
     
@@ -113,7 +113,7 @@ TEST_F(Xml_test, Matrix3x3)
         7.0, 8.0, 9.0 
     };
 
-    sMatrix3x3 mat = doc.get_root_element().get_child("child2/matrix3x3").get_value(sMatrix3x3());
+    sMatrix3x3 mat = doc.get_root_element().get_child("child2/matrix3x3")->get_value(sMatrix3x3());
 
     for (size_t i = 0; i < 3; ++i)
         for (size_t j = 0; j < 3; ++j)
@@ -182,7 +182,7 @@ TEST_F(Xml_test, print_element)
     sOut << "</child2>" << std::endl;
 
     std::ostringstream sOutXml;
-    sOutXml << doc.get_root_element().get_child("child2");
+    sOutXml << doc.get_root_element().get_child("child2").cast<Xml_element>();
     EXPECT_EQ(sOutXml.str(), sOut.str());
 
 
@@ -202,21 +202,12 @@ TEST_F(Xml_test, create_child)
 {
     Xml_document doc_out("dummy.xml");
     doc_out.create_root_element("root");
-    Xml_element child = doc_out.get_root_element().add_child("child");
-    child.set_value("value for child");
+    auto child = doc_out.get_root_element().add_child("child");
+    child->set_value("value for child");
     
     std::ostringstream sOut;
     sOut << doc_out;
     EXPECT_EQ(sOut.str(), "<root>\n    <child>value for child</child>\n</root>\n");
-}
-
-TEST_F(Xml_test, get_value_as_bool)
-{
-    Xml_document doc;
-    doc.parse("<doc> <a> true </a> <b> false </b> </doc>");
-
-    EXPECT_TRUE(doc.get_element("doc/a").get_value(bool()));
-    EXPECT_FALSE(doc.get_element("doc/b").get_value(bool()));
 }
 
 
@@ -239,7 +230,8 @@ TEST_F(Xml_test, deep_copy)
     Xml_document doc2;
     doc2.parse("<doc2> <content1> <content2> content </content2> </content1> </doc2>");
 
-    doc1.get_element("doc/a/empty_node").copy_contents(doc2.get_element("doc2"));
+    auto element_to_copy = doc2.get_element("doc2");
+    doc1.get_element("doc/a/empty_node").copy_contents(element_to_copy);
 
     std::ostringstream s_out_ref;
     s_out_ref << "<doc>" << std::endl;

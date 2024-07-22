@@ -8,6 +8,32 @@
 #include <cmath>
 #include "lion/foundation/type_traits.h"
 
+
+template<std::size_t N, typename VectorType, typename T = typename VectorType::value_type>
+constexpr std::array<T, N> vec2array(const VectorType& v)
+{
+    if (v.size() != N) {
+        throw lion_exception("[ERROR] vec2array -> size of v (" + std::to_string(v.size()) + ") does not match requested array size N(" + std::to_string(N) + ")");
+    }
+
+    auto ret = std::array<T, N>{};
+    std::copy(v.cbegin(), v.cend(), ret.begin());
+    return ret;
+}
+
+template<typename T, std::size_t N>
+constexpr std::vector<T> array2vec(const std::array<T,N>& v)
+{
+    auto ret = std::vector<T>{};
+    ret.resize(N);
+    std::copy(v.cbegin(), v.cend(), ret.begin());
+    return ret;
+}
+
+
+
+
+
 //! Sum two vectors
 //! @param[in] lhs: left hand side vector
 //! @param[in] rhs: right hand side vector

@@ -15,15 +15,15 @@ static Xml_document small_dense_inverse_matrices_test_reference_file("data/small
 
 
 template<typename DetAndInverseMatrixFun>
-void test_matrices(const Xml_element &reference_xml_element, DetAndInverseMatrixFun &&det_and_inverse_matrix_fun)
+void test_matrices(Document_element_ptr reference_xml_element, DetAndInverseMatrixFun &&det_and_inverse_matrix_fun)
 {
     constexpr auto reltolnear = 1e-12;
     constexpr auto abstolnear = 1e-10;
 
-    for (const auto &test : reference_xml_element.get_children()) {
-        const auto reference_matrix = test.get_child("matrix_colmaj").get_value(std::vector<double>{});
-        const auto reference_det = test.get_child("det").get_value(double{});
-        const auto reference_inverse_matrix = test.get_child("inverse_matrix_colmaj").get_value(std::vector<double>{});
+    for (auto &test : reference_xml_element->get_children()) {
+        const auto reference_matrix = test->get_child("matrix_colmaj")->get_value(std::vector<double>{});
+        const auto reference_det = test->get_child("det")->get_value(double{});
+        const auto reference_inverse_matrix = test->get_child("inverse_matrix_colmaj")->get_value(std::vector<double>{});
 
         const auto ret = det_and_inverse_matrix_fun(reference_matrix);
         const auto &det = std::get<0>(ret);

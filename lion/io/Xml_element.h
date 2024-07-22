@@ -8,129 +8,123 @@
 #include "lion/math/vector3d.hpp"
 #include "lion/math/matrix3x3.h"
 #include "lion/math/matrix_extensions.h"
+#include "document_element.h"
 
-class Xml_element
+class Xml_element : public Document_element
 {
  public:
+
+    using base_type = Document_element;
+    using base_type::get_value;
+    using base_type::value_ptr;
+
     //! Constructor
     //! @param[in] e: pointer to a tinyxml2 XMLElement
-    Xml_element(tinyxml2::XMLElement* e); 
+    Xml_element(tinyxml2::XMLElement* e) : base_type(e, e->Name()) {}
 
-    //! Get the element name
-    std::string get_name() const { return _e->Name(); }
+
+    // cast the element void* in the parent class to the actual type for its usage
+    // in this implementation
+    tinyxml2::XMLElement& e_xml() { return *static_cast<tinyxml2::XMLElement*>(this->e()); }
+    const tinyxml2::XMLElement& e_xml_const() const { return *static_cast<const tinyxml2::XMLElement*>(this->e()); }
+    tinyxml2::XMLElement* e_xml_ptr() { return static_cast<tinyxml2::XMLElement*>(this->e()); }
 
     //! Set the element name
     //! @param[in] name: new name for the element
-    void set_name(const std::string& name) { _e->SetName(name.c_str()); }
+    void set_name(const std::string& name) { e_xml().SetName(name.c_str()); }
 
     //! Get value as string
-    std::string get_value()             const { return (_e->GetText() == nullptr) ? "" : _e->GetText(); }
-    std::string get_value(std::string&&) const { return get_value(); }
+    virtual std::string get_value() const override { return (e_xml_const().GetText() == nullptr) ? "" : e_xml_const().GetText(); }
 
     //! Get value as double
     //! @param[in] simply pass int() to overload this version
-    int get_value(int&&) { return std::stoi(get_value()); }
+    virtual int get_value(int&&) const override { return std::stoi(get_value()); }
 
     //! Get value as double
     //! @param[in] simply pass double() to overload this version
-    double get_value(double&&) { return std::stod(get_value()); }
+    virtual double get_value(double&&) const override { return std::stod(get_value()); }
 
     //! Get value as double vector
     //! @param[in] simply pass std::vector<double>() to overload this version
-    std::vector<double> get_value(std::vector<double>&&) { return string_to_double_vector<double>(get_value()); }
+    virtual std::vector<double> get_value(std::vector<double>&&) const override { return string_to_double_vector<double>(get_value()); }
 
     //! Get value as float vector
     //! @param[in] simply pass std::vector<float>() to overload this version
-    std::vector<float> get_value(std::vector<float>&&) { return string_to_double_vector<float>(get_value()); }
+    virtual std::vector<float> get_value(std::vector<float>&&) const override { return string_to_double_vector<float>(get_value()); }
 
     //! Get value as vector3d
     //! @param[in] simply pass Vector3d() to overload this function
-    sVector3d get_value(sVector3d&&) { return sVector3d(string_to_double_vector<double>(get_value())); }
+    virtual sVector3d get_value(sVector3d&&) const override { return sVector3d(string_to_double_vector<double>(get_value())); }
 
     //! Get value as matrix3x3
     //! @param[in] simply pass Matrix3x3() to overload this function
-    sMatrix3x3 get_value(sMatrix3x3&&) { return transpose(sMatrix3x3(string_to_double_vector<double>(get_value()))); }
+    virtual sMatrix3x3 get_value(sMatrix3x3&&) const override { return transpose(sMatrix3x3(string_to_double_vector<double>(get_value()))); }
 
-    //! Get value as bool
-    //! @param[in] simply pass bool() to overload this function
-    bool get_value(bool&&) { return to_bool(get_value()); }
 
-    //! Get value as an std::array<double, N>
-    //! @param[in] simply pass and std::array<double, N>{} to overload this function
-    template<std::size_t N>
-    std::array<double, N> get_value(std::array<double, N>&&)
-    {
-        const auto vec = get_value(std::vector<double>{});
-        if (vec.size() != N) {
-            throw std::runtime_error("Xml_element::get_value(std::array<double, N>): incorrect size.");
-        }
-        std::array<double, N> arr{};
-        std::copy_n(vec.cbegin(), N, arr.begin());
-        return arr;
-    }
+    //! Set the value from different variable types
+    virtual void set_value(const std::string& val) override { e_xml().SetText(val.c_str()); }
 
-    //! Set the value from string
-    //! @param[in] val: new string value
-    Xml_element& set_value(const std::string& val) { _e->SetText(val.c_str()); return *this; }
+    virtual void set_value(const char* val) override { e_xml().SetText(val); }
+
+    virtual void set_value(const double& val) override { set_value_generic(val); }
+
+    virtual void set_value(const int& val) override { set_value_generic(val); }
+
+    virtual void set_value(const float& val) override { set_value_generic(val); }
+
+    virtual void set_value(const std::vector<double>& val) override { set_value_generic(val); }
+
+    virtual void set_value(const std::vector<int>& val) override { set_value_generic(val); }
+
+    virtual void set_value(const std::vector<float>& val) override { set_value_generic(val); }
+
+    virtual void set_value(const sVector3d& val) override { set_value_generic(val); }
+
+    virtual void set_value(const sMatrix3x3& val) override { set_value_generic(val); }
 
 
     //! Set the value from numbers (scalars, std::vector, std::array)
     template<typename T,
              typename std::enable_if_t<std::is_arithmetic_v<T> >* = nullptr>
-    Xml_element& set_value(const T &num) { return set_value(num2str(num)); }
+    void set_value_generic(const T &num) { return set_value(num2str(num)); }
 
     template<typename T>
-    Xml_element& set_value(const std::vector<T> &vec) { return set_value(vec2str(vec)); }
+    void set_value_generic(const std::vector<T> &vec) { return set_value(vec2str(vec)); }
 
     template<typename T, std::size_t N>
-    Xml_element& set_value(const std::array<T, N> &arr) { return set_value(vec2str(arr)); }
+    void set_value_generic(const std::array<T, N> &arr) { return set_value(vec2str(arr)); }
 
-
-    // ! Set children & their values from an "std::(unordered)map<std::string, number_or_vector_or_array>"
-    //! @param[in] m: the map holding numbers or std::vectors or std::arrays, whose keys are std::strings
-    template<typename MapType>
-    void add_children_and_values_from_map(const MapType &m);
-
-    // ! Get children & their values and emplace them in an "std::(unordered)map<std::string, number_or_vector_or_array>"
-    //! @param[inout] m: the map holding numbers or std::vectors or std::arrays, whose keys are std::strings
-    template<typename MapType>
-    void emplace_children_and_values_in_map(MapType &m);
-
-    // ! Get children & their values and emplace_back them in an "std::vector<std::pair<std::string, number_or_vector_or_array> >"
-    //! @param[inout] vp: the vector of pairs holding numbers or std::vectors or std::arrays, whose keys are std::strings
-    template<typename T>
-    void emplace_back_children_and_values_in_vector_of_pairs(std::vector<std::pair<std::string, T> > &vp);
 
 
     //! Get all children to a std::vector
-    std::vector<Xml_element> get_children() const;
+    virtual std::vector<value_ptr> get_children() override;
 
     //! Add children
-    Xml_element add_child(const std::string& name); 
+    virtual value_ptr add_child(const std::string& name) override; 
 
     //! Add comment
-    void add_comment(const std::string& text) { _e->InsertNewComment(text.c_str()); }
+    void add_comment(const std::string& text) { e_xml().InsertNewComment(text.c_str()); }
 
     //! See if the element has children
-    bool has_children() const {return (_e->FirstChildElement() ? true : false);}
+    bool has_children() const override {return (e_xml_const().FirstChildElement() ? true : false);}
 
     //! Get the first child
-    Xml_element get_first_child() const {return _e->FirstChildElement();}
+    Xml_element get_first_child()  {return e_xml().FirstChildElement();}
 
     //! Get child by name
-    Xml_element get_child(const std::string& name) const;
+    virtual value_ptr get_child(const std::string& name) override;
 
     //! See if a child exists
-    bool has_child(const std::string& name) const;
+    virtual bool has_child(const std::string& name) override;
 
 
     //! Try to get the value of a child, or return a default one
     template<typename ValueType>
     ValueType try_get_child_value(const std::string &childname, ValueType default_value,
-                                  bool warn_if_returning_default_value = true) const
+                                  bool warn_if_returning_default_value = true)
     {
         if (has_child(childname)) {
-            return get_child(childname).get_value(ValueType{});
+            return get_child(childname)->get_value(ValueType{});
         }
         else {
             if (warn_if_returning_default_value) {
@@ -171,20 +165,20 @@ class Xml_element
 
 
     //! See if parent exists
-    bool has_parent() const { return (_e->Parent()->ToElement() ? true : false); }
+    bool has_parent() const { return (e_xml_const().Parent()->ToElement() ? true : false); }
 
     //! Get parent
-    Xml_element get_parent() const { return _e->Parent()->ToElement(); }
+    Xml_element get_parent()  { return e_xml().Parent()->ToElement(); }
 
     //! See if sibling exists
-    bool has_sibling() const { return (_e->NextSiblingElement() ? true : false); }
+    bool has_sibling() const { return (e_xml_const().NextSiblingElement() ? true : false); }
 
     //! Get Next Sibling
-    Xml_element get_sibling() const { return _e->NextSiblingElement()->ToElement(); }
+    Xml_element get_sibling() { return e_xml().NextSiblingElement()->ToElement(); }
 
     //! See if an attribute exists
     //! @param[in] attribute: name of the attribute
-    bool has_attribute(const std::string& attribute) const {return (_e->FindAttribute(attribute.c_str()) ? true : false);}
+    bool has_attribute(const std::string& attribute) const {return (e_xml_const().FindAttribute(attribute.c_str()) ? true : false);}
 
     //! Get attribute by name
     //! @param[in] attribute: name of the attribute
@@ -193,48 +187,47 @@ class Xml_element
     //! Get attribute as double
     //! @param[in] attribute: name of the attribute
     //! @param[in] simply pass double() to overload this version
-    double get_attribute(const std::string& attribute, double&&) const { return std::stod(_e->Attribute(attribute.c_str())); }
+    double get_attribute(const std::string& attribute, double&&) const { return std::stod(e_xml_const().Attribute(attribute.c_str())); }
 
     //! Sets a new attribute or modifies the value of an existing one
-    void set_attribute(const std::string& attrib_name, const std::string& attrib_value) { _e->SetAttribute(attrib_name.c_str(), attrib_value.c_str()); }
+    void set_attribute(const std::string& attrib_name, const std::string& attrib_value) { e_xml().SetAttribute(attrib_name.c_str(), attrib_value.c_str()); }
 
     template<typename T>
-    void set_attribute(const std::string& attrib_name, const T& attrib_value) { _e->SetAttribute(attrib_name.c_str(), attrib_value); }
+    void set_attribute(const std::string& attrib_name, const T& attrib_value) { e_xml().SetAttribute(attrib_name.c_str(), attrib_value); }
 
     //! Print
-    void print(std::ostream& os) const;
+    virtual void print(std::ostream& os) const override;
     
     //! Copy the contents of other into this node
-    void copy_contents(Xml_element other);
+    virtual void copy_contents(Document_element& other) override;
 
     //! Delete attribute
     void delete_attribute(const std::string& attribute_name)
     {
 
         if (has_attribute(attribute_name))
-            _e->DeleteAttribute(attribute_name.c_str());
+            e_xml().DeleteAttribute(attribute_name.c_str());
         else
             throw lion_exception("[ERROR] delete_attribute -> attribute does not exist");
     } 
 
 
     //! Check if this element and its childs have any attribute
-    bool this_and_childs_have_attributes() const;
+    bool this_and_childs_have_attributes();
 
 
     //! Check if this element and its childs have value and children
-    bool this_and_childs_have_both_value_and_children() const;
+    bool this_and_childs_have_both_value_and_children();
 
 
- private:
-    tinyxml2::XMLElement* _e;
+    inline Document_element::value_ptr to_value_ptr() { return Document_element_ptr(std::make_shared<Xml_element>(e_xml_ptr())); }
 };
 
 
 inline void Xml_element::print(std::ostream& os) const
 {
     tinyxml2::XMLPrinter printer;
-    _e->Accept(&printer);
+    e_xml_const().Accept(&printer);
     os << printer.CStr();
 }
 
@@ -246,18 +239,19 @@ inline std::ostream& operator<<(std::ostream& os, const Xml_element& e)
 }
 
 
-inline void Xml_element::copy_contents(Xml_element other)
+inline void Xml_element::copy_contents(Document_element& other_)
 {
-    tinyxml2::XMLElement* element = other._e->FirstChildElement(); 
-    tinyxml2::XMLNode* previous_sibling_ptr = _e->LastChild();
+    auto& other = static_cast<Xml_element&>(other_);
+    tinyxml2::XMLElement* element = other.e_xml().FirstChildElement(); 
+    tinyxml2::XMLNode* previous_sibling_ptr = e_xml().LastChild();
     while (element != nullptr)
     {
-        auto* element_copy = element->DeepClone(_e->GetDocument()); 
+        auto* element_copy = element->DeepClone(e_xml().GetDocument()); 
 
         if (previous_sibling_ptr != nullptr)
-            _e->InsertAfterChild(previous_sibling_ptr, element_copy);
+            e_xml().InsertAfterChild(previous_sibling_ptr, element_copy);
         else
-            _e->InsertFirstChild(element_copy);
+            e_xml().InsertFirstChild(element_copy);
 
         element = element->NextSiblingElement();
         previous_sibling_ptr = element_copy;
@@ -265,22 +259,15 @@ inline void Xml_element::copy_contents(Xml_element other)
 }
 
 
-inline Xml_element::Xml_element(tinyxml2::XMLElement* e) : _e(e) 
+inline std::vector<Document_element::value_ptr> Xml_element::get_children()
 {
-    if ( e == nullptr )
-        throw lion_exception("Attempted to construct Xml_element from nullptr"); 
-} 
+    std::vector<value_ptr> output;
 
-
-inline std::vector<Xml_element> Xml_element::get_children() const
-{
-    std::vector<Xml_element> output;
-
-    tinyxml2::XMLElement* element = _e->FirstChildElement();
+    tinyxml2::XMLElement* element = e_xml().FirstChildElement();
 
     while (element != nullptr)
     {
-        output.push_back({element});
+        output.push_back(std::make_shared<Xml_element>(element));
         element = element->NextSiblingElement();
     }
 
@@ -288,7 +275,7 @@ inline std::vector<Xml_element> Xml_element::get_children() const
 }
 
 
-inline Xml_element Xml_element::get_child(const std::string& name) const
+inline Document_element::value_ptr Xml_element::get_child(const std::string& name)
 {
     // Divide the string in child_name/the_rest
     std::string::size_type pos = name.find('/');
@@ -306,17 +293,17 @@ inline Xml_element Xml_element::get_child(const std::string& name) const
     }
 
     // Look for child_name, and make sure it is the only occurrence
-    Xml_element child(_e);
+    Xml_element child(&e_xml());
 
     if ( child_name == "." )
-        child = _e;
+        child = &e_xml();
 
     else if ( child_name == ".." )
         child = get_parent();
 
     else
     {
-        if ( _e->FirstChildElement(child_name.c_str()) == nullptr )
+        if ( e_xml().FirstChildElement(child_name.c_str()) == nullptr )
         {
             std::ostringstream s_out;
             s_out << "[ERROR] Xml_element::get_child -> No child found with name \"" + child_name + "\"" << std::endl;
@@ -324,10 +311,10 @@ inline Xml_element Xml_element::get_child(const std::string& name) const
             throw lion_exception(s_out.str());
         }
 
-        child = _e->FirstChildElement(child_name.c_str());
+        child = e_xml().FirstChildElement(child_name.c_str());
     }
 
-    if (child._e->NextSiblingElement(child_name.c_str()) != nullptr ) 
+    if (child.e_xml().NextSiblingElement(child_name.c_str()) != nullptr ) 
     {
         std::ostringstream s_out;
         s_out << "[ERROR] Xml_element::get_child -> There are several children with name \"" + child_name + "\"" << std::endl;
@@ -336,14 +323,14 @@ inline Xml_element Xml_element::get_child(const std::string& name) const
     }
 
     if ( the_rest.size() == 0 )
-        return child;
+        return std::make_shared<Xml_element>(child);
 
     else
         return child.get_child(the_rest);
 }
 
 
-inline Xml_element Xml_element::add_child(const std::string& name) 
+inline Document_element::value_ptr Xml_element::add_child(const std::string& name) 
 {
     // Divide the string in child_name/the_rest
     std::string::size_type pos = name.find('/');
@@ -361,13 +348,13 @@ inline Xml_element Xml_element::add_child(const std::string& name)
     }
 
     // Look for child_name: if exists, make sure there's only one occurrence. If it does not, create it
-    Xml_element child(_e);
+    Xml_element child(&e_xml());
 
     if ( the_rest.size() > 0 )
     {
         // The child exists and its me
         if ( child_name == "." )
-            child = _e;
+            child = &e_xml();
 
         // The child exists and its my parent
         else if ( child_name == ".." )
@@ -376,17 +363,17 @@ inline Xml_element Xml_element::add_child(const std::string& name)
         else
         {
             // The children does not exist -> create it
-            if ( _e->FirstChildElement(child_name.c_str()) == nullptr )
+            if ( e_xml().FirstChildElement(child_name.c_str()) == nullptr )
             {
-                child = _e->InsertNewChildElement(child_name.c_str());
+                child = e_xml().InsertNewChildElement(child_name.c_str());
             }
             else
             {
                 // The children does exist -> point to it
-                child = _e->FirstChildElement(child_name.c_str());
+                child = e_xml().FirstChildElement(child_name.c_str());
         
                 // Check uniqueness
-                if (child._e->NextSiblingElement(child_name.c_str()) != nullptr ) 
+                if (child.e_xml().NextSiblingElement(child_name.c_str()) != nullptr ) 
                 {
                     std::ostringstream s_out;
                     s_out << "[ERROR] Xml_element::add_child -> There are several children with name \"" + child_name + "\"" << std::endl;
@@ -402,7 +389,7 @@ inline Xml_element Xml_element::add_child(const std::string& name)
     else
     {
         // Make sure that the node does not already exist
-        if ( _e->FirstChildElement(child_name.c_str()) != nullptr )
+        if ( e_xml().FirstChildElement(child_name.c_str()) != nullptr )
         {
             std::ostringstream s_out;
             s_out << "[ERROR] Xml_element::add_child -> Node \"" + child_name + "\" already exists" << std::endl;
@@ -410,96 +397,12 @@ inline Xml_element Xml_element::add_child(const std::string& name)
             throw lion_exception("Node \"" + child_name + "\" already exists");
         }
 
-        return {_e->InsertNewChildElement(name.c_str())};
+        return std::make_shared<Xml_element>(e_xml().InsertNewChildElement(name.c_str()));
     }
 }
 
 
-template<typename MapType>
-void Xml_element::add_children_and_values_from_map(const MapType &m)
-{
-    //
-    // Saves an "std::(unordered_)map<std::string, mapped_type>" into the Xml_element,
-    // in which "mapped_type" can be either "std::vector", "std::array" or a number.
-    //
-
-    using key_type = typename MapType::key_type;
-    using mapped_type = typename MapType::mapped_type;
-
-    constexpr auto map_key_is_string = std::is_same_v<key_type, std::string>;
-    constexpr auto map_of_vectors = is_specialization_v<mapped_type, std::vector>;
-    constexpr auto map_of_arrays = is_std_array_v<mapped_type>;
-    constexpr auto map_of_scalars = std::is_scalar_v<mapped_type>;
-
-    static_assert(map_key_is_string && (map_of_vectors || map_of_arrays || map_of_scalars),
-                  "Xml_element::add_children_and_values_from_map:: unsupported map type.");
-
-    for (const auto &mi : m) {
-        add_child(mi.first).set_value(mi.second);
-    }
-}
-
-
-template<typename MapType>
-void Xml_element::emplace_children_and_values_in_map(MapType &m)
-{
-    //
-    // Emplaces the children and values of *this Xml_element
-    // in the given map. This map must be an
-    // "std::(unordered_)map<std::string, mapped_type>" in which
-    // "mapped_type" can be either "std::vector", "std::array" or a number.
-    // If a child cannot be emplaced, the function throws an
-    // std::runtime_error.
-    //
-
-    using key_type = typename MapType::key_type;
-    using mapped_type = typename MapType::mapped_type;
-
-    constexpr auto map_key_is_string = std::is_same_v<key_type, std::string>;
-    constexpr auto map_of_vectors = is_specialization_v<mapped_type, std::vector>;
-    constexpr auto map_of_arrays = is_std_array_v<mapped_type>;
-    constexpr auto map_of_scalars = std::is_scalar_v<mapped_type>;
-
-    static_assert(map_key_is_string && (map_of_vectors || map_of_arrays || map_of_scalars),
-                  "Xml_element::emplace_children_and_values_in_map:: unsupported map type.");
-
-    for (auto c : get_children()) {
-        const auto [_, did_emplace] = m.emplace(c.get_name(), c.get_value(mapped_type{}));
-
-        if (!did_emplace) {
-            throw std::runtime_error(
-                std::string{ "Xml_element::emplace_children_and_values_in_map:"
-                             " could not emplace child \"" } +
-                c.get_name() + "\" in the given map.");
-        }
-    }
-}
-
-
-template<typename T>
-void Xml_element::emplace_back_children_and_values_in_vector_of_pairs(std::vector<std::pair<std::string, T> > &vp)
-{
-    //
-    // Emplaces the children and values of *this Xml_element
-    // in the given std::vector of std::pairs. These pairs must be
-    // "std::pair<std::string, T>" in which "T" can be either
-    // "std::vector", "std::array" or a number.
-    //
-
-    constexpr auto pairs_of_vectors = is_specialization_v<T, std::vector>;
-    constexpr auto pairs_of_arrays = is_std_array_v<T>;
-    constexpr auto pairs_of_scalars = std::is_scalar_v<T>;
-
-    static_assert(pairs_of_vectors || pairs_of_arrays || pairs_of_scalars,
-                  "Xml_element::emplace_back_children_and_values_in_vector_of_pairs:: unsupported value type.");
-
-    for (auto c : get_children()) {
-        vp.emplace_back(c.get_name(), c.get_value(T{}));
-    }
-}
-
-
-inline bool Xml_element::has_child(const std::string& name) const
+inline bool Xml_element::has_child(const std::string& name)
 {
     // Divide the string in child_name/the_rest
     std::string::size_type pos = name.find('/');
@@ -517,21 +420,21 @@ inline bool Xml_element::has_child(const std::string& name) const
     }
 
     // Look for child_name, and make sure it is the only occurrence
-    Xml_element child(_e);
+    Xml_element child(&e_xml());
 
     if ( child_name == "." )
-        child = _e;
+        child = &e_xml();
 
     else if ( child_name == ".." )
         child = get_parent();
 
     else
-        if ( _e->FirstChildElement(child_name.c_str()) == nullptr )
+        if ( e_xml().FirstChildElement(child_name.c_str()) == nullptr )
             return false;
         else
-            child = _e->FirstChildElement(child_name.c_str());
+            child = e_xml().FirstChildElement(child_name.c_str());
 
-    if (child._e->NextSiblingElement(child_name.c_str()) != nullptr ) 
+    if (child.e_xml().NextSiblingElement(child_name.c_str()) != nullptr ) 
     {
         std::ostringstream s_out;
         s_out << "[ERROR] Xml_element::has_child -> There are several children with name \"" + child_name + "\"" << std::endl;
@@ -550,7 +453,7 @@ inline bool Xml_element::has_child(const std::string& name) const
 inline std::string Xml_element::get_attribute(const std::string& attribute, std::string&&) const 
 { 
     if ( has_attribute(attribute) )
-        return _e->Attribute(attribute.c_str()); 
+        return e_xml_const().Attribute(attribute.c_str()); 
     else
     {
         std::ostringstream s_out;
@@ -561,17 +464,18 @@ inline std::string Xml_element::get_attribute(const std::string& attribute, std:
 }
 
 
-inline bool Xml_element::this_and_childs_have_attributes() const
+inline bool Xml_element::this_and_childs_have_attributes()
 {
     // check if this element has attributes
-    if (_e -> FirstAttribute() != nullptr) {
+    if (e_xml_const().FirstAttribute() != nullptr) {
         return true;
     }
     else {
 
         // check if children have attributes
-        for (const auto& child : get_children()) {
-            if (child.this_and_childs_have_attributes()) {
+        for (auto& child : get_children()) {
+            if (child.cast<Xml_element>().this_and_childs_have_attributes()) {
+            //if (static_cast<Xml_element&>(*child).this_and_childs_have_attributes()) {
                 return true;
             }
         }
@@ -582,7 +486,7 @@ inline bool Xml_element::this_and_childs_have_attributes() const
 }
 
 
-inline bool Xml_element::this_and_childs_have_both_value_and_children() const
+inline bool Xml_element::this_and_childs_have_both_value_and_children()
 {
     if (!(get_value().empty()) && (get_children().size() > 0u)) {
         return true;
@@ -590,12 +494,11 @@ inline bool Xml_element::this_and_childs_have_both_value_and_children() const
     else {
 
         // check if children have attributes
-        for (const auto& child : get_children()) {
-            if (child.this_and_childs_have_both_value_and_children()) {
+        for (auto& child : get_children()) {
+            if (child.cast<Xml_element>().this_and_childs_have_both_value_and_children()) {
                 return true;
             }
         }
-
     }
 
     return false;

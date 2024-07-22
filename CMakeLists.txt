@@ -68,7 +68,7 @@ if(WITH_HSL)
     target_compile_definitions(lion INTERFACE WITH_HSL)
 endif()
 
-target_link_libraries(lion INTERFACE ipopt blaslapack tinyxml2 fortran_libraries cppad hdf5 ZLIB::ZLIB SZIP::SZIP)
+target_link_libraries(lion INTERFACE ipopt blaslapack tinyxml2 nlohmann_json fortran_libraries cppad hdf5 ZLIB::ZLIB SZIP::SZIP)
 
 # Create a lion header only
 add_library(header_only INTERFACE)
@@ -113,7 +113,7 @@ install(FILES ${version_file} ${config_file}
   DESTINATION ${cmake_files_install_dir})
 
 # Export the targets
-install(TARGETS lion ipopt blaslapack tinyxml2 header_only fortran_libraries cppad hdf5
+install(TARGETS lion ipopt blaslapack tinyxml2 nlohmann_json header_only fortran_libraries cppad hdf5
   EXPORT ${targets_export_name}
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
   ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"

@@ -4,10 +4,14 @@
 #include "tinyxml2.h"
 
 #include "Xml_element.h"
+#include "document.h"
 
-class Xml_document
+class Xml_document : public Document
 {
  public:
+    using base_type = Document;
+    using base_type::save;
+
     //! Constructor
     //! @param[in] name: name of the file
     Xml_document(const std::string& name = "", bool load_file = false) : _name(name) { if (load_file) load();} 
@@ -17,22 +21,15 @@ class Xml_document
 
     //! Load an XML document from file
     //! @return true if OK, false if NOT OK
-    void load();
+    void load() override;
 
     //! Save an XML document to file
     //! @return true if OK, false if NOT OK
-    bool save() { return _doc.SaveFile(_name.c_str()) == tinyxml2::XML_SUCCESS; }
-
-    const std::string& get_file_name() const { return _name; }
-
-    //! Save an XML document to file, name given as input
-    //! @param[in] name: name of the file;
-    //! @return true if OK, false if NOT OK
-    bool save(const std::string& name) { _name = name; return save(); }
+    bool save() override { return _doc.SaveFile(_name.c_str()) == tinyxml2::XML_SUCCESS; }
 
     //! Parse an XML document from a string
-    void parse(const char *contents) { _doc.Parse(contents); }
-    void parse(const std::string& contents) { parse(contents.c_str()); }
+    void parse(const char *contents) override { _doc.Parse(contents); }
+    void parse(const std::string& contents) override { parse(contents.c_str()); }
 
     //! Get the root element
     Xml_element get_root_element() { return _doc.RootElement(); } 
@@ -97,7 +94,7 @@ inline Xml_element Xml_document::get_element(const std::string& name)
         return get_root_element();
 
     else
-        return get_root_element().get_child(the_rest);
+        return get_root_element().get_child(the_rest).cast<Xml_element>();
 }
 
 inline Xml_element Xml_document::add_element(const std::string& full_path)
@@ -135,7 +132,7 @@ inline Xml_element Xml_document::add_element(const std::string& full_path)
         throw lion_exception(s_out.str());
     }
     else
-        return get_root_element().add_child(the_rest);
+        return get_root_element().add_child(the_rest).cast<Xml_element>();
 }
 
 

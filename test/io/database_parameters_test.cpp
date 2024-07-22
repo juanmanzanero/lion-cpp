@@ -214,7 +214,8 @@ TEST_F(Database_parameter_test, parameters_all_used_check)
     } s;
 
     read_parameters(doc2, "xml_doc/", s.__get_parameters(), s.__used_parameters);
-    bool parameters_all_used = database_parameters_all_used(doc2.get_root_element());
+    auto root = doc2.get_root_element();
+    bool parameters_all_used = database_parameters_all_used(root);
     EXPECT_TRUE(parameters_all_used);
 }
 
@@ -228,6 +229,7 @@ TEST_F(Database_parameter_test, parameters_all_used_check_2)
     } s;
 
     read_parameters(doc2, "xml_doc/", s.__get_parameters(), s.__used_parameters);
-    bool parameters_all_used = database_parameters_all_used(doc2.get_root_element());
+    auto root = doc2.get_root_element();
+    bool parameters_all_used = database_parameters_all_used(root);
     EXPECT_FALSE(parameters_all_used);
 }
