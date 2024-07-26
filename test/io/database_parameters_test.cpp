@@ -159,12 +159,12 @@ TEST_F(Database_parameter_test, unused_parameter)
 
     read_parameters(doc, "xml_doc/parameters/", s.__get_parameters(), s.__used_parameters);
 
-    Xml_element element = doc.get_element("xml_doc/parameters");
+    Xml_element element = doc.get_element("xml_doc/parameters").cast<Xml_element>();
     std::string attribute, expected("false");
 
     for (size_t i = 0; i < s.__get_parameters().size(); ++i)
     {
-        element = doc.get_element("xml_doc/parameters/"+ s.__get_parameters()[i].name);
+        element = doc.get_element("xml_doc/parameters/"+ s.__get_parameters()[i].name).cast<Xml_element>();
         // Check until you get
         while(element.has_parent())
         {
@@ -187,11 +187,11 @@ TEST_F(Database_parameter_test, unusued_parameter_2)
 
     read_parameters(doc, "xml_doc/parameters/", s.__get_parameters(), s.__used_parameters);
 
-    Xml_element element = doc.get_element("xml_doc/parameters/double_parameter_2");
+    Xml_element element = doc.get_element("xml_doc/parameters/double_parameter_2").cast<Xml_element>();
     bool attribute_existance = element.has_attribute("__unused__");
     EXPECT_FALSE(attribute_existance);
 
-    element = doc.get_element("xml_doc/parameters/double_parameter");
+    element = doc.get_element("xml_doc/parameters/double_parameter").cast<Xml_element>();
     attribute_existance = element.has_attribute("__unused__");
     EXPECT_TRUE(attribute_existance);
 }
@@ -214,7 +214,7 @@ TEST_F(Database_parameter_test, parameters_all_used_check)
     } s;
 
     read_parameters(doc2, "xml_doc/", s.__get_parameters(), s.__used_parameters);
-    auto root = doc2.get_root_element();
+    auto root = doc2.get_root_element().cast<Xml_element>();
     bool parameters_all_used = database_parameters_all_used(root);
     EXPECT_TRUE(parameters_all_used);
 }
@@ -229,7 +229,7 @@ TEST_F(Database_parameter_test, parameters_all_used_check_2)
     } s;
 
     read_parameters(doc2, "xml_doc/", s.__get_parameters(), s.__used_parameters);
-    auto root = doc2.get_root_element();
+    auto root = doc2.get_root_element().cast<Xml_element>();
     bool parameters_all_used = database_parameters_all_used(root);
     EXPECT_FALSE(parameters_all_used);
 }

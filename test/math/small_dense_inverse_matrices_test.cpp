@@ -41,7 +41,7 @@ void test_matrices(Document_element_ptr reference_xml_element, DetAndInverseMatr
 
 TEST(small_dense_inverse_matrices, inv2x2)
 {
-    test_matrices(small_dense_inverse_matrices_test_reference_file.get_root_element().get_child("inv2x2"),
+    test_matrices(small_dense_inverse_matrices_test_reference_file.get_root_element()->get_child("inv2x2"),
         [](const auto &mat)
         {
             EXPECT_EQ(mat.size(), 4u);
@@ -52,7 +52,7 @@ TEST(small_dense_inverse_matrices, inv2x2)
 
 TEST(small_dense_inverse_matrices, inv3x3)
 {
-    test_matrices(small_dense_inverse_matrices_test_reference_file.get_root_element().get_child("inv3x3"),
+    test_matrices(small_dense_inverse_matrices_test_reference_file.get_root_element()->get_child("inv3x3"),
         [](const auto &mat)
         {
             EXPECT_EQ(mat.size(), 9u);
@@ -63,7 +63,7 @@ TEST(small_dense_inverse_matrices, inv3x3)
 
 TEST(small_dense_inverse_matrices, inv4x4)
 {
-    test_matrices(small_dense_inverse_matrices_test_reference_file.get_root_element().get_child("inv4x4"),
+    test_matrices(small_dense_inverse_matrices_test_reference_file.get_root_element()->get_child("inv4x4"),
         [](const auto &mat)
         {
             EXPECT_EQ(mat.size(), 16u);
@@ -74,7 +74,7 @@ TEST(small_dense_inverse_matrices, inv4x4)
 
 TEST(small_dense_inverse_matrices, inv5x5)
 {
-    test_matrices(small_dense_inverse_matrices_test_reference_file.get_root_element().get_child("inv5x5"),
+    test_matrices(small_dense_inverse_matrices_test_reference_file.get_root_element()->get_child("inv5x5"),
         [](const auto &mat)
         {
             EXPECT_EQ(mat.size(), 25u);
@@ -85,7 +85,7 @@ TEST(small_dense_inverse_matrices, inv5x5)
 
 TEST(small_dense_inverse_matrices, inv6x6)
 {
-    test_matrices(small_dense_inverse_matrices_test_reference_file.get_root_element().get_child("inv6x6"),
+    test_matrices(small_dense_inverse_matrices_test_reference_file.get_root_element()->get_child("inv6x6"),
         [](const auto &mat)
         {
             EXPECT_EQ(mat.size(), 36u);

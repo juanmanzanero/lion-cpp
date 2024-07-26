@@ -51,8 +51,8 @@ TEST(linear_algebra_test, lusolve_test0)
 {
     // 3 x 3 singular problem with 1 column in the rhs
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value(std::vector<double>{});
-    const auto b_colmaj = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/b")->get_value(std::vector<double>{});
+    const auto A_colmaj = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value(std::vector<double>{});
+    const auto b_colmaj = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/b")->get_value(std::vector<double>{});
 
     const auto n = static_cast<int>(b_colmaj.size());
     EXPECT_EQ(n, 3);
@@ -75,14 +75,14 @@ TEST(linear_algebra_test, lusolve_test1)
 {
     // 4 x 4 problem with 1 column in the rhs
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value(std::vector<double>{});
-    const auto b_colmaj = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/b")->get_value(std::vector<double>{});
+    const auto A_colmaj = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value(std::vector<double>{});
+    const auto b_colmaj = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/b")->get_value(std::vector<double>{});
 
     const auto n = static_cast<int>(b_colmaj.size());
     EXPECT_EQ(n, 4);
     EXPECT_EQ(std::sqrt(A_colmaj.size()), n);
 
-    const auto reference_x_colmaj = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/x")->
+    const auto reference_x_colmaj = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/x")->
         get_value(std::vector<double>{});
 
     {
@@ -118,14 +118,14 @@ TEST(linear_algebra_test, lusolve_test2)
 {
     // 10 x 10 problem with 3 columns in the rhs
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    auto A_colmaj = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value(std::vector<double>{});
-    auto b_colmaj = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/b")->get_value(std::vector<double>{});
+    auto A_colmaj = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value(std::vector<double>{});
+    auto b_colmaj = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/b")->get_value(std::vector<double>{});
 
     const auto n = static_cast<int>(b_colmaj.size()) / 3;
     EXPECT_EQ(n, 10);
     EXPECT_EQ(std::sqrt(A_colmaj.size()), n);
 
-    const auto reference_x_colmaj = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/x")->
+    const auto reference_x_colmaj = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/x")->
         get_value(std::vector<double>{});
 
     {
@@ -161,14 +161,14 @@ TEST(linear_algebra_test, lusolve_test3)
 {
     // 20 x 20 problem with 7 columns in the rhs
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    auto A_colmaj = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value(std::vector<double>{});
-    auto b_colmaj = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/b")->get_value(std::vector<double>{});
+    auto A_colmaj = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value(std::vector<double>{});
+    auto b_colmaj = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/b")->get_value(std::vector<double>{});
 
     const auto n = static_cast<int>(b_colmaj.size()) / 7;
     EXPECT_EQ(n, 20);
     EXPECT_EQ(std::sqrt(A_colmaj.size()), n);
 
-    const auto reference_x_colmaj = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/x")->
+    const auto reference_x_colmaj = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/x")->
         get_value(std::vector<double>{});
 
     {
@@ -204,10 +204,10 @@ TEST(linear_algebra_test, qrsolve_test0)
 {
     // 10 x 4 matrix with 1 column in the rhs
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    auto A_colmaj = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value(std::vector<double>{});
-    auto b_colmaj = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/b")->get_value(std::vector<double>{});
+    auto A_colmaj = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value(std::vector<double>{});
+    auto b_colmaj = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/b")->get_value(std::vector<double>{});
 
-    const auto reference_x = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/x")->get_value(std::vector<double>{});
+    const auto reference_x = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/x")->get_value(std::vector<double>{});
     std::vector<double> x_colmaj(4);
     EXPECT_EQ(reference_x.size(), x_colmaj.size());
     qrsolve(x_colmaj.data(), A_colmaj.data(), b_colmaj.data(), 10, 4, 1);
@@ -221,10 +221,10 @@ TEST(linear_algebra_test, qrsolve_test1)
 {
     // 4 x 10 matrix with 1 column in the rhs
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    auto A_colmaj = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value(std::vector<double>{});
-    auto b_colmaj = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/b")->get_value(std::vector<double>{});
+    auto A_colmaj = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value(std::vector<double>{});
+    auto b_colmaj = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/b")->get_value(std::vector<double>{});
 
-    const auto reference_x = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/x")->get_value(std::vector<double>{});
+    const auto reference_x = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/x")->get_value(std::vector<double>{});
     std::vector<double> x_colmaj(10);
     EXPECT_EQ(reference_x.size(), x_colmaj.size());
     qrsolve(x_colmaj.data(), A_colmaj.data(), b_colmaj.data(), 4, 10, 1);
@@ -238,10 +238,10 @@ TEST(linear_algebra_test, qrsolve_test2)
 {
     // 11 x 6 matrix with 4 columns in the rhs
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    auto A_colmaj = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value(std::vector<double>{});
-    auto b_colmaj = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/b")->get_value(std::vector<double>{});
+    auto A_colmaj = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value(std::vector<double>{});
+    auto b_colmaj = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/b")->get_value(std::vector<double>{});
 
-    const auto reference_x = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/x")->get_value(std::vector<double>{});
+    const auto reference_x = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/x")->get_value(std::vector<double>{});
     std::vector<double> x_colmaj(6 * 4);
     EXPECT_EQ(reference_x.size(), x_colmaj.size());
     qrsolve(x_colmaj.data(), A_colmaj.data(), b_colmaj.data(), 11, 6, 4);
@@ -255,10 +255,10 @@ TEST(linear_algebra_test, qrsolve_test3)
 {
     // 6 x 11 matrix with 7 columns in the rhs
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    auto A_colmaj = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value(std::vector<double>{});
-    auto b_colmaj = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/b")->get_value(std::vector<double>{});
+    auto A_colmaj = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value(std::vector<double>{});
+    auto b_colmaj = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/b")->get_value(std::vector<double>{});
 
-    const auto reference_x = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/x")->get_value(std::vector<double>{});
+    const auto reference_x = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/x")->get_value(std::vector<double>{});
     std::vector<double> x_colmaj(11 * 7);
     EXPECT_EQ(reference_x.size(), x_colmaj.size());
     qrsolve(x_colmaj.data(), A_colmaj.data(), b_colmaj.data(), 6, 11, 7);
@@ -366,8 +366,8 @@ TEST(linear_algebra_test, rcond_minitest9)
 {
     const auto n = 2;
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value());
-    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/rcond")->get_value(double{});
+    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value());
+    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/rcond")->get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
     EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
@@ -378,8 +378,8 @@ TEST(linear_algebra_test, rcond_minitest10)
 {
     const auto n = 2;
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value());
-    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/rcond")->get_value(double{});
+    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value());
+    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/rcond")->get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
     EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
@@ -390,8 +390,8 @@ TEST(linear_algebra_test, rcond_minitest11)
 {
     const auto n = 3;
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value());
-    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/rcond")->get_value(double{});
+    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value());
+    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/rcond")->get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
     EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
@@ -402,8 +402,8 @@ TEST(linear_algebra_test, rcond_minitest12)
 {
     const auto n = 30;
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value());
-    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/rcond")->get_value(double{});
+    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value());
+    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/rcond")->get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
     EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
@@ -414,8 +414,8 @@ TEST(linear_algebra_test, rcond_minitest13)
 {
     const auto n = 10;
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value());
-    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/rcond")->get_value(double{});
+    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value());
+    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/rcond")->get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
     EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
@@ -426,8 +426,8 @@ TEST(linear_algebra_test, rcond_minitest14)
 {
     const auto n = 5;
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value());
-    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/rcond")->get_value(double{});
+    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value());
+    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/rcond")->get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
     EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
@@ -438,8 +438,8 @@ TEST(linear_algebra_test, rcond_minitest15)
 {
     const auto n = 3;
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value());
-    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/rcond")->get_value(double{});
+    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value());
+    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/rcond")->get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
     EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
@@ -450,8 +450,8 @@ TEST(linear_algebra_test, rcond_minitest16)
 {
     const auto n = 5;
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value());
-    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/rcond")->get_value(double{});
+    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value());
+    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/rcond")->get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
     EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
@@ -462,8 +462,8 @@ TEST(linear_algebra_test, rcond_randtest0)
 {
     const auto n = 263;
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value());
-    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/rcond")->get_value(double{});
+    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value());
+    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/rcond")->get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
     EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
@@ -474,8 +474,8 @@ TEST(linear_algebra_test, rcond_randtest1)
 {
     const auto n = 52;
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value());
-    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/rcond")->get_value(double{});
+    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value());
+    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/rcond")->get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
     EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
@@ -486,8 +486,8 @@ TEST(linear_algebra_test, rcond_randtest2)
 {
     const auto n = 357;
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value());
-    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/rcond")->get_value(double{});
+    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value());
+    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/rcond")->get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
     EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
@@ -498,8 +498,8 @@ TEST(linear_algebra_test, rcond_randtest3)
 {
     const auto n = 474;
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value());
-    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/rcond")->get_value(double{});
+    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value());
+    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/rcond")->get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
     EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
@@ -510,8 +510,8 @@ TEST(linear_algebra_test, rcond_randtest4)
 {
     const auto n = 434;
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value());
-    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/rcond")->get_value(double{});
+    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value());
+    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/rcond")->get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
     EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
@@ -522,8 +522,8 @@ TEST(linear_algebra_test, rcond_gallerytest0)
 {
     const auto n = 281;
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value());
-    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/rcond")->get_value(double{});
+    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value());
+    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/rcond")->get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
     EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
@@ -534,8 +534,8 @@ TEST(linear_algebra_test, rcond_gallerytest1)
 {
     const auto n = 396;
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value());
-    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/rcond")->get_value(double{});
+    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value());
+    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/rcond")->get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
     EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
@@ -546,8 +546,8 @@ TEST(linear_algebra_test, rcond_gallerytest2)
 {
     const auto n = 456;
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value());
-    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/rcond")->get_value(double{});
+    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value());
+    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/rcond")->get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
     EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
@@ -558,8 +558,8 @@ TEST(linear_algebra_test, rcond_gallerytest3)
 {
     const auto n = 478;
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value());
-    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/rcond")->get_value(double{});
+    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value());
+    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/rcond")->get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
     EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
@@ -570,8 +570,8 @@ TEST(linear_algebra_test, rcond_gallerytest4)
 {
     const auto n = 334;
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value());
-    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/rcond")->get_value(double{});
+    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value());
+    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/rcond")->get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
     EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
@@ -582,8 +582,8 @@ TEST(linear_algebra_test, rcond_gallerytest5)
 {
     const auto n = 213;
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value());
-    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/rcond")->get_value(double{});
+    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value());
+    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/rcond")->get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
     EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
@@ -594,8 +594,8 @@ TEST(linear_algebra_test, rcond_gallerytest6)
 {
     const auto n = 175;
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value());
-    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/rcond")->get_value(double{});
+    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value());
+    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/rcond")->get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
     EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
@@ -606,8 +606,8 @@ TEST(linear_algebra_test, rcond_gallerytest7)
 {
     const auto n = 444;
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value());
-    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/rcond")->get_value(double{});
+    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value());
+    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/rcond")->get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
     EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
@@ -618,8 +618,8 @@ TEST(linear_algebra_test, rcond_gallerytest8)
 {
     const auto n = 368;
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value());
-    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/rcond")->get_value(double{});
+    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value());
+    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/rcond")->get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
     EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
@@ -630,8 +630,8 @@ TEST(linear_algebra_test, rcond_gallerytest9)
 {
     const auto n = 197;
     const std::string test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A")->get_value());
-    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/rcond")->get_value(double{});
+    const auto A_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A")->get_value());
+    const auto reference_rcond = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/rcond")->get_value(double{});
 
     EXPECT_EQ(n, static_cast<int>(std::sqrt(A_colmaj.size())));
     EXPECT_NEAR(rcond(A_colmaj.data(), n), reference_rcond, tolnear_rcond);
@@ -644,20 +644,20 @@ TEST(linear_algebra_test, tridiagonalsolve_tests)
     while (true) {
         const auto test_name = std::string{ "tridiagonalsolve_test" } + std::to_string(testcount);
 
-        if (!linear_algebra_test_reference_file.get_root_element().has_child(test_name)) {
+        if (!linear_algebra_test_reference_file.get_root_element()->has_child(test_name)) {
             break;
         }
         else {
             ++testcount;
         }
 
-        const auto num_rows_A_rows_B = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/num_rows_A_rows_B")->get_value(int{});
-        const auto num_cols_B = linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/num_cols_B")->get_value(int{});
-        const auto A_a = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A_a")->get_value());
-        const auto A_b = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A_b")->get_value());
-        const auto A_c = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/A_c")->get_value());
-        const auto B_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/B_colmaj")->get_value());
-        const auto reference_X_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element().get_child(test_name + "/X_colmaj")->get_value());
+        const auto num_rows_A_rows_B = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/num_rows_A_rows_B")->get_value(int{});
+        const auto num_cols_B = linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/num_cols_B")->get_value(int{});
+        const auto A_a = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A_a")->get_value());
+        const auto A_b = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A_b")->get_value());
+        const auto A_c = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/A_c")->get_value());
+        const auto B_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/B_colmaj")->get_value());
+        const auto reference_X_colmaj = comma_separated_string2vector_of_doubles(linear_algebra_test_reference_file.get_root_element()->get_child(test_name + "/X_colmaj")->get_value());
 
         ASSERT_EQ(A_a.size(), static_cast<std::size_t>(num_rows_A_rows_B - 1));
         ASSERT_EQ(A_b.size(), static_cast<std::size_t>(num_rows_A_rows_B));
@@ -691,14 +691,14 @@ TEST(linear_algebra_test, lufactorize_and_lusolve_Doolittle)
     //
 
     // the 10 x 10 problem with 3 columns in the rhs from "lusolve_test1"
-    auto A_colmaj = linear_algebra_test_reference_file.get_root_element().get_child("lusolve_test2/A")->get_value(std::vector<double>{});
-    auto b_colmaj = linear_algebra_test_reference_file.get_root_element().get_child("lusolve_test2/b")->get_value(std::vector<double>{});
+    auto A_colmaj = linear_algebra_test_reference_file.get_root_element()->get_child("lusolve_test2/A")->get_value(std::vector<double>{});
+    auto b_colmaj = linear_algebra_test_reference_file.get_root_element()->get_child("lusolve_test2/b")->get_value(std::vector<double>{});
 
     const auto n = static_cast<int>(b_colmaj.size()) / 3;
     EXPECT_EQ(n, 10);
     EXPECT_EQ(std::sqrt(A_colmaj.size()), n);
 
-    const auto reference_x_colmaj = linear_algebra_test_reference_file.get_root_element().get_child("lusolve_test2/x")->
+    const auto reference_x_colmaj = linear_algebra_test_reference_file.get_root_element()->get_child("lusolve_test2/x")->
         get_value(std::vector<double>{});
 
     {

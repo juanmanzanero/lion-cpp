@@ -81,10 +81,10 @@ TEST(Crank_nicolson_test, robertson_equation)
 
     Xml_document results_saved("data/crank_nicolson_test.xml",true);
 
-    const auto t_saved = results_saved.get_element("robertson_equation_test/t").get_value(std::vector<scalar>());
-    const auto q0_saved = results_saved.get_element("robertson_equation_test/q0").get_value(std::vector<scalar>());
-    const auto q1_saved = results_saved.get_element("robertson_equation_test/q1").get_value(std::vector<scalar>());
-    const auto qa0_saved = results_saved.get_element("robertson_equation_test/qa0").get_value(std::vector<scalar>());
+    const auto t_saved = results_saved.get_element("robertson_equation_test/t")->get_value(std::vector<scalar>());
+    const auto q0_saved = results_saved.get_element("robertson_equation_test/q0")->get_value(std::vector<scalar>());
+    const auto q1_saved = results_saved.get_element("robertson_equation_test/q1")->get_value(std::vector<scalar>());
+    const auto qa0_saved = results_saved.get_element("robertson_equation_test/qa0")->get_value(std::vector<scalar>());
 
     for (size_t i = 0; i < n_timesteps; ++i)
     {
