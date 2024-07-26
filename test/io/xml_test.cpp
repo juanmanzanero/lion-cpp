@@ -25,18 +25,18 @@ TEST_F(Xml_test, open_document)
 TEST_F(Xml_test, root_node)
 {
     doc.load();
-    Xml_element root = doc.get_root_element();
+    auto root = doc.get_root_element();
 
-    EXPECT_EQ(root.get_name(), "xml_doc");
+    EXPECT_EQ(root->get_name(), "xml_doc");
 
-    EXPECT_EQ(root.get_value(std::string()), "");
+    EXPECT_EQ(root->get_value(std::string()), "");
 }
 
 
 TEST_F(Xml_test, root_node_children)
 {
     doc.load();
-    auto root_children = doc.get_root_element().get_children();
+    auto root_children = doc.get_root_element()->get_children();
 
     EXPECT_EQ(root_children.size(), 3);
     EXPECT_EQ(root_children[0]->get_name(), "child1");
@@ -50,7 +50,7 @@ TEST_F(Xml_test, read_vector1)
     doc.load();
 
     // Find node using full path
-    auto vector_child = doc.get_root_element().get_child("child2/vector1");
+    auto vector_child = doc.get_root_element()->get_child("child2/vector1");
 
     std::vector<double> v = vector_child->get_value(std::vector<double>());
     std::vector<double> v_expected = { 1, 3, 5, 7 };
@@ -61,7 +61,7 @@ TEST_F(Xml_test, read_vector1)
         EXPECT_DOUBLE_EQ(v[i], v_expected[i]);
 
     // Find node by node
-    auto child2 = doc.get_root_element().get_child("child2");
+    auto child2 = doc.get_root_element()->get_child("child2");
     auto vector1 = child2->get_child("vector1");
 
     std::vector<double> v2 = vector1->get_value(std::vector<double>());
@@ -78,7 +78,7 @@ TEST_F(Xml_test, read_vector2)
     doc.load();
 
     // Find node using full path
-    auto vector_child = doc.get_root_element().get_child("child2/vector2");
+    auto vector_child = doc.get_root_element()->get_child("child2/vector2");
 
     std::vector<double> v = vector_child->get_value(std::vector<double>());
     std::vector<double> v_expected = { 1, 2, 3, 4 };
@@ -89,7 +89,7 @@ TEST_F(Xml_test, read_vector2)
         EXPECT_DOUBLE_EQ(v[i], v_expected[i]);
 
     // Find node by node
-    auto child2 = doc.get_root_element().get_child("child2");
+    auto child2 = doc.get_root_element()->get_child("child2");
     auto vector1 = child2->get_child("vector2");
 
     std::vector<double> v2 = vector1->get_value(std::vector<double>());
@@ -113,7 +113,7 @@ TEST_F(Xml_test, Matrix3x3)
         7.0, 8.0, 9.0 
     };
 
-    sMatrix3x3 mat = doc.get_root_element().get_child("child2/matrix3x3")->get_value(sMatrix3x3());
+    sMatrix3x3 mat = doc.get_root_element()->get_child("child2/matrix3x3")->get_value(sMatrix3x3());
 
     for (size_t i = 0; i < 3; ++i)
         for (size_t j = 0; j < 3; ++j)
@@ -182,7 +182,7 @@ TEST_F(Xml_test, print_element)
     sOut << "</child2>" << std::endl;
 
     std::ostringstream sOutXml;
-    sOutXml << doc.get_root_element().get_child("child2").cast<Xml_element>();
+    sOutXml << doc.get_root_element()->get_child("child2").cast<Xml_element>();
     EXPECT_EQ(sOutXml.str(), sOut.str());
 
 
@@ -202,7 +202,7 @@ TEST_F(Xml_test, create_child)
 {
     Xml_document doc_out("dummy.xml");
     doc_out.create_root_element("root");
-    auto child = doc_out.get_root_element().add_child("child");
+    auto child = doc_out.get_root_element()->add_child("child");
     child->set_value("value for child");
     
     std::ostringstream sOut;
@@ -218,7 +218,7 @@ TEST_F(Xml_test, add_child)
 
     doc.add_element("root/a/b/../b/./c/d").set_value("my value");
 
-    EXPECT_EQ(doc.get_element("root/a/b/c/d").get_value(), "my value");
+    EXPECT_EQ(doc.get_element("root/a/b/c/d")->get_value(), "my value");
 }
 
 
@@ -231,7 +231,7 @@ TEST_F(Xml_test, deep_copy)
     doc2.parse("<doc2> <content1> <content2> content </content2> </content1> </doc2>");
 
     auto element_to_copy = doc2.get_element("doc2");
-    doc1.get_element("doc/a/empty_node").copy_contents(element_to_copy);
+    doc1.get_element("doc/a/empty_node")->copy_contents(element_to_copy);
 
     std::ostringstream s_out_ref;
     s_out_ref << "<doc>" << std::endl;
@@ -267,13 +267,13 @@ TEST_F(Xml_test, this_and_child_have_attributes)
     Xml_document doc;
     doc.parse(xmldef);
 
-    ASSERT_TRUE(doc.get_root_element().this_and_childs_have_attributes());
+    ASSERT_TRUE(doc.get_root_element()->this_and_childs_have_attributes());
 
-    doc.get_element("test/abc/dfg/qwer").delete_attribute("aaaa");
-    ASSERT_TRUE(doc.get_root_element().this_and_childs_have_attributes());
+    doc.get_element("test/abc/dfg/qwer").cast<Xml_element>().delete_attribute("aaaa");
+    ASSERT_TRUE(doc.get_root_element()->this_and_childs_have_attributes());
 
-    doc.get_element("test/qwe").delete_attribute("abc");
-    ASSERT_FALSE(doc.get_root_element().this_and_childs_have_attributes());
+    doc.get_element("test/qwe").cast<Xml_element>().delete_attribute("abc");
+    ASSERT_FALSE(doc.get_root_element()->this_and_childs_have_attributes());
 }
 
 
@@ -292,9 +292,9 @@ TEST_F(Xml_test, this_and_childs_have_both_value_and_children)
     Xml_document doc;
     doc.parse(xmldef);
 
-    ASSERT_TRUE(doc.get_root_element().this_and_childs_have_both_value_and_children());
+    ASSERT_TRUE(doc.get_root_element()->this_and_childs_have_both_value_and_children());
 
-    doc.get_element("test/abc/auu").set_value("");
-    ASSERT_FALSE(doc.get_root_element().this_and_childs_have_both_value_and_children());
+    doc.get_element("test/abc/auu")->set_value("");
+    ASSERT_FALSE(doc.get_root_element()->this_and_childs_have_both_value_and_children());
 
 }

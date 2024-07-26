@@ -24,12 +24,17 @@ public:
 
     virtual void parse(const std::string& contents) = 0;
 
-    //virtual Document_element get_root_element() = 0;
+    virtual Document_element::value_ptr get_root_element() = 0;
+
+    virtual Document_element::value_ptr get_element(const std::string& name) = 0;
 
 
 private:
 
     std::string _name;
 };
+
+
+using Document_ptr = std::shared_ptr<Document>;
 
 #endif

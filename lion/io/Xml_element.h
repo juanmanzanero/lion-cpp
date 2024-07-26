@@ -199,7 +199,7 @@ class Xml_element : public Document_element
     virtual void print(std::ostream& os) const override;
     
     //! Copy the contents of other into this node
-    virtual void copy_contents(Document_element& other) override;
+    virtual void copy_contents(Document_element::value_ptr other) override;
 
     //! Delete attribute
     void delete_attribute(const std::string& attribute_name)
@@ -213,11 +213,11 @@ class Xml_element : public Document_element
 
 
     //! Check if this element and its childs have any attribute
-    bool this_and_childs_have_attributes();
+    virtual bool this_and_childs_have_attributes() override;
 
 
     //! Check if this element and its childs have value and children
-    bool this_and_childs_have_both_value_and_children();
+    virtual bool this_and_childs_have_both_value_and_children() override;
 
 
     inline Document_element::value_ptr to_value_ptr() { return Document_element_ptr(std::make_shared<Xml_element>(e_xml_ptr())); }
@@ -239,9 +239,9 @@ inline std::ostream& operator<<(std::ostream& os, const Xml_element& e)
 }
 
 
-inline void Xml_element::copy_contents(Document_element& other_)
+inline void Xml_element::copy_contents(Document_element::value_ptr other_)
 {
-    auto& other = static_cast<Xml_element&>(other_);
+    auto& other = other_.cast<Xml_element>();
     tinyxml2::XMLElement* element = other.e_xml().FirstChildElement(); 
     tinyxml2::XMLNode* previous_sibling_ptr = e_xml().LastChild();
     while (element != nullptr)

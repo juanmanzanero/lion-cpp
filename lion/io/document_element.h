@@ -111,7 +111,7 @@ public:
 
     virtual bool has_child(const std::string& name) = 0;
 
-    virtual void copy_contents(Document_element& other) = 0;
+    virtual void copy_contents(Document_element::value_ptr other) = 0;
 
     // ! Get children & their values and emplace_back them in an "std::vector<std::pair<std::string, number_or_vector_or_array> >"
     //! @param[inout] vp: the vector of pairs holding numbers or std::vectors or std::arrays, whose keys are std::strings
@@ -127,6 +127,13 @@ public:
     //! @param[inout] m: the map holding numbers or std::vectors or std::arrays, whose keys are std::strings
     template<typename MapType>
     void emplace_children_and_values_in_map(MapType &m);
+
+
+    //! Check if this element and its childs have any attribute
+    virtual bool this_and_childs_have_attributes() = 0;
+
+    virtual bool this_and_childs_have_both_value_and_children() = 0;
+
 
 private:
 

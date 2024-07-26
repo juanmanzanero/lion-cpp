@@ -123,8 +123,7 @@ inline void read_parameters(Xml_document &doc,
                             std::vector<bool>& used_parameters)
 {
     auto elem = doc.get_element(path);
-    auto e = Document_element_ptr(std::make_shared<Xml_element>(elem.e_xml_ptr()));
-    read_parameters(std::move(e), p, used_parameters);
+    read_parameters(elem, p, used_parameters);
 }
 
 

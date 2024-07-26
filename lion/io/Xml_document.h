@@ -32,10 +32,11 @@ class Xml_document : public Document
     void parse(const std::string& contents) override { parse(contents.c_str()); }
 
     //! Get the root element
-    Xml_element get_root_element() { return _doc.RootElement(); } 
+    virtual Document_element::value_ptr get_root_element() override { return std::make_shared<Xml_element>(_doc.RootElement()); } 
+
 
     //! Get an element
-    Xml_element get_element(const std::string& name);
+    virtual Document_element::value_ptr get_element(const std::string& name) override;
 
     //! Add an element from its full path
     Xml_element add_element(const std::string& full_path);
@@ -63,7 +64,7 @@ inline void Xml_document::print(std::ostream& os) const
 }
 
 
-inline Xml_element Xml_document::get_element(const std::string& name)
+inline Document_element::value_ptr Xml_document::get_element(const std::string& name)
 {
     // Divide the string in root_name/the_rest
     std::string::size_type pos = name.find('/');
@@ -82,7 +83,7 @@ inline Xml_element Xml_document::get_element(const std::string& name)
 
     // Look for root_name, and make sure it is the only occurrence
     // Check that the root name coincides 
-    if ( root_name != get_root_element().get_name() )
+    if ( root_name != get_root_element()->get_name() )
     {
         std::ostringstream s_out;
         s_out << "[ERROR] Xml_document::get_element -> Root name does not match" << std::endl;
@@ -94,7 +95,7 @@ inline Xml_element Xml_document::get_element(const std::string& name)
         return get_root_element();
 
     else
-        return get_root_element().get_child(the_rest).cast<Xml_element>();
+        return get_root_element()->get_child(the_rest);
 }
 
 inline Xml_element Xml_document::add_element(const std::string& full_path)
@@ -116,7 +117,7 @@ inline Xml_element Xml_document::add_element(const std::string& full_path)
 
     // Look for root_name, and make sure it is the only occurrence
     // Check that the root full_path coincides 
-    if ( root_name != get_root_element().get_name() )
+    if ( root_name != get_root_element()->get_name() )
     {
         std::ostringstream s_out;
         s_out << "[ERROR] Xml_document::add_element -> Root full_path \"" + full_path + "\" does not match" << std::endl;
@@ -132,7 +133,7 @@ inline Xml_element Xml_document::add_element(const std::string& full_path)
         throw lion_exception(s_out.str());
     }
     else
-        return get_root_element().add_child(the_rest).cast<Xml_element>();
+        return get_root_element()->add_child(the_rest).cast<Xml_element>();
 }
 
 
@@ -243,14 +244,14 @@ inline bool Xml_document::has_element(const std::string& name)
 
     // Look for root_name, and make sure it is the only occurrence
     // Check that the root name coincides 
-    if ( root_name != get_root_element().get_name() )
+    if ( root_name != get_root_element()->get_name() )
         return false;
 
     if ( the_rest.size() == 0 )
         return true;
 
     else
-        return get_root_element().has_child(the_rest);
+        return get_root_element()->has_child(the_rest);
 }
 
 
