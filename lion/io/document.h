@@ -18,7 +18,7 @@ public:
         return save();
     }
 
-    const auto& get_file_name() const { return _name; }
+    const std::string& get_file_name() const { return _name; }
 
     virtual void parse(const char* contents) = 0;
 
