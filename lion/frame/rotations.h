@@ -615,6 +615,8 @@ constexpr Array3Type angular_kinematic_relationships_crossderivatives(const T &y
     // acceleration "[pdot01, qdot01, rdot01]" that these two increments yield.
     //
 
+    (void)rolldot0;
+    (void)yawdot1;
     (void)yaw_rad;
 
     using std::cos;
@@ -652,6 +654,8 @@ constexpr Array3Type sis_kinematic_relationships_crossderivatives(const T &steer
     // "[pdot01, qdot01, rdot01]" that these two increments yield.
     //
 
+    (void)spindot0;
+    (void)steerdot1;
     (void)steer_rad;
 
     using std::cos;
@@ -690,6 +694,8 @@ constexpr Array3Type inverse_angular_kinematic_relationships_crossderivatives(co
     // yield.
     //
 
+    (void)rolldot0;
+    (void)yawdot1;
     (void)yaw_rad;
 
     using std::cos;
@@ -727,6 +733,8 @@ constexpr Array3Type inverse_sis_kinematic_relationships_crossderivatives(const 
     // that these two increments yield.
     //
 
+    (void)spindot0;
+    (void)steerdot1;
     (void)steer_rad;
 
     using std::cos;
