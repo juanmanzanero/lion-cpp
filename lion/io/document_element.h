@@ -16,9 +16,16 @@ public:
     public:
         using base_type = std::shared_ptr<Document_element>;
 
-        template<typename ...Args>
-        value_ptr(Args&& ... args) : base_type(std::forward<Args>(args)...) {}
+        template<typename... Args>
+        value_ptr(Args&&... args) : base_type(std::forward<Args>(args)...) {}
 
+        template<typename T,
+                 typename... Args,
+                 typename std::enable_if_t<std::is_base_of_v<Document_element, T> >* = nullptr>
+        static value_ptr make(Args&&... args)
+        {
+            return std::make_shared<T>(std::forward<Args>(args)...);
+        }
 
         template<typename T>
         inline T& cast()
@@ -75,9 +82,30 @@ public:
 
     virtual std::vector<float> get_value(std::vector<float>&&) const = 0;
 
-    virtual sVector3d get_value(sVector3d&&) const = 0;
+    template<typename T, std::size_t N>
+    std::array<double, N> get_value(std::array<T, N>&&) const
+    {
+        const auto vec = get_value(std::vector<T>{});
+        if (vec.size() != N) {
+            throw std::runtime_error("Document_element::get_value(std::array<double, N>): incorrect size.");
+        }
+        std::array<T, N> arr{};
+        std::copy_n(vec.cbegin(), N, arr.begin());
+        return arr;
+    }
 
-    virtual sMatrix3x3 get_value(sMatrix3x3&&) const = 0;
+    template<typename T>
+    Vector3d<T> get_value(Vector3d<T>&&) const
+    {
+        return Vector3d<T>(get_value(typename Vector3d<T>::base_type{}));
+    }
+
+    template<typename T>
+    Matrix3x3<T> get_value(Matrix3x3<T>&&) const
+    {
+        return transpose(Matrix3x3<T>(get_value(typename Matrix3x3<T>::base_type{})));
+    }
+
 
     virtual void set_value(const std::string& val) = 0;
 
@@ -95,9 +123,18 @@ public:
 
     virtual void set_value(const std::vector<int>& val) = 0;
 
-    virtual void set_value(const sVector3d& val) = 0;
+    template<typename T, std::size_t N>
+    void set_value(const std::array<T, N> &val)
+    {
+        set_value(std::vector<T>(val.cbegin(), val.cend()));
+    }
 
-    virtual void set_value(const sMatrix3x3& val) = 0;
+    template<typename T>
+    void set_value(const Matrix3x3<T> &mat)
+    {
+        set_value(static_cast<typename Matrix3x3<T>::base_type>(transpose(mat)));
+    }
+
 
     virtual std::vector<value_ptr> get_children() = 0;
 
@@ -112,6 +149,12 @@ public:
     virtual bool has_child(const std::string& name) = 0;
 
     virtual void copy_contents(Document_element::value_ptr other) = 0;
+
+
+    //! Try to get the value of a child, or return a default one
+    template<typename ValueType>
+    ValueType try_get_child_value(const std::string &childname, ValueType default_value,
+                                  bool warn_if_returning_default_value = true);
 
     // ! Get children & their values and emplace_back them in an "std::vector<std::pair<std::string, number_or_vector_or_array> >"
     //! @param[inout] vp: the vector of pairs holding numbers or std::vectors or std::arrays, whose keys are std::strings
@@ -141,6 +184,11 @@ private:
     void* _e;
 };
 
+
+//
+// "Document_element" impl.
+//
+
 using Document_element_ptr = Document_element::value_ptr;
 
 
@@ -148,6 +196,36 @@ inline std::ostream& operator<<(std::ostream& os, Document_element& doc)
 {
     doc.print(os);
     return os;
+}
+
+
+template<typename ValueType>
+ValueType Document_element::try_get_child_value(const std::string &childname, ValueType default_value,
+                                                bool warn_if_returning_default_value)
+{
+    //
+    // Attempts to return the value of child "childname", and returns
+    // the given "default_value" if the child doesn't exist (if input
+    // "warn_if_returning_default_value" is true, the function prints
+    // a warning message in this latter case).
+    //
+
+    if (has_child(childname)) {
+        return get_child(childname)->get_value(ValueType{});
+    }
+    else {
+        if (warn_if_returning_default_value) {
+            std::cerr << "Document_element::try_get_child_value: warning, xml element \""
+                << get_name()
+                << "\" does not contain child \""
+                << childname << "\", returning a default value of \""
+                << default_value
+                << "\"."
+                << std::endl;
+        }
+
+        return default_value;
+    }
 }
 
 
@@ -166,7 +244,7 @@ inline void Document_element::emplace_back_children_and_values_in_vector_of_pair
     constexpr auto pairs_of_scalars = std::is_scalar_v<T>;
 
     static_assert(pairs_of_vectors || pairs_of_arrays || pairs_of_scalars,
-                  "Xml_element::emplace_back_children_and_values_in_vector_of_pairs:: unsupported value type.");
+                  "Document_element::emplace_back_children_and_values_in_vector_of_pairs:: unsupported value type.");
 
     for (auto& c : get_children()) {
         vp.emplace_back(c->get_name(), c->get_value(T{}));
@@ -195,7 +273,7 @@ inline void Document_element::emplace_children_and_values_in_map(MapType &m)
     constexpr auto map_of_scalars = std::is_scalar_v<mapped_type>;
 
     static_assert(map_key_is_string && (map_of_vectors || map_of_arrays || map_of_scalars),
-                  "Xml_element::emplace_children_and_values_in_map:: unsupported map type.");
+                  "Document_element::emplace_children_and_values_in_map:: unsupported map type.");
 
     for (auto& c : get_children()) {
         const auto [_, did_emplace] = m.emplace(c->get_name(), c->get_value(mapped_type{}));
@@ -228,7 +306,7 @@ inline void Document_element::add_children_and_values_from_map(const MapType &m)
     constexpr auto map_of_scalars = std::is_scalar_v<mapped_type>;
 
     static_assert(map_key_is_string && (map_of_vectors || map_of_arrays || map_of_scalars),
-                  "Xml_element::add_children_and_values_from_map:: unsupported map type.");
+                  "Document_element::add_children_and_values_from_map:: unsupported map type.");
 
     for (const auto &mi : m) {
         add_child(mi.first)->set_value(mi.second);

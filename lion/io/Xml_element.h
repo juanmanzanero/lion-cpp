@@ -52,14 +52,6 @@ class Xml_element : public Document_element
     //! @param[in] simply pass std::vector<float>() to overload this version
     virtual std::vector<float> get_value(std::vector<float>&&) const override { return string_to_double_vector<float>(get_value()); }
 
-    //! Get value as vector3d
-    //! @param[in] simply pass Vector3d() to overload this function
-    virtual sVector3d get_value(sVector3d&&) const override { return sVector3d(string_to_double_vector<double>(get_value())); }
-
-    //! Get value as matrix3x3
-    //! @param[in] simply pass Matrix3x3() to overload this function
-    virtual sMatrix3x3 get_value(sMatrix3x3&&) const override { return transpose(sMatrix3x3(string_to_double_vector<double>(get_value()))); }
-
 
     //! Set the value from different variable types
     virtual void set_value(const std::string& val) override { e_xml().SetText(val.c_str()); }
@@ -77,10 +69,6 @@ class Xml_element : public Document_element
     virtual void set_value(const std::vector<int>& val) override { set_value_generic(val); }
 
     virtual void set_value(const std::vector<float>& val) override { set_value_generic(val); }
-
-    virtual void set_value(const sVector3d& val) override { set_value_generic(val); }
-
-    virtual void set_value(const sMatrix3x3& val) override { set_value_generic(val); }
 
 
     //! Set the value from numbers (scalars, std::vector, std::array)
@@ -116,29 +104,6 @@ class Xml_element : public Document_element
 
     //! See if a child exists
     virtual bool has_child(const std::string& name) override;
-
-
-    //! Try to get the value of a child, or return a default one
-    template<typename ValueType>
-    ValueType try_get_child_value(const std::string &childname, ValueType default_value,
-                                  bool warn_if_returning_default_value = true)
-    {
-        if (has_child(childname)) {
-            return get_child(childname)->get_value(ValueType{});
-        }
-        else {
-            if (warn_if_returning_default_value) {
-                std::cerr << "Xml_element::try_get_child_value: warning, xml element \""
-                    << get_name()
-                    << "\" does not contain child \""
-                    << childname << "\", returning a default value of \""
-                    << default_value
-                    << "\"."
-                    << std::endl;
-            }
-            return default_value;
-        }
-    }
 
 
     //! Try to get the value of an attribute, or return a default one
@@ -223,6 +188,10 @@ class Xml_element : public Document_element
     inline Document_element::value_ptr to_value_ptr() { return Document_element_ptr(std::make_shared<Xml_element>(e_xml_ptr())); }
 };
 
+
+//
+// "Xml_element" impl.
+//
 
 inline void Xml_element::print(std::ostream& os) const
 {

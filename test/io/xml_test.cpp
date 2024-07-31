@@ -38,7 +38,7 @@ TEST_F(Xml_test, root_node_children)
     doc.load();
     auto root_children = doc.get_root_element()->get_children();
 
-    EXPECT_EQ(root_children.size(), 3);
+    EXPECT_EQ(root_children.size(), 3u);
     EXPECT_EQ(root_children[0]->get_name(), "child1");
     EXPECT_EQ(root_children[1]->get_name(), "child2");
     EXPECT_EQ(root_children[2]->get_name(), "parameters");
@@ -118,6 +118,68 @@ TEST_F(Xml_test, Matrix3x3)
     for (size_t i = 0; i < 3; ++i)
         for (size_t j = 0; j < 3; ++j)
             EXPECT_DOUBLE_EQ(mat_expected(i,j), mat(i,j));
+}
+
+
+TEST_F(Xml_test, setget_stdarray_Matrix3x3_Vector3d)
+{
+    constexpr auto ref_array = std::array<double, 10>{ -0.747873558438421,
+                                                       0.152910391091676,
+                                                       0.020299178810689,
+                                                       -0.462828559182863,
+                                                       0.348012509296819,
+                                                       0.963524857198698,
+                                                      -0.848449653427868,
+                                                       0.106551410006897,
+                                                       -0.351271659559704,
+                                                       0.214090352577798 };
+
+    constexpr auto ref_matrix3x3 = sMatrix3x3{ -0.230420379098272, -0.729266329894491, -0.822025202317546,
+                                               -0.794278216759767, 0.653874348334355, -0.840119645921260,
+                                               -0.699372948125601, 0.179282943946838, 0.858659940414170 };
+
+    constexpr auto ref_vector3d = sVector3d{ -0.383548029744673,
+                                              0.278827481911275,
+                                             -0.984115682466366 };
+
+    Xml_document doc;
+    doc.create_root_element("doc");
+    doc.get_root_element()->add_child("array")->set_value(ref_array);
+    doc.get_root_element()->add_child("Matrix3x3")->set_value(ref_matrix3x3);
+    doc.get_root_element()->add_child("Vector3d")->set_value(ref_vector3d);
+
+    const auto array_ = doc.get_root_element()->get_child("array")->get_value(std::remove_const_t<decltype(ref_array)>{});
+    ASSERT_EQ(array_.size(), ref_array.size());
+    for (auto i = 0u; i < array_.size(); ++i) {
+        EXPECT_DOUBLE_EQ(array_[i], ref_array[i]);
+    }
+
+    const auto array_try = doc.get_root_element()->try_get_child_value("array", std::remove_const_t<decltype(ref_array)>{});
+    for (auto i = 0u; i < array_try.size(); ++i) {
+        EXPECT_NE(array_try[i], scalar{ 0 });
+    }
+
+    const auto matrix3x3 = doc.get_element("doc/Matrix3x3")->get_value(std::remove_const_t<decltype(ref_matrix3x3)>{});
+    ASSERT_EQ(matrix3x3.base_type::size(), ref_matrix3x3.base_type::size());
+    for (auto i = 0u; i < matrix3x3.base_type::size(); ++i) {
+        EXPECT_DOUBLE_EQ(matrix3x3[i], ref_matrix3x3[i]);
+    }
+
+    const auto matrix3x3_try = doc.get_root_element()->try_get_child_value("Matrix3x3", std::remove_const_t<decltype(ref_matrix3x3)>{});
+    for (auto i = 0u; i < matrix3x3_try.base_type::size(); ++i) {
+        EXPECT_NE(matrix3x3_try[i], scalar{ 0 });
+    }
+
+    const auto vector3d = doc.get_root_element()->get_child("Vector3d")->get_value(std::remove_const_t<decltype(ref_vector3d)>{});
+    ASSERT_EQ(vector3d.base_type::size(), ref_vector3d.base_type::size());
+    for (auto i = 0u; i < vector3d.base_type::size(); ++i) {
+        EXPECT_DOUBLE_EQ(vector3d[i], ref_vector3d[i]);
+    }
+
+    const auto vector3d_try = doc.get_root_element()->try_get_child_value("Vector3d", std::remove_const_t<decltype(ref_vector3d)>{});
+    for (auto i = 0u; i < vector3d_try.base_type::size(); ++i) {
+        EXPECT_NE(vector3d_try[i], scalar{ 0 });
+    }
 }
 
 
