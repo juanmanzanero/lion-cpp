@@ -315,7 +315,7 @@ constexpr T smooth_sign(const T &x, S eps)
 
     if constexpr (ActuallySmooth) {
         if constexpr (UseSmoothAbsFormula) {
-            return x / smooth_abs(x, eps * eps);
+            return x / sqrt(x * x + eps * eps);
         }
         else {
             using std::tanh;
@@ -370,7 +370,7 @@ constexpr T smooth_sign_derivative(const T &x, S eps)
 
 
 template<bool ActuallySmooth, typename T, typename S>
-constexpr T smooth_abs(const T &x, S eps2)
+constexpr T smooth_abs(const T &x, S eps)
 {
     //
     // Returns the absolute value of input "x", smoothed
@@ -383,12 +383,12 @@ constexpr T smooth_abs(const T &x, S eps2)
     if constexpr (ActuallySmooth) {
         using std::sqrt;
 
-        return sqrt(x * x + eps2);
+        return sqrt(x * x + eps * eps) - eps;
     }
     else {
         using std::abs;
 
-        (void)eps2;
+        (void)eps;
 
         return abs(x);
     }
@@ -396,7 +396,7 @@ constexpr T smooth_abs(const T &x, S eps2)
 
 
 template<bool ActuallySmooth, typename T, typename S>
-constexpr T smooth_hypot(const T &x, const T &y, S eps2)
+constexpr T smooth_hypot(const T &x, const T &y, S eps)
 {
     //
     // Returns "sqrt(x^2 + y^2)", smoothed out near [0, 0]
@@ -408,13 +408,13 @@ constexpr T smooth_hypot(const T &x, const T &y, S eps2)
     if constexpr (ActuallySmooth) {
         using std::sqrt;
 
-        return sqrt(x * x + y * y + eps2);
+        return sqrt(x * x + y * y + eps * eps) - eps;
     }
     else {
         //using std::hypot; -> not implemented in CppAD
         using std::sqrt;
 
-        (void)eps2;
+        (void)eps;
 
         //return hypot(x, y);
         return sqrt(x * x + y * y);
