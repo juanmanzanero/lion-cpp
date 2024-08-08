@@ -219,6 +219,30 @@ constexpr Matrix3x3Type sis2rotmat(const T &steer_rad, const T &inclination_rad,
 }
 
 
+template<typename T,
+         typename Matrix3x3Type = Matrix3x3<T> >
+constexpr Vector3d<T> sis2ybody(const T &steer_rad, const T &inclination_rad, const T &spin_rad)
+{
+    //
+    // Converts the input Euler angles (in radians and in "steer-inclination-spin"
+    // "ZXY" sequence) to the central column of the rotation matrix you would get
+    // if you called "sis2rotmat" with them.
+    //
+
+    using std::cos;
+    using std::sin;
+
+    const auto csteer = cos(steer_rad);
+    const auto ssteer = sin(steer_rad);
+    const auto cinclination = cos(inclination_rad);
+    const auto sinclination = sin(inclination_rad);
+
+    return Vector3d<T>{ -cinclination * ssteer,
+                         cinclination * csteer,
+                         sinclination };
+}
+
+
 template<typename Matrix3x3Type,
          typename Array3Type = std::array<typename Matrix3x3Type::value_type, 3u> >
 constexpr Array3Type rotmat2ea(const Matrix3x3Type &T_colmaj)

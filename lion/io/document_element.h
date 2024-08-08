@@ -45,13 +45,6 @@ public:
         {
             return dynamic_cast<T*>(&base_type::operator*()) != nullptr ? true : false;
         }
-
-    private:
-
-        Document_element& operator*() 
-        {
-            return base_type::operator*();
-        }
     };
 
     Document_element(void* e, const std::string& name) : _name(name), _e(e)
