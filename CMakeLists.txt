@@ -8,7 +8,6 @@ include(CMakeDependentOption)
 include(GNUInstallDirs)
 
 # Options
-option(ENABLE_TEST "Enables tests" ON)
 option(WITH_HSL "Set to the location of the HSL zip file" OFF)
 
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/thirdparty)
@@ -34,8 +33,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS ON)
 
-include_directories(./)
-
 include(compilerflags)
 
 if (WITH_HSL)
@@ -47,8 +44,6 @@ if ( ${ENABLE_TEST} )
 	enable_testing()
 	list(APPEND CMAKE_CTEST_ARGUMENTS "--verbose")
 
-	# Compile the subdirectories
-	add_subdirectory(./test)
 endif()
 
 ############# INSTALLATION #################
@@ -80,8 +75,6 @@ target_include_directories(header_only SYSTEM INTERFACE
 	"$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}/lion/thirdparty/include>"
 )
 
-# Install lion
-install(DIRECTORY "${CMAKE_SOURCE_DIR}/lion" TYPE INCLUDE)
 
 # Install third party libraries
 install(DIRECTORY "${CMAKE_BINARY_DIR}/lion/thirdparty/include/"
