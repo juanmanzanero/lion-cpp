@@ -62,7 +62,11 @@ if (NOT hdf5_FOUND)
                "$<BUILD_INTERFACE:${HDF5_LIBRARY}>"
                "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_LIBDIR}/${HDF5_LIB_NAME}>")
 
-        target_link_libraries(hdf5 INTERFACE ZLIB::ZLIB SZIP::SZIP)
+        target_link_libraries(hdf5 INTERFACE ZLIB::ZLIB)
+
+	if (WITH_SZIP)
+        	target_link_libraries(hdf5 INTERFACE SZIP::SZIP)
+	endif()
 
 
         foreach(t ${HDF5_LIB_ALL_FILES})
