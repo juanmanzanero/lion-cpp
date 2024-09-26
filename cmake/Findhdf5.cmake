@@ -8,7 +8,9 @@ if (NOT hdf5_FOUND)
     find_library(HDF5_CPP_HL_LIBRARY NAMES hdf5_hl_cpp PATHS ${CMAKE_BINARY_DIR}/lion/thirdparty/lib HINTS ${CMAKE_BINARY_DIR}/lion/thirdparty/lib NO_DEFAULT_PATH) 
 
     find_package(ZLIB)
-    find_package(SZIP)
+    if (WITH_SZIP)
+    	find_package(SZIP)
+    endif()
 
     if (HDF5_INCLUDE_DIR AND HDF5_LIBRARY)
         set(hdf5_FOUND YES)

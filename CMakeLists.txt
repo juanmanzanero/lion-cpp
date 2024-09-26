@@ -9,6 +9,7 @@ include(GNUInstallDirs)
 
 # Options
 option(WITH_HSL "Set to the location of the HSL zip file" OFF)
+option(WITH_SZIP "Whether HDF5 will be compiled with SZIP or not" OFF)
 
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/thirdparty)
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/thirdparty/include)
@@ -63,7 +64,10 @@ if(WITH_HSL)
     target_compile_definitions(lion INTERFACE WITH_HSL)
 endif()
 
-target_link_libraries(lion INTERFACE ipopt blaslapack tinyxml2 nlohmann_json fortran_libraries cppad hdf5 ZLIB::ZLIB SZIP::SZIP)
+target_link_libraries(lion INTERFACE ipopt blaslapack tinyxml2 nlohmann_json fortran_libraries cppad hdf5 ZLIB::ZLIB)
+if(WITH_SZIP)
+	target_link_libraries(lion INTERFACE SZIP::SZIP)
+endif()
 
 # Create a lion header only
 add_library(header_only INTERFACE)
