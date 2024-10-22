@@ -1,5 +1,5 @@
 if (NOT loggercpp_FOUND)
-    find_path(LOGGERCPP_INCLUDE_DIR logger.hpp PATHS ${CMAKE_BINARY_DIR}/lion/thirdparty/include NO_DEFAULT_PATH)
+    find_path(LOGGERCPP_INCLUDE_DIR logger.h PATHS ${CMAKE_BINARY_DIR}/lion/thirdparty/include NO_DEFAULT_PATH)
  
     if (LOGGERCPP_INCLUDE_DIR)
         set(loggercpp_FOUND YES)

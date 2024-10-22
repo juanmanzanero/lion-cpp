@@ -9,7 +9,7 @@ if ( ${BUILD_LOGGERCPP} )
       INSTALL_DIR ${THIRD_PARTY_DIR}/lion/thirdparty
       CONFIGURE_COMMAND ""
       BUILD_COMMAND ""
-      INSTALL_COMMAND cp ${THIRD_PARTY_DIR}/loggercpp/source/logger.h ${THIRD_PARTY_DIR}/loggercpp/source/logger.hpp ${THIRD_PARTY_DIR}/lion/thirdparty/include
+      INSTALL_COMMAND cp ${THIRD_PARTY_DIR}/loggercpp/source/logger.h ${THIRD_PARTY_DIR}/lion/thirdparty/include
     )
 
 endif()
