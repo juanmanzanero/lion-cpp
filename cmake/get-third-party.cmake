@@ -62,6 +62,20 @@ if (NOT ${hdf5_FOUND})
 endif()
 
 
+# cppcodec
+find_package(cppcodec)
+
+if (NOT ${cppcodec_FOUND})
+    set(BUILD_CPPCODEC YES)
+endif()
+
+
+# ZSTD
+find_package(zstd)
+
+if (NOT ${zstd_FOUND})
+    set(BUILD_ZSTD YES)
+endif()
 
 
 #######################################################################
@@ -91,6 +105,8 @@ find_package(ipopt REQUIRED)
 find_package(loggercpp REQUIRED)
 find_package(cppad REQUIRED)
 find_package(hdf5 REQUIRED)
+find_package(cppcodec REQUIRED)
+find_package(zstd REQUIRED)
 
 if (MSYS)
 	file(COPY ${CMAKE_BINARY_DIR}/lion/thirdparty/bin/msys-tinyxml2-9.dll DESTINATION ${CMAKE_BINARY_DIR}/lion/thirdparty/lib)

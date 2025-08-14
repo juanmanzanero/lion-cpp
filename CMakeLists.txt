@@ -22,14 +22,14 @@ SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 add_library(fortran_libraries INTERFACE)
 target_link_directories(fortran_libraries INTERFACE ${CMAKE_Fortran_IMPLICIT_LINK_DIRECTORIES})
 target_link_libraries(fortran_libraries INTERFACE ${CMAKE_Fortran_IMPLICIT_LINK_LIBRARIES})
-    
+
 # Download third party libraries
 include(get-third-party)
 
 # Configure doxygen
 include(Doxygen)
 
-# Set C++ 
+# Set C++
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS ON)
@@ -64,7 +64,7 @@ if(WITH_HSL)
     target_compile_definitions(lion INTERFACE WITH_HSL)
 endif()
 
-target_link_libraries(lion INTERFACE ipopt blaslapack tinyxml2 nlohmann_json fortran_libraries cppad hdf5 ZLIB::ZLIB)
+target_link_libraries(lion INTERFACE ipopt blaslapack tinyxml2 nlohmann_json fortran_libraries cppad hdf5 ZLIB::ZLIB cppcodec zstd)
 if(WITH_SZIP)
 	target_link_libraries(lion INTERFACE SZIP::SZIP)
 endif()
@@ -110,7 +110,7 @@ install(FILES ${version_file} ${config_file}
   DESTINATION ${cmake_files_install_dir})
 
 # Export the targets
-install(TARGETS lion ipopt blaslapack tinyxml2 nlohmann_json header_only fortran_libraries cppad hdf5
+install(TARGETS lion ipopt blaslapack tinyxml2 nlohmann_json header_only fortran_libraries cppad hdf5 cppcodec zstd
   EXPORT ${targets_export_name}
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
   ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
