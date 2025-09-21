@@ -7,16 +7,18 @@ if (${BUILD_IPOPT})
     list(TRANSFORM fortran_dirs PREPEND "-L")
     string (REPLACE ";" " " fortran_libs_str "${fortran_libs}")
     string (REPLACE ";" " " fortran_dirs_str "${fortran_dirs}")
+    
+    if (${WITH_MKL})
 
-    set(lapack_flags "--with-lapack-lflags=-L${THIRD_PARTY_DIR}/lion/thirdparty/lib/ -llapack -lblas ${fortran_dirs_str} ${fortran_libs_str}")
-    if (${BUILD_LAPACK})
-	    set(depends "lapack")
-    endif()
-
-    if (NOT MSYS)
-	    set(ipopt_patch_command cd ${THIRD_PARTY_DIR}/ipopt/source && git apply ${PATCH_DIR}/ipopt.patch --reject)
+      set(lapack_flags "--with-lapack-lflags=${MKL_FLAGS}")
+      set(MUMPS_CPPFLAGS "-I${MKL_INCDIR}")
+      message(STATUS "${lapack_flags}")
+	
     else()
-	    set(disable_dependency_tracking "--disable-dependency-tracking")
+        set(lapack_flags "--with-lapack-lflags=-L${THIRD_PARTY_DIR}/lion/thirdparty/lib/ -llapack -lblas ${fortran_dirs_str} ${fortran_libs_str}")
+        if (${BUILD_LAPACK})
+            set(depends "lapack")
+        endif()
     endif()
 
 
@@ -27,12 +29,13 @@ if (${BUILD_IPOPT})
           SOURCE_DIR ${THIRD_PARTY_DIR}/gklib/source
           BINARY_DIR ${THIRD_PARTY_DIR}/gklib/build 
           INSTALL_DIR ${THIRD_PARTY_DIR}/lion/thirdparty
-          CONFIGURE_COMMAND cd ${THIRD_PARTY_DIR}/gklib/source && make config prefix=${THIRD_PARTY_DIR}/lion/thirdparty cc=${CMAKE_C_COMPILER}
+	  CONFIGURE_COMMAND cd ${THIRD_PARTY_DIR}/gklib/source && make config prefix=${THIRD_PARTY_DIR}/lion/thirdparty cc=${CMAKE_C_COMPILER} CFLAGS=-fPIC
           BUILD_COMMAND cd ${THIRD_PARTY_DIR}/gklib/source && make && make install
           INSTALL_COMMAND ""
           UPDATE_COMMAND ""
         )
-    
+
+   
         ExternalProject_Add(metis
           GIT_REPOSITORY https://github.com/KarypisLab/METIS.git
           PREFIX "${THIRD_PARTY_DIR}/metis"
@@ -49,6 +52,9 @@ if (${BUILD_IPOPT})
           DEPENDS GKLib
         )
 
+	set(metis_c_flags "--with-metis-cflags=-I${THIRD_PARTY_DIR}/lion/thirdparty/include")
+	set(metis_l_flags "--with-metis-lflags=-L${THIRD_PARTY_DIR}/lion/thirdparty/lib -lmetis -lGKlib -lm")
+
         ExternalProject_Add(hsl
           GIT_REPOSITORY https://github.com/coin-or-tools/ThirdParty-HSL.git
           GIT_TAG stable/2.2
@@ -57,13 +63,12 @@ if (${BUILD_IPOPT})
           BINARY_DIR ${THIRD_PARTY_DIR}/hsl/build 
           INSTALL_DIR ${THIRD_PARTY_DIR}/lion/thirdparty
           CONFIGURE_COMMAND cd ${THIRD_PARTY_DIR}/hsl/source 
-    		&& cp ${WITH_HSL} . 
-    		&& unzip coinhsl-2022.11.09.zip && mv coinhsl-2022.11.09 coinhsl 
-    		&& ./configure 
-    		--prefix=${THIRD_PARTY_DIR}/lion/thirdparty 
-    		--enable-static=no --enable-shared=yes ${lapack_flags} ${disable_dependency_tracking} --libdir=${THIRD_PARTY_DIR}/lion/thirdparty/lib 
-    		--with-metis-cflags=-I${THIRD_PARTY_DIR}/lion/thirdparty/include
-    		"--with-metis-lflags=-L${THIRD_PARTY_DIR}/lion/thirdparty/lib -lmetis -lGKlib -lm"
+            && cp ${WITH_HSL} . 
+            && unzip coinhsl-2022.11.09.zip && mv coinhsl-2022.11.09 coinhsl 
+            && ./configure 
+            --prefix=${THIRD_PARTY_DIR}/lion/thirdparty 
+            --enable-static=no --enable-shared=yes --libdir=${THIRD_PARTY_DIR}/lion/thirdparty/lib 
+	    ${lapack_flags} ${metis_c_flags} ${metis_l_flags}
           BUILD_COMMAND cd ${THIRD_PARTY_DIR}/hsl/source && make && make install
           INSTALL_COMMAND ""
           UPDATE_COMMAND ""
@@ -77,26 +82,31 @@ if (${BUILD_IPOPT})
         set(hsl_c_flags "")
         set(hsl_l_flags "")
         set(depends_hsl "")
+	set(metis_c_flags "--without-metis")
+	set(metis_l_flags "")
     endif()
 
     ExternalProject_Add(mumps
       GIT_REPOSITORY https://github.com/coin-or-tools/ThirdParty-Mumps.git
-      GIT_TAG releases/3.0.2
+      GIT_TAG stable/3.0
       PREFIX "${THIRD_PARTY_DIR}/mumps"
       SOURCE_DIR ${THIRD_PARTY_DIR}/mumps/source
       BINARY_DIR ${THIRD_PARTY_DIR}/mumps/build 
       INSTALL_DIR ${THIRD_PARTY_DIR}/lion/thirdparty
+      CPPFLAGS=${MUMPS_CPPFLAGS}
       CONFIGURE_COMMAND cd ${THIRD_PARTY_DIR}/mumps/source 
- 	&& ./get.Mumps 
-	&& ./configure 
-		--prefix=${THIRD_PARTY_DIR}/lion/thirdparty 
-		--enable-static=no --enable-shared=yes ${lapack_flags} ${disable_dependency_tracking} --libdir=${THIRD_PARTY_DIR}/lion/thirdparty/lib
-        --without-metis
+         && ./get.Mumps 
+         && ./configure 
+           --prefix=${THIRD_PARTY_DIR}/lion/thirdparty 
+	   --enable-static=no --enable-shared=yes --libdir=${THIRD_PARTY_DIR}/lion/thirdparty/lib
+	   --without-metis
+	   ${lapack_flags}
       BUILD_COMMAND cd ${THIRD_PARTY_DIR}/mumps/source && make && make install
       INSTALL_COMMAND ""
       UPDATE_COMMAND ""
       DEPENDS ${depends}
     )
+
 
     ExternalProject_Add(ipopt
       GIT_REPOSITORY https://github.com/coin-or/Ipopt.git
@@ -105,16 +115,17 @@ if (${BUILD_IPOPT})
       SOURCE_DIR ${THIRD_PARTY_DIR}/ipopt/source
       BINARY_DIR ${THIRD_PARTY_DIR}/ipopt/build 
       INSTALL_DIR ${THIRD_PARTY_DIR}/lion/thirdparty
-      PATCH_COMMAND "${ipopt_patch_command}"
+      PATCH_COMMAND cd ${THIRD_PARTY_DIR}/ipopt/source && git apply ${PATCH_DIR}/ipopt.patch --reject
       CONFIGURE_COMMAND cd ${THIRD_PARTY_DIR}/ipopt/build &&
-	../source/configure CXX=${CMAKE_CXX_COMPILER} CC=${CMAKE_C_COMPILER} F77=${CMAKE_FORTRAN_COMPILER}
-                 --disable-java --enable-static=yes --enable-shared=no --with-lapack ${lapack_flags}
-                 --with-mumps-cflags=-I${THIRD_PARTY_DIR}/lion/thirdparty/include/coin-or/mumps 
-                 --with-mumps-lflags="-L${THIRD_PARTY_DIR}/lion/thirdparty/lib -lcoinmumps" 
-                 ${hsl_c_flags} ${hsl_l_flags}
-                 --prefix=${THIRD_PARTY_DIR}/lion/thirdparty
-                 --libdir=${THIRD_PARTY_DIR}/lion/thirdparty/lib
-                 --without-asl
-                 DEPENDS mumps ${depends_hsl}
+      ../source/configure CXX=${CMAKE_CXX_COMPILER} CC=${CMAKE_C_COMPILER} F77=${CMAKE_FORTRAN_COMPILER} CFLAGS=-O3\ -fno-fast-math\ -m64 CXXFLAGS=-O3\ -fno-fast-math\ -m64
+          --disable-java --enable-static=yes --enable-shared=no --with-lapack ${lapack_flags}
+          --with-mumps-cflags=-I${THIRD_PARTY_DIR}/lion/thirdparty/include/coin-or/mumps 
+          --with-mumps-lflags="-L${THIRD_PARTY_DIR}/lion/thirdparty/lib -lcoinmumps" 
+          ${hsl_c_flags} ${hsl_l_flags}
+          --prefix=${THIRD_PARTY_DIR}/lion/thirdparty
+          --libdir=${THIRD_PARTY_DIR}/lion/thirdparty/lib
+          --without-asl
+          DEPENDS mumps ${depends_hsl}
     )
+
 endif()

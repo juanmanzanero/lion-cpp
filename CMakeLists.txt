@@ -10,6 +10,8 @@ include(GNUInstallDirs)
 # Options
 option(WITH_HSL "Set to the location of the HSL zip file" OFF)
 option(WITH_SZIP "Whether HDF5 will be compiled with SZIP or not" OFF)
+option(WITH_MKL "Whether we have MKL or not" OFF)
+
 
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/thirdparty)
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/thirdparty/include)

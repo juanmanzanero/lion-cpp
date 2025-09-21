@@ -3,6 +3,11 @@ project(fastest-lap-third-party VERSION 1.0 LANGUAGES C CXX Fortran)
 
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
+set(WITH_MKL ${WITH_MKL})
+set(MKL_INCDIR ${MKL_INCDIR})
+set(MKL_FLAGS "${MKL_FLAGS}")
+
+
 set(THIRD_PARTY_DIR ${CMAKE_BINARY_DIR})
 set(PATCH_DIR ${CMAKE_SOURCE_DIR}/cmake/patch)
 

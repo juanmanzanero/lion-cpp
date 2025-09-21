@@ -1,10 +1,39 @@
 # Find lapack
 set(BUILD_LAPACK NO)
-find_package(blaslapack) 
+if (${WITH_MKL})
+    set(MKL_LINK static CACHE STRING "Link MKL statically")
+    set(MKL_THREADING intel_thread CACHE STRING "Use MKL with Intel OpenMP threading")
+    set(MKL_INTERFACE_FULL gf_lp64 CACHE STRING "Interface (lp64 or ilp64)")
 
-if (NOT ${blaslapack_FOUND})
-    set(BUILD_LAPACK YES)
+    find_package(OpenMP REQUIRED)
+    find_package(MKL CONFIG REQUIRED)
+    
+    # Derive MKL root from MKL_DIR
+    set(_root "${MKL_DIR}")
+    get_filename_component(_root "${_root}" DIRECTORY)
+    get_filename_component(_root "${_root}" DIRECTORY)
+    get_filename_component(MKLROOT_FROM_CMAKE "${_root}" DIRECTORY)
+    
+    set(MKL_LIBDIR "${MKLROOT_FROM_CMAKE}/lib/intel64")
+    set(MKL_INCDIR "${MKLROOT_FROM_CMAKE}/include")
+    get_target_property(OMP_LINK OpenMP::OpenMP_C INTERFACE_LINK_LIBRARIES)
+
+    # This is the static version
+    #set(MKL_FLAGS " -Wl,--start-group ${MKL_LIBDIR}/libmkl_intel_lp64.a ${MKL_LIBDIR}/libmkl_core.a ${MKL_LIBDIR}/libmkl_gnu_thread.a -Wl,--end-group ${OMP_LINK} -lm -ldl")
+    set(MKL_FLAGS "-L${MKL_LIBDIR} -lmkl_intel_lp64 -lmkl_core -lmkl_gnu_thread ${OMP_LINK} -lm -ldl")
+    string(JOIN " " MKL_FLAGS ${MKL_FLAGS})
+
+    add_library(blaslapack INTERFACE)
+    target_link_libraries(blaslapack INTERFACE "${MKL_FLAGS}")
+
+    
+else()
+    find_package(blaslapack) 
+    if (NOT ${blaslapack_FOUND})
+        set(BUILD_LAPACK YES)
+    endif()
 endif()
+
 
 if ( ${ENABLE_TEST} )
     # Google tests 
@@ -87,7 +116,7 @@ configure_file(cmake/third-party/CMakeLists.txt ${CMAKE_BINARY_DIR}/thirdparty/C
 execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/thirdparty"
 )
-execute_process(COMMAND "${CMAKE_COMMAND}" --build .
+execute_process(COMMAND "${CMAKE_COMMAND}"  --build .
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/thirdparty"
 )
 message("")
