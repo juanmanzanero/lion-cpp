@@ -5,29 +5,34 @@ if (NOT cppad_FOUND)
 
     if (CPPAD_INCLUDE_DIR AND CPPAD_LIBRARY)
         set(cppad_FOUND YES)
-	
-	    get_filename_component(CPPAD_LIB_NAME ${CPPAD_LIBRARY} NAME)
+    
+        get_filename_component(CPPAD_LIB_NAME ${CPPAD_LIBRARY} NAME)
 
-	    if (APPLE)
-		    # Change relative paths by absolute path
-		    execute_process(COMMAND ${CMAKE_INSTALL_NAME_TOOL} -id "@rpath/${CPPAD_LIB_NAME}" ${CPPAD_LIBRARY})
-    	endif()
-
-
-	    add_library(cppad INTERFACE)
+        if (APPLE)
+            # Change relative paths by absolute path
+            execute_process(COMMAND ${CMAKE_INSTALL_NAME_TOOL} -id "@rpath/${CPPAD_LIB_NAME}" ${CPPAD_LIBRARY})
+        endif()
 
 
-	    file(GLOB CPPAD_LIB_ALL_FILES "${CMAKE_BINARY_DIR}/lion/thirdparty/lib/libcppad_lib*")
-	
-	    set(CPPAD_LIBRARY_INSTALL ${CMAKE_INSTALL_FULL_LIBDIR}/${CPPAD_LIB_NAME})
+        add_library(cppad INTERFACE)
+
+        # CppAD now installs architecture-dependent configure.hpp separately.
+        if(CMAKE_LIBRARY_ARCHITECTURE)
+            target_include_directories(cppad SYSTEM INTERFACE
+                "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/lion/thirdparty/include/${CMAKE_LIBRARY_ARCHITECTURE}>"
+                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/lion/thirdparty/include/${CMAKE_LIBRARY_ARCHITECTURE}>"
+            )
+        endif()
+
+        file(GLOB CPPAD_LIB_ALL_FILES "${CMAKE_BINARY_DIR}/lion/thirdparty/lib/libcppad_lib*")
+        set(CPPAD_LIBRARY_INSTALL ${CMAKE_INSTALL_FULL_LIBDIR}/${CPPAD_LIB_NAME})
 
         target_link_libraries(cppad INTERFACE 
-               "$<BUILD_INTERFACE:${CPPAD_LIBRARY}>"
-               "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_LIBDIR}/${CPPAD_LIB_NAME}>")
-
+           "$<BUILD_INTERFACE:${CPPAD_LIBRARY}>"
+           "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_LIBDIR}/${CPPAD_LIB_NAME}>")
 
         foreach(t ${CPPAD_LIB_ALL_FILES})
-    	    install(FILES "${t}" TYPE LIB) 
+            install(FILES "${t}" TYPE LIB) 
         endforeach()
 
     else()
