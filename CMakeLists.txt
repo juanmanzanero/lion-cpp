@@ -66,6 +66,9 @@ if(WITH_HSL)
     target_compile_definitions(lion INTERFACE WITH_HSL)
 endif()
 
+# ZSTD is a required dependency, so expose it to lion consumers.
+target_compile_definitions(lion INTERFACE WITH_ZSTD)
+
 target_link_libraries(lion INTERFACE ipopt blaslapack tinyxml2 nlohmann_json fortran_libraries cppad hdf5 ZLIB::ZLIB cppcodec zstd)
 if(WITH_SZIP)
 	target_link_libraries(lion INTERFACE SZIP::SZIP)
