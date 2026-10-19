@@ -38,6 +38,7 @@ if (${BUILD_IPOPT})
    
         ExternalProject_Add(metis
           GIT_REPOSITORY https://github.com/KarypisLab/METIS.git
+	  GIT_TAG 076b60ea8f90b3e213db22ad7d8f706b62c687b5
           PREFIX "${THIRD_PARTY_DIR}/metis"
           SOURCE_DIR ${THIRD_PARTY_DIR}/metis/source
           BINARY_DIR ${THIRD_PARTY_DIR}/metis/build 
