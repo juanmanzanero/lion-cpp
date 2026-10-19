@@ -106,6 +106,12 @@ if (NOT ${zstd_FOUND})
     set(BUILD_ZSTD YES)
 endif()
 
+# CLI11 (header-only)
+find_package(cli11)
+
+if (NOT cli11_FOUND)
+    set(BUILD_CLI11 YES)
+endif()
 
 #######################################################################
 
@@ -136,6 +142,7 @@ find_package(cppad REQUIRED)
 find_package(hdf5 REQUIRED)
 find_package(cppcodec REQUIRED)
 find_package(zstd REQUIRED)
+find_package(cli11 REQUIRED)
 
 if (MSYS)
 	file(COPY ${CMAKE_BINARY_DIR}/lion/thirdparty/bin/msys-tinyxml2-9.dll DESTINATION ${CMAKE_BINARY_DIR}/lion/thirdparty/lib)

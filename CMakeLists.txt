@@ -69,7 +69,7 @@ endif()
 # ZSTD is a required dependency, so expose it to lion consumers.
 target_compile_definitions(lion INTERFACE WITH_ZSTD)
 
-target_link_libraries(lion INTERFACE ipopt blaslapack tinyxml2 nlohmann_json fortran_libraries cppad hdf5 ZLIB::ZLIB cppcodec zstd)
+target_link_libraries(lion INTERFACE ipopt blaslapack tinyxml2 nlohmann_json fortran_libraries cppad hdf5 ZLIB::ZLIB cppcodec zstd cli11)
 if(WITH_SZIP)
 	target_link_libraries(lion INTERFACE SZIP::SZIP)
 endif()
@@ -115,7 +115,7 @@ install(FILES ${version_file} ${config_file}
   DESTINATION ${cmake_files_install_dir})
 
 # Export the targets
-install(TARGETS lion ipopt blaslapack tinyxml2 nlohmann_json header_only fortran_libraries cppad hdf5 cppcodec zstd
+install(TARGETS lion ipopt blaslapack tinyxml2 nlohmann_json header_only fortran_libraries cppad hdf5 cppcodec zstd cli11
   EXPORT ${targets_export_name}
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
   ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
