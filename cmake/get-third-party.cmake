@@ -113,10 +113,18 @@ configure_file(cmake/third-party/CMakeLists.txt ${CMAKE_BINARY_DIR}/thirdparty/C
 
 execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/thirdparty"
+    RESULT_VARIABLE _lion_thirdparty_configure_status
 )
-execute_process(COMMAND "${CMAKE_COMMAND}"  --build .
+if(NOT "${_lion_thirdparty_configure_status}" STREQUAL "0")
+    message(FATAL_ERROR "lion: third-party CMake configuration failed: ${_lion_thirdparty_configure_status}")
+endif()
+execute_process(COMMAND "${CMAKE_COMMAND}" --build .
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/thirdparty"
+    RESULT_VARIABLE _lion_thirdparty_build_status
 )
+if(NOT "${_lion_thirdparty_build_status}" STREQUAL "0")
+    message(FATAL_ERROR "lion: third-party build failed: ${_lion_thirdparty_build_status}. See the preceding ExternalProject error.")
+endif()
 message("")
 message(STATUS "Configuration of fastest-lap")
 #######################################################################

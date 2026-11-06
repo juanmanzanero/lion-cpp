@@ -27,7 +27,13 @@ endif()
 if(MKL_THREADING STREQUAL "gnu_thread")
     find_package(OpenMP REQUIRED COMPONENTS C CXX Fortran)
 endif()
-find_package(MKL CONFIG REQUIRED)
+
+# May provision oneMKL during configure, before lion's nested Ipopt/MUMPS
+# build. An already installed MKL (explicit, local, or system-wide) is reused.
+include("${CMAKE_CURRENT_LIST_DIR}/mkl-bootstrap.cmake")
+if(NOT TARGET MKL::MKL)
+    find_package(MKL CONFIG REQUIRED)
+endif()
 if(NOT TARGET MKL::MKL)
     message(FATAL_ERROR "MKLConfig.cmake did not provide target MKL::MKL")
 endif()

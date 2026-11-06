@@ -94,6 +94,9 @@ install(DIRECTORY "${CMAKE_BINARY_DIR}/lion/thirdparty/bin/"
 
 include(CMakePackageConfigHelpers)
 
+# Install oneMKL beside lion and export its prefix-relative location.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/install-mkl.cmake")
+
 # Set names
 set(cmake_package_name lion CACHE INTERNAL "")
 set(targets_export_name ${cmake_package_name}Targets CACHE INTERNAL "")

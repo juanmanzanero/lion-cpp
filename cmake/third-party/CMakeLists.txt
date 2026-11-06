@@ -6,6 +6,10 @@ SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 set(WITH_MKL ${WITH_MKL})
 set(MKL_INCDIR ${MKL_INCDIR})
 set(MKL_FLAGS "${MKL_FLAGS}")
+# The top-level project configures this file before starting the nested build.
+# The Autotools integrations also need the link mode and MKL library directory.
+set(MKL_LINK "${MKL_LINK}")
+set(MKL_LIBDIR "${MKL_LIBDIR}")
 
 
 set(THIRD_PARTY_DIR ${CMAKE_BINARY_DIR})

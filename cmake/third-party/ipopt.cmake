@@ -8,6 +8,26 @@ if (${BUILD_IPOPT})
     string (REPLACE ";" " " fortran_libs_str "${fortran_libs}")
     string (REPLACE ";" " " fortran_dirs_str "${fortran_dirs}")
     
+    # Shared HSL/MUMPS need a persistent RUNPATH to the locally installed MKL.
+    # Ipopt's standalone HSL link probe needs rpath-link to resolve MKL DSOs
+    # that are needed indirectly by libcoinhsl.so (its own LAPACK flags are not
+    # included in that probe).
+    # This file is included by lion's separate third-party CMake process.
+    # Fail immediately if the parent did not forward the MKL settings.
+    if (WITH_MKL)
+        if (NOT MKL_LINK STREQUAL "dynamic" AND NOT MKL_LINK STREQUAL "static")
+            message(FATAL_ERROR "lion: missing or invalid MKL_LINK in nested third-party build")
+        endif()
+        if (NOT IS_DIRECTORY "${MKL_LIBDIR}")
+            message(FATAL_ERROR "lion: missing MKL_LIBDIR in nested third-party build: '${MKL_LIBDIR}'")
+        endif()
+    endif()
+    set(lion_autotools_mkl_ldflags "")
+    if (WITH_MKL AND MKL_LINK STREQUAL "dynamic")
+        set(lion_autotools_mkl_ldflags "LDFLAGS=$ENV{LDFLAGS} -Wl,-rpath-link,${MKL_LIBDIR} -Wl,-rpath,${MKL_LIBDIR}")
+    endif()
+    set(lion_mumps_lflags "--with-mumps-lflags=-L${THIRD_PARTY_DIR}/lion/thirdparty/lib -lcoinmumps")
+
     set(mumps_configure_command ./configure)
     set(pardisomkl_flag "")
     if (WITH_MKL)
@@ -70,6 +90,7 @@ if (${BUILD_IPOPT})
             && cp ${WITH_HSL} . 
             && unzip coinhsl-2022.11.09.zip && mv coinhsl-2022.11.09 coinhsl 
             && ./configure 
+            ${lion_autotools_mkl_ldflags}
             --prefix=${THIRD_PARTY_DIR}/lion/thirdparty 
             --enable-static=no --enable-shared=yes --libdir=${THIRD_PARTY_DIR}/lion/thirdparty/lib 
 	    ${lapack_flags} ${metis_c_flags} ${metis_l_flags}
@@ -100,6 +121,7 @@ if (${BUILD_IPOPT})
       CONFIGURE_COMMAND cd ${THIRD_PARTY_DIR}/mumps/source 
          && ./get.Mumps 
          && ${mumps_configure_command}
+           ${lion_autotools_mkl_ldflags}
            --prefix=${THIRD_PARTY_DIR}/lion/thirdparty 
 	   --enable-static=no --enable-shared=yes --libdir=${THIRD_PARTY_DIR}/lion/thirdparty/lib
 	   --without-metis
@@ -122,8 +144,9 @@ if (${BUILD_IPOPT})
       CONFIGURE_COMMAND cd ${THIRD_PARTY_DIR}/ipopt/build &&
       ../source/configure CXX=${CMAKE_CXX_COMPILER} CC=${CMAKE_C_COMPILER} F77=${CMAKE_Fortran_COMPILER} CFLAGS=-O3\ -fno-fast-math\ -m64 CXXFLAGS=-O3\ -fno-fast-math\ -m64
           --disable-java --enable-static=yes --enable-shared=no --with-lapack ${lapack_flags}
+          ${lion_autotools_mkl_ldflags}
           --with-mumps-cflags=-I${THIRD_PARTY_DIR}/lion/thirdparty/include/coin-or/mumps 
-          --with-mumps-lflags="-L${THIRD_PARTY_DIR}/lion/thirdparty/lib -lcoinmumps" 
+          ${lion_mumps_lflags}
           ${hsl_c_flags} ${hsl_l_flags}
           --prefix=${THIRD_PARTY_DIR}/lion/thirdparty
           --libdir=${THIRD_PARTY_DIR}/lion/thirdparty/lib

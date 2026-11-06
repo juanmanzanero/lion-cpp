@@ -1,0 +1,51 @@
+# Invoked by cmake --install after HSL/MUMPS and the oneMKL tree are copied.
+# The Autotools libraries were linked against the build-time MKL directory;
+# change only that RPATH entry to an install-prefix-relative path. No patchelf.
+set(_lion_old_mkl_dir "@LION_MKL_OLD_RPATH@")
+set(_lion_new_mkl_rpath "@LION_MKL_NEW_RPATH@")
+set(_lion_dest_libdir "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/@LION_MKL_INSTALLED_LIBDIR@")
+
+find_program(_lion_readelf_executable NAMES readelf llvm-readelf)
+if(NOT _lion_readelf_executable)
+    message(FATAL_ERROR "lion: readelf is required to relocate installed MKL-dependent shared libraries")
+endif()
+
+file(GLOB _lion_mkl_consumers
+    "${_lion_dest_libdir}/libcoinmumps.so*"
+    "${_lion_dest_libdir}/libcoinhsl.so*")
+foreach(_lion_library IN LISTS _lion_mkl_consumers)
+    if(IS_SYMLINK "${_lion_library}" OR IS_DIRECTORY "${_lion_library}")
+        continue()
+    endif()
+    execute_process(COMMAND "${_lion_readelf_executable}" -d "${_lion_library}"
+        OUTPUT_VARIABLE _lion_elf_dynamic ERROR_VARIABLE _lion_readelf_error
+        RESULT_VARIABLE _lion_readelf_status)
+    if(NOT _lion_readelf_status EQUAL 0)
+        message(FATAL_ERROR "lion: cannot inspect ${_lion_library}: ${_lion_readelf_error}")
+    endif()
+    if(NOT _lion_elf_dynamic MATCHES "libmkl_[^ ]+")
+        continue() # no dynamic oneMKL dependencies to relocate
+    endif()
+    string(REGEX MATCH "\\((RUNPATH|RPATH)\\)[^\n]*\\[([^]]*)\\]"
+        _lion_rpath_match "${_lion_elf_dynamic}")
+    if(NOT _lion_rpath_match)
+        message(FATAL_ERROR "lion: ${_lion_library} uses oneMKL but has no RPATH; cannot make the installed package self-contained")
+    endif()
+    set(_lion_old_rpath "${CMAKE_MATCH_2}")
+    string(FIND "${_lion_old_rpath}" "${_lion_old_mkl_dir}" _lion_mkl_index)
+    if(_lion_mkl_index EQUAL -1)
+        message(FATAL_ERROR "lion: ${_lion_library} has an unexpected RPATH: ${_lion_old_rpath}; expected ${_lion_old_mkl_dir}")
+    endif()
+    string(REPLACE "${_lion_old_mkl_dir}" "${_lion_new_mkl_rpath}"
+        _lion_new_rpath "${_lion_old_rpath}")
+    string(LENGTH "${_lion_old_rpath}" _lion_old_length)
+    string(LENGTH "${_lion_new_rpath}" _lion_new_length)
+    if(_lion_new_length GREATER _lion_old_length)
+        message(FATAL_ERROR
+            "lion: cannot safely expand RPATH for ${_lion_library}: "
+            "${_lion_old_rpath} -> ${_lion_new_rpath}. "
+            "Use a longer build-time MKL installation path or adjust the ELF RPATH with patchelf.")
+    endif()
+    file(RPATH_CHANGE FILE "${_lion_library}"
+        OLD_RPATH "${_lion_old_rpath}" NEW_RPATH "${_lion_new_rpath}")
+endforeach()

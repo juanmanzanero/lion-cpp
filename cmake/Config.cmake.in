@@ -13,13 +13,106 @@ if(@WITH_MKL@)
     if(DEFINED MKL_INTERFACE_FULL AND NOT MKL_INTERFACE_FULL STREQUAL "@MKL_INTERFACE_FULL@")
         message(FATAL_ERROR "lion was built with MKL_INTERFACE_FULL=@MKL_INTERFACE_FULL@; the consuming project requests ${MKL_INTERFACE_FULL}")
     endif()
+
     set(MKL_LINK "@MKL_LINK@")
     set(MKL_THREADING "@MKL_THREADING@")
     set(MKL_INTERFACE_FULL "@MKL_INTERFACE_FULL@")
-    if(MKL_THREADING STREQUAL "gnu_thread")
-        find_dependency(OpenMP COMPONENTS C CXX Fortran)
+
+    # Prefer the versioned oneMKL shipped alongside lion. PACKAGE_PREFIX_DIR
+    # is computed by @PACKAGE_INIT@ at package-load time, making --prefix,
+    # DESTDIR staging and moved install trees work without build paths.
+    # Explicit LION_MKL_ROOT remains an override for specialized installations.
+    if(LION_MKL_ROOT)
+        set(_lion_mkl_root "${LION_MKL_ROOT}")
+    elseif(@LION_INSTALL_MKL_WITH_LION@)
+        set(_lion_mkl_root "${PACKAGE_PREFIX_DIR}/@LION_MKL_INSTALL_SUBDIR@")
+    elseif(MKL_ROOT)
+        set(_lion_mkl_root "${MKL_ROOT}")
+    elseif(MKL_DIR)
+        get_filename_component(_lion_mkl_root "${MKL_DIR}/../../.." ABSOLUTE)
+    elseif(DEFINED ENV{MKLROOT} AND NOT "$ENV{MKLROOT}" STREQUAL "")
+        set(_lion_mkl_root "$ENV{MKLROOT}")
+    else()
+        set(_lion_mkl_root "@LION_MKL_EXTERNAL_ROOT@")
     endif()
-    find_dependency(MKL CONFIG)
+
+    if(NOT EXISTS "${_lion_mkl_root}/include/mkl.h")
+        message(FATAL_ERROR "lion requires Intel oneMKL headers/libraries. Expected mkl.h under ${_lion_mkl_root}/include. Set -DLION_MKL_ROOT=<MKL installation root>.")
+    endif()
+
+    # OpenMP detection must only consider languages enabled by the consuming
+    # project. Asking for Fortran unconditionally breaks C/CXX-only consumers.
+    if(MKL_THREADING STREQUAL "gnu_thread")
+        find_dependency(OpenMP)
+    endif()
+
+    get_property(_lion_enabled_languages GLOBAL PROPERTY ENABLED_LANGUAGES)
+    if("Fortran" IN_LIST _lion_enabled_languages)
+        # When Fortran is enabled, use the vendor config: it can select the
+        # GNU Fortran LP64 ABI used by the original HSL/MUMPS/Ipopt build.
+        # Always use the selected installation, not an unrelated MKL_DIR
+        # left in a consumer's CMake cache.
+        set(MKL_DIR "${_lion_mkl_root}/lib/cmake/mkl")
+        set(MKL_ROOT "${_lion_mkl_root}")
+        find_dependency(MKL CONFIG)
+    elseif(NOT TARGET MKL::MKL)
+        # Intel's MKLConfig.cmake chooses gf_lp64 only when CMake has enabled
+        # GNU Fortran. A consumer that uses C/CXX but not Fortran must still
+        # link the exact gf_lp64 libraries selected when lion was built.
+        if(MKL_LINK STREQUAL "static")
+            set(_lion_mkl_extension ".a")
+        else()
+            set(_lion_mkl_extension ".so")
+        endif()
+
+        set(_lion_mkl_libdir "")
+        foreach(_lion_candidate
+            "${_lion_mkl_root}/lib"
+            "${_lion_mkl_root}/lib/intel64"
+            "${_lion_mkl_root}/lib/intel64_lin")
+            if(EXISTS "${_lion_candidate}/libmkl_gf_lp64${_lion_mkl_extension}"
+               AND EXISTS "${_lion_candidate}/libmkl_${MKL_THREADING}${_lion_mkl_extension}"
+               AND EXISTS "${_lion_candidate}/libmkl_core${_lion_mkl_extension}")
+                set(_lion_mkl_libdir "${_lion_candidate}")
+                break()
+            endif()
+        endforeach()
+        if(NOT _lion_mkl_libdir)
+            message(FATAL_ERROR "lion requires MKL ${MKL_LINK}/${MKL_THREADING}/gf_lp64 under ${_lion_mkl_root}/lib. Set -DLION_MKL_ROOT=<MKL installation root>.")
+        endif()
+
+        if(MKL_LINK STREQUAL "static")
+            set(_lion_mkl_libs
+                "-Wl,--start-group"
+                "${_lion_mkl_libdir}/libmkl_gf_lp64.a"
+                "${_lion_mkl_libdir}/libmkl_${MKL_THREADING}.a"
+                "${_lion_mkl_libdir}/libmkl_core.a"
+                "-Wl,--end-group")
+        else()
+            set(_lion_mkl_libs
+                "-Wl,--no-as-needed"
+                "${_lion_mkl_libdir}/libmkl_gf_lp64.so"
+                "${_lion_mkl_libdir}/libmkl_${MKL_THREADING}.so"
+                "${_lion_mkl_libdir}/libmkl_core.so"
+                "-Wl,--as-needed")
+        endif()
+        if(MKL_THREADING STREQUAL "gnu_thread")
+            list(APPEND _lion_mkl_libs gomp)
+        endif()
+        list(APPEND _lion_mkl_libs pthread m dl)
+
+        add_library(MKL::MKL INTERFACE IMPORTED)
+        set_target_properties(MKL::MKL PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "${_lion_mkl_root}/include"
+            INTERFACE_LINK_LIBRARIES "${_lion_mkl_libs}")
+    endif()
+
+    unset(_lion_mkl_root)
+    unset(_lion_mkl_libdir)
+    unset(_lion_mkl_libs)
+    unset(_lion_mkl_extension)
+    unset(_lion_enabled_languages)
+    unset(_lion_candidate)
 endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/@targets_export_name@.cmake")
