@@ -20,7 +20,7 @@ ExternalProject_Add(tinyxml
                 -DCMAKE_INSTALL_LIBDIR:STRING=lib
                 -DCMAKE_CXX_FLAGS:STRING=-DTIXML_USE_STL
 		-DCMAKE_BUILD_TYPE:STRING=Release
-		-DBUILD_SHARED_LIBS:BOOL=On
+		-DBUILD_SHARED_LIBS:BOOL=Off
 		-DCMAKE_CXX_STANDARD=11
 		-DCMAKE_CXX_FLAGS=${windows_flag}
                 ${THIRD_PARTY_DIR}/tinyxml/source

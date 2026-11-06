@@ -8,10 +8,13 @@ if (${BUILD_IPOPT})
     string (REPLACE ";" " " fortran_libs_str "${fortran_libs}")
     string (REPLACE ";" " " fortran_dirs_str "${fortran_dirs}")
     
-    if (${WITH_MKL})
-
+    set(mumps_configure_command ./configure)
+    set(pardisomkl_flag "")
+    if (WITH_MKL)
       set(lapack_flags "--with-lapack-lflags=${MKL_FLAGS}")
-      set(MUMPS_CPPFLAGS "-I${MKL_INCDIR}")
+      set(MUMPS_CPPFLAGS "$ENV{CPPFLAGS} -I${MKL_INCDIR}")
+      set(mumps_configure_command "${CMAKE_COMMAND}" -E env "CPPFLAGS=${MUMPS_CPPFLAGS}" ./configure)
+      set(pardisomkl_flag "--enable-pardisomkl")
       message(STATUS "${lapack_flags}")
 	
     else()
@@ -94,10 +97,9 @@ if (${BUILD_IPOPT})
       SOURCE_DIR ${THIRD_PARTY_DIR}/mumps/source
       BINARY_DIR ${THIRD_PARTY_DIR}/mumps/build 
       INSTALL_DIR ${THIRD_PARTY_DIR}/lion/thirdparty
-      CPPFLAGS=${MUMPS_CPPFLAGS}
       CONFIGURE_COMMAND cd ${THIRD_PARTY_DIR}/mumps/source 
          && ./get.Mumps 
-         && ./configure 
+         && ${mumps_configure_command}
            --prefix=${THIRD_PARTY_DIR}/lion/thirdparty 
 	   --enable-static=no --enable-shared=yes --libdir=${THIRD_PARTY_DIR}/lion/thirdparty/lib
 	   --without-metis
@@ -118,7 +120,7 @@ if (${BUILD_IPOPT})
       INSTALL_DIR ${THIRD_PARTY_DIR}/lion/thirdparty
       PATCH_COMMAND cd ${THIRD_PARTY_DIR}/ipopt/source && git apply ${PATCH_DIR}/ipopt.patch --reject
       CONFIGURE_COMMAND cd ${THIRD_PARTY_DIR}/ipopt/build &&
-      ../source/configure CXX=${CMAKE_CXX_COMPILER} CC=${CMAKE_C_COMPILER} F77=${CMAKE_FORTRAN_COMPILER} CFLAGS=-O3\ -fno-fast-math\ -m64 CXXFLAGS=-O3\ -fno-fast-math\ -m64
+      ../source/configure CXX=${CMAKE_CXX_COMPILER} CC=${CMAKE_C_COMPILER} F77=${CMAKE_Fortran_COMPILER} CFLAGS=-O3\ -fno-fast-math\ -m64 CXXFLAGS=-O3\ -fno-fast-math\ -m64
           --disable-java --enable-static=yes --enable-shared=no --with-lapack ${lapack_flags}
           --with-mumps-cflags=-I${THIRD_PARTY_DIR}/lion/thirdparty/include/coin-or/mumps 
           --with-mumps-lflags="-L${THIRD_PARTY_DIR}/lion/thirdparty/lib -lcoinmumps" 
@@ -126,6 +128,7 @@ if (${BUILD_IPOPT})
           --prefix=${THIRD_PARTY_DIR}/lion/thirdparty
           --libdir=${THIRD_PARTY_DIR}/lion/thirdparty/lib
           --without-asl
+          ${pardisomkl_flag}
           DEPENDS mumps ${depends_hsl}
     )
 

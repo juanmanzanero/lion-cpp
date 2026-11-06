@@ -1,37 +1,30 @@
-# Find lapack
+# Select exactly one BLAS/LAPACK provider for lion and all of its dependencies.
 set(BUILD_LAPACK NO)
-if (${WITH_MKL})
-    set(MKL_LINK static CACHE STRING "Link MKL statically")
-    set(MKL_THREADING intel_thread CACHE STRING "Use MKL with Intel OpenMP threading")
-    set(MKL_INTERFACE_FULL gf_lp64 CACHE STRING "Interface (lp64 or ilp64)")
-
-    find_package(OpenMP REQUIRED)
-    find_package(MKL CONFIG REQUIRED)
-    
-    # Derive MKL root from MKL_DIR
-    set(_root "${MKL_DIR}")
-    get_filename_component(_root "${_root}" DIRECTORY)
-    get_filename_component(_root "${_root}" DIRECTORY)
-    get_filename_component(MKLROOT_FROM_CMAKE "${_root}" DIRECTORY)
-    
-    set(MKL_LIBDIR "${MKLROOT_FROM_CMAKE}/lib/intel64")
-    set(MKL_INCDIR "${MKLROOT_FROM_CMAKE}/include")
-    get_target_property(OMP_LINK OpenMP::OpenMP_C INTERFACE_LINK_LIBRARIES)
-
-    # This is the static version
-    #set(MKL_FLAGS " -Wl,--start-group ${MKL_LIBDIR}/libmkl_intel_lp64.a ${MKL_LIBDIR}/libmkl_core.a ${MKL_LIBDIR}/libmkl_gnu_thread.a -Wl,--end-group ${OMP_LINK} -lm -ldl")
-    set(MKL_FLAGS "-L${MKL_LIBDIR} -lmkl_intel_lp64 -lmkl_core -lmkl_gnu_thread ${OMP_LINK} -lm -ldl")
-    string(JOIN " " MKL_FLAGS ${MKL_FLAGS})
-
-    add_library(blaslapack INTERFACE)
-    target_link_libraries(blaslapack INTERFACE "${MKL_FLAGS}")
-
-    
+if (WITH_MKL)
+    include(mkl)
 else()
-    find_package(blaslapack) 
-    if (NOT ${blaslapack_FOUND})
+    find_package(blaslapack)
+    if (NOT blaslapack_FOUND)
         set(BUILD_LAPACK YES)
     endif()
+endif()
+
+# A previously configured Ipopt/MUMPS cannot safely change BLAS/LAPACK ABI or
+# linking mode in place. Require a separate build directory on any change.
+set(_lion_math_backend "reference|WITH_HSL=${WITH_HSL}")
+if (WITH_MKL)
+    set(_lion_math_backend "MKL|${MKL_ROOT}|${MKL_LINK}|${MKL_THREADING}|${MKL_INTERFACE_FULL}|WITH_HSL=${WITH_HSL}")
+endif()
+set(_lion_math_backend_file "${CMAKE_BINARY_DIR}/lion-math-backend.txt")
+if (EXISTS "${_lion_math_backend_file}")
+    file(READ "${_lion_math_backend_file}" _lion_previous_math_backend)
+    if (NOT _lion_previous_math_backend STREQUAL _lion_math_backend)
+        message(FATAL_ERROR "BLAS/LAPACK configuration has changed in this build directory. Use a fresh build directory for WITH_MKL, MKL settings or WITH_HSL changes.")
+    endif()
+elseif(WITH_MKL AND EXISTS "${CMAKE_BINARY_DIR}/lion/thirdparty/lib/libipopt.a")
+    message(FATAL_ERROR "Found an existing Ipopt build without a recorded BLAS/LAPACK provider. Use a fresh build directory for WITH_MKL=ON.")
+else()
+    file(WRITE "${_lion_math_backend_file}" "${_lion_math_backend}")
 endif()
 
 
@@ -98,7 +91,6 @@ if (NOT ${cppcodec_FOUND})
     set(BUILD_CPPCODEC YES)
 endif()
 
-
 # ZSTD
 find_package(zstd)
 
@@ -130,10 +122,12 @@ message(STATUS "Configuration of fastest-lap")
 #######################################################################
 
 if ( ${ENABLE_TEST} )
-	find_package(GTest PATHS ${CMAKE_BINARY_DIR}/thirdparty REQUIRED NO_DEFAULT_PATH)
+    find_package(GTest PATHS ${CMAKE_BINARY_DIR}/thirdparty REQUIRED NO_DEFAULT_PATH)
 endif()
 
-find_package(blaslapack REQUIRED)
+if (NOT WITH_MKL)
+    find_package(blaslapack REQUIRED)
+endif()
 find_package(tinyxml2 REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(ipopt REQUIRED)
